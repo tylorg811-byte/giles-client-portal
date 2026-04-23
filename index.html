@@ -3,28 +3,511 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Client Portal | Giles Web Design</title>
-<link rel="stylesheet" href="styles.css">
+<title>Small Business Websites | Giles Web Design</title>
+
+<!-- SEO -->
+<meta name="description" content="Giles Web Design builds fast, modern, mobile-friendly websites that help small businesses get more customers online. Affordable, high-converting web design.">
+<link rel="canonical" href="https://gileswebdesign.com/">
+<meta property="og:title" content="Giles Web Design">
+<meta property="og:description" content="Modern websites that turn visitors into customers.">
+<meta property="og:url" content="https://gileswebdesign.com">
+<meta property="og:type" content="website">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#0B0B0F;color:#fff;font-family:'Inter',sans-serif;overflow-x:hidden;}
+
+/* HEADER */
+.header{
+position:fixed;
+top:0;
+width:100%;
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:12px 20px;
+background:rgba(10,10,15,0.8);
+backdrop-filter:blur(10px);
+z-index:100;
+}
+.header img{width:110px;}
+
+.portal-btn{
+padding:9px 20px;
+border-radius:30px;
+background:linear-gradient(45deg,#7B5CFF,#9F7BFF);
+color:#fff;
+text-decoration:none;
+font-size:13px;
+font-weight:500;
+letter-spacing:.3px;
+box-shadow:0 0 18px rgba(123,92,255,.35);
+transition:.25s;
+}
+
+.portal-btn:hover{
+transform:translateY(-2px);
+box-shadow:0 0 26px rgba(123,92,255,.55);
+}
+
+/* HERO */
+.hero{
+padding-top:90px;
+min-height:90vh;
+display:flex;
+align-items:center;
+justify-content:center;
+text-align:center;
+position:relative;
+overflow:hidden;
+}
+
+.hero-bg{
+position:absolute;
+width:200%;
+height:200%;
+background:linear-gradient(120deg,#0B0B0F,#1a1a40,#0B0B0F,#2a1a55);
+background-size:300% 300%;
+animation:gradientFlow 12s ease infinite;
+opacity:.6;
+}
+
+@keyframes gradientFlow{
+0%{background-position:0% 50%;}
+50%{background-position:100% 50%;}
+100%{background-position:0% 50%;}
+}
+
+.hero-content{
+position:relative;
+max-width:600px;
+opacity:0;
+transform:translateY(30px);
+animation:fadeIn 0.9s ease forwards;
+}
+
+@keyframes fadeIn{
+to{opacity:1;transform:translateY(0);}
+}
+
+.logo{width:180px;margin:10px auto;}
+.tagline{font-size:11px;letter-spacing:3px;color:#aaa;margin-bottom:10px;}
+
+.hero h1{
+font-family:'Playfair Display';
+font-size:40px;
+margin-bottom:10px;
+}
+
+.hero p{color:#aaa;margin-bottom:25px;}
+
+.btn{
+display:inline-block;
+margin-top:18px;
+padding:14px 32px;
+border-radius:30px;
+background:linear-gradient(45deg,#7B5CFF,#9F7BFF);
+color:#fff;
+text-decoration:none;
+}
+
+.phone-btn{
+margin-left:10px;
+}
+
+/* SECTION */
+.section{
+padding:60px 20px;
+text-align:center;
+position:relative;
+}
+
+.section::before{
+content:"";
+position:absolute;
+top:0;
+left:50%;
+transform:translateX(-50%);
+width:60%;
+height:1px;
+background:linear-gradient(to right,transparent,#7B5CFF,transparent);
+opacity:.4;
+}
+
+.section h2{margin-bottom:25px;}
+
+/* SCROLL */
+.fade{opacity:0;transform:translateY(40px) scale(.98);transition:.5s;}
+.fade.show{opacity:1;transform:translateY(0) scale(1);}
+
+/* GLASS */
+.glass{
+background:rgba(255,255,255,0.05);
+backdrop-filter:blur(14px);
+border:1px solid rgba(255,255,255,0.08);
+}
+
+/* TOGGLE */
+.toggle{display:flex;justify-content:center;margin-bottom:20px;}
+.toggle-inner{background:#111;border-radius:30px;padding:4px;display:flex;}
+.toggle button{
+border:none;
+padding:8px 16px;
+border-radius:20px;
+background:transparent;
+color:#aaa;
+cursor:pointer;
+}
+.toggle .active{background:#7B5CFF;color:#fff;}
+
+/* CARDS */
+.cards{display:flex;flex-wrap:wrap;justify-content:center;gap:20px;}
+.card{
+width:260px;
+padding:28px;
+border-radius:18px;
+transition:.25s;
+}
+.card:hover{transform:translateY(-8px);}
+
+.price{
+font-size:34px;
+color:#9F7BFF;
+margin:10px 0;
+}
+
+.featured .price{
+text-shadow:0 0 2px #000,0 0 6px rgba(0,0,0,0.8);
+}
+
+/* FEATURES */
+.features{display:none;text-align:left;margin-top:10px;}
+.features li{
+list-style:none;
+margin-bottom:10px;
+padding-left:26px;
+position:relative;
+}
+.features li::before{
+content:"✔";
+position:absolute;
+left:0;
+color:#7B5CFF;
+}
+
+/* FEATURED BORDER */
+.featured{
+position:relative;
+transform:scale(1.08);
+}
+
+.featured::before{
+content:"";
+position:absolute;
+inset:-2px;
+border-radius:20px;
+background:linear-gradient(120deg,#7B5CFF,#9F7BFF,#7B5CFF);
+background-size:300%;
+animation:glow 4s linear infinite;
+z-index:-1;
+}
+
+.badge{
+display:inline-block;
+margin-bottom:10px;
+padding:6px 12px;
+border-radius:20px;
+background:#7B5CFF;
+color:#fff;
+font-size:12px;
+font-weight:600;
+}
+
+@keyframes glow{
+0%{background-position:0%}
+50%{background-position:100%}
+100%{background-position:0%}
+}
+
+.trust{
+margin-top:25px;
+color:#aaa;
+font-size:14px;
+}
+
+/* ABOUT */
+.about{
+max-width:700px;
+margin:0 auto;
+line-height:1.6;
+color:#bbb;
+}
+
+/* PROJECT */
+.project{
+max-width:900px;
+margin:30px auto;
+border-radius:18px;
+overflow:hidden;
+}
+.project video{width:100%;}
+.project-info{padding:20px;text-align:left;}
+
+.project-testimonial{
+max-width:650px;
+margin:20px auto;
+padding:24px;
+border-radius:16px;
+text-align:center;
+}
+
+/* TESTIMONIALS */
+.testimonials{
+display:flex;
+flex-wrap:wrap;
+justify-content:center;
+gap:18px;
+}
+.testimonial{
+width:300px;
+padding:22px;
+border-radius:14px;
+line-height:1.5;
+}
+
+/* CONTACT */
+.contact{
+max-width:600px;
+margin:auto;
+padding:35px;
+border-radius:18px;
+}
+
+input,textarea{
+width:100%;
+padding:14px;
+margin-bottom:12px;
+border:none;
+border-radius:10px;
+background:#111;
+color:#fff;
+}
+
+button{
+width:100%;
+padding:14px;
+border:none;
+border-radius:30px;
+background:#7B5CFF;
+color:#fff;
+}
+
+@media(max-width:600px){
+.header{padding:10px 16px;}
+.header img{width:95px;}
+.portal-btn{padding:8px 14px;font-size:12px;}
+.hero h1{font-size:34px;}
+.featured{transform:scale(1);}
+.phone-btn{margin-left:0;}
+}
+</style>
 </head>
 
 <body>
 
-<div class="portal-bg"></div>
-
-<div class="login-card">
-  <h1>Giles Client Portal</h1>
-  <p>Log in to manage your website.</p>
-
-  <input id="email" type="email" placeholder="Email">
-  <input id="password" type="password" placeholder="Password">
-
-  <button onclick="login()">Login</button>
-
-  <div id="message"></div>
+<div class="header">
+  <img src="logo.png" alt="Giles Web Design Logo">
+  <a href="https://YOURGITHUBUSERNAME.github.io/giles-client-portal/" class="portal-btn">Client Portal</a>
 </div>
 
+<section class="hero">
+<div class="hero-bg"></div>
+
+<div class="hero-content">
+<div class="tagline">AFFORDABLE — YOUR WAY</div>
+<img src="logo.png" class="logo" alt="Giles Web Design Logo">
+
+<h1 id="heroTitle">Look Professional.<br>Get More Customers.</h1>
+<p id="heroSubtitle">Affordable websites designed to turn visitors into paying customers.</p>
+
+<a href="#contact" class="btn">Message Me</a>
+<a id="phoneLink" href="tel:5555555555" class="btn phone-btn">(555) 555-5555</a>
+</div>
+</section>
+
+<section class="section fade">
+<h2>Website Packages</h2>
+
+<div class="toggle">
+<div class="toggle-inner">
+<button class="active" onclick="toggleView('simple',this)">Overview</button>
+<button onclick="toggleView('full',this)">Breakdown</button>
+</div>
+</div>
+
+<div class="cards">
+
+<div class="card glass">
+<h3>Starter</h3>
+<div class="price">$100</div>
+<p class="simple">Simple site to get online fast.</p>
+<ul class="features">
+<li>1 Page</li>
+<li>Mobile Ready</li>
+<li>Basic SEO</li>
+</ul>
+</div>
+
+<div class="card glass featured">
+<div class="badge">Most Popular</div>
+<h3>Business Growth</h3>
+<div class="price">$250</div>
+<p class="simple">Best option to attract customers.</p>
+<ul class="features">
+<li>3 Pages</li>
+<li>SEO</li>
+<li>Google Maps</li>
+</ul>
+</div>
+
+<div class="card glass">
+<h3>Premium</h3>
+<div class="price">$500</div>
+<p class="simple">High-end business presence.</p>
+<ul class="features">
+<li>5 Pages</li>
+<li>Booking</li>
+<li>Priority Support</li>
+</ul>
+</div>
+
+</div>
+
+<div class="trust">
+Not sure what you need? We’ll work with your budget and build something that fits.
+</div>
+</section>
+
+<section class="section fade">
+<h2>Why Choose Me</h2>
+<p class="about">
+I've been designing websites since 2015, helping small businesses look professional and actually convert visitors into customers.
+You’re not getting a cookie-cutter template — you’re getting a site built to make your business stand out and bring in real results.
+</p>
+</section>
+
+<section class="section fade">
+<h2>Recent Work</h2>
+
+<div class="project glass">
+<video autoplay muted loop playsinline>
+<source src="demo.mp4">
+</video>
+
+<div class="project-info">
+<h3>Landscaping Business Website</h3>
+<p>Designed to increase calls and build trust instantly.</p>
+</div>
+</div>
+
+<div class="project-testimonial glass">
+“Since launching the site, we’ve gotten way more calls.”
+<br><strong>– Greenscape Owner</strong>
+</div>
+</section>
+
+<section id="contact" class="section fade">
+<h2>Let’s Build Your Website</h2>
+
+<div class="contact glass">
+<form action="https://formspree.io/f/xqewgaev" method="POST">
+  <input type="text" name="name" placeholder="Your Name" required>
+  <input type="email" name="email" placeholder="Your Email" required>
+  <textarea name="message" placeholder="Tell me about your business" required></textarea>
+  <button type="submit">Start My Website</button>
+</form>
+</div>
+</section>
+
+<section class="section fade">
+<h2>What Clients Say</h2>
+
+<div class="testimonials">
+<div class="testimonial glass">
+“Working with him was honestly one of the easiest decisions I made for my business. The site looks clean, professional, and I started getting calls within the first week.”
+<strong> – James R.</strong>
+</div>
+
+<div class="testimonial glass">
+“I didn’t even know what I needed going in, but he walked me through everything and built something that actually fits my business perfectly.”
+<strong> – Sarah L.</strong>
+</div>
+
+<div class="testimonial glass">
+“I’ve paid for websites before and none of them came close to this. This actually feels like something a real company would use.”
+<strong> – David M.</strong>
+</div>
+</div>
+</section>
+
+<script>
+const observer=new IntersectionObserver(entries=>{
+entries.forEach(e=>{
+if(e.isIntersecting){e.target.classList.add('show')}
+});
+},{threshold:.15});
+
+document.querySelectorAll('.fade').forEach(el=>observer.observe(el));
+
+function toggleView(type,btn){
+document.querySelectorAll('.simple').forEach(el=>el.style.display= type==='simple'?'block':'none');
+document.querySelectorAll('.features').forEach(el=>el.style.display= type==='full'?'block':'none');
+document.querySelectorAll('.toggle button').forEach(b=>b.classList.remove('active'));
+btn.classList.add('active');
+}
+</script>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="app.js"></script>
+
+<script>
+const SUPABASE_URL = "https://ujxuirmeikbzakqaerec.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_gLnNGeQUUbjLoQlN5g2t9g_XXQpy9P3";
+
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const CLIENT_USER_ID = "979da64c-e710-4632-8056-c8e81c46ff21";
+
+async function loadClientContent(){
+  const { data, error } = await db
+    .from("site_content")
+    .select("*")
+    .eq("user_id", CLIENT_USER_ID)
+    .single();
+
+  if(error || !data){
+    console.log("No portal content yet.");
+    return;
+  }
+
+  if(data.hero_title){
+    document.getElementById("heroTitle").innerHTML = data.hero_title;
+  }
+
+  if(data.hero_subtitle){
+    document.getElementById("heroSubtitle").textContent = data.hero_subtitle;
+  }
+
+  if(data.phone){
+    const phoneLink = document.getElementById("phoneLink");
+    phoneLink.textContent = data.phone;
+    phoneLink.href = "tel:" + data.phone.replace(/\D/g, "");
+  }
+}
+
+loadClientContent();
+</script>
 
 </body>
 </html>
