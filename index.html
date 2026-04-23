@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Client Portal | Giles Web Design</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+<div class="portal-bg"></div>
+
+<div class="login-card">
+  <h1>Giles Client Portal</h1>
+  <p>Log in to manage your website.</p>
+
+  <input id="email" type="email" placeholder="Email">
+  <input id="password" type="password" placeholder="Password">
+
+  <button onclick="login()">Login</button>
+
+  <div id="message"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
