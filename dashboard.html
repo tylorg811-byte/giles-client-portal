@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard | Giles Client Portal</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+<div class="dashboard">
+
+  <aside class="sidebar">
+    <h2>Giles Portal</h2>
+    <a class="active">Dashboard</a>
+    <a>Website Content</a>
+    <a>Analytics</a>
+    <a>Change Logs</a>
+    <button onclick="logout()">Logout</button>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <h1>Website Dashboard</h1>
+      <p id="userEmail"></p>
+    </div>
+
+    <section class="grid">
+
+      <div class="card">
+        <h3>Your Website</h3>
+        <p id="siteName">Loading...</p>
+        <a id="siteLink" href="#" target="_blank">View Live Site</a>
+      </div>
+
+      <div class="card">
+        <h3>Visitors</h3>
+        <p class="stat">Coming Soon</p>
+      </div>
+
+      <div class="card">
+        <h3>Page Views</h3>
+        <p class="stat">Coming Soon</p>
+      </div>
+
+    </section>
+
+    <section class="card wide">
+      <h3>Edit Homepage Content</h3>
+
+      <label>Hero Headline</label>
+      <input id="heroTitle" placeholder="Example: Look Professional. Get More Customers.">
+
+      <label>Hero Subtitle</label>
+      <textarea id="heroSubtitle" placeholder="Example: Affordable websites built for small businesses."></textarea>
+
+      <label>Phone Number</label>
+      <input id="phone" placeholder="Example: (555) 555-5555">
+
+      <button onclick="saveContent()">Save Changes</button>
+      <div id="saveMessage"></div>
+    </section>
+
+    <section class="card wide">
+      <h3>Change Log</h3>
+      <ul id="changeLog">
+        <li>No changes yet.</li>
+      </ul>
+    </section>
+
+  </main>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
+<script>
+checkUser();
+loadDashboard();
+</script>
+
+</body>
+</html>
