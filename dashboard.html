@@ -13,60 +13,127 @@
 
   <aside class="sidebar">
     <h2>Giles Portal</h2>
-    <a class="active">Dashboard</a>
-    <a>Website Content</a>
-    <a>Analytics</a>
-    <a>Change Logs</a>
-    <button onclick="logout()">Logout</button>
+
+    <button class="nav-btn active" onclick="showTab('overview', this)">Dashboard</button>
+    <button class="nav-btn" onclick="showTab('content', this)">Website Content</button>
+    <button class="nav-btn" onclick="showTab('services', this)">Services</button>
+    <button class="nav-btn" onclick="showTab('gallery', this)">Gallery</button>
+    <button class="nav-btn" onclick="showTab('analytics', this)">Analytics</button>
+    <button class="nav-btn" onclick="showTab('logs', this)">Change Logs</button>
+
+    <button class="logout-btn" onclick="logout()">Logout</button>
   </aside>
 
   <main class="main">
+
     <div class="topbar">
       <h1>Website Dashboard</h1>
       <p id="userEmail"></p>
     </div>
 
-    <section class="grid">
+    <section id="overview" class="tab-section active-tab">
+      <div class="grid">
+        <div class="card">
+          <h3>Your Website</h3>
+          <p id="siteName">Loading...</p>
+          <a id="siteLink" href="#" target="_blank">View Live Site</a>
+        </div>
 
-      <div class="card">
-        <h3>Your Website</h3>
-        <p id="siteName">Loading...</p>
-        <a id="siteLink" href="#" target="_blank">View Live Site</a>
+        <div class="card">
+          <h3>Visitors</h3>
+          <p class="stat">Coming Soon</p>
+        </div>
+
+        <div class="card">
+          <h3>Page Views</h3>
+          <p class="stat">Coming Soon</p>
+        </div>
       </div>
 
-      <div class="card">
-        <h3>Visitors</h3>
-        <p class="stat">Coming Soon</p>
+      <div class="card wide">
+        <h3>Quick Preview</h3>
+        <p>Use the tabs on the left to update allowed website sections.</p>
       </div>
-
-      <div class="card">
-        <h3>Page Views</h3>
-        <p class="stat">Coming Soon</p>
-      </div>
-
     </section>
 
-    <section class="card wide">
-      <h3>Edit Homepage Content</h3>
+    <section id="content" class="tab-section">
+      <div class="card wide">
+        <h3>Edit Homepage Content</h3>
 
-      <label>Hero Headline</label>
-      <input id="heroTitle" placeholder="Example: Look Professional. Get More Customers.">
+        <label>Hero Headline</label>
+        <input id="heroTitle" placeholder="Example: Look Professional. Get More Customers.">
 
-      <label>Hero Subtitle</label>
-      <textarea id="heroSubtitle" placeholder="Example: Affordable websites built for small businesses."></textarea>
+        <label>Hero Subtitle</label>
+        <textarea id="heroSubtitle" placeholder="Example: Affordable websites built for small businesses."></textarea>
 
-      <label>Phone Number</label>
-      <input id="phone" placeholder="Example: (555) 555-5555">
+        <label>Phone Number</label>
+        <input id="phone" placeholder="Example: (555) 555-5555">
 
-      <button onclick="saveContent()">Save Changes</button>
-      <div id="saveMessage"></div>
+        <label>Announcement Banner</label>
+        <input id="announcement" placeholder="Example: Now booking websites for May">
+
+        <button onclick="saveContent()">Save Content</button>
+        <div id="saveMessage"></div>
+      </div>
     </section>
 
-    <section class="card wide">
-      <h3>Change Log</h3>
-      <ul id="changeLog">
-        <li>No changes yet.</li>
-      </ul>
+    <section id="services" class="tab-section">
+      <div class="card wide">
+        <h3>Edit Services</h3>
+
+        <label>Service 1</label>
+        <input id="service1" placeholder="Website Design">
+
+        <label>Service 2</label>
+        <input id="service2" placeholder="SEO Setup">
+
+        <label>Service 3</label>
+        <input id="service3" placeholder="Booking Forms">
+
+        <button onclick="saveServices()">Save Services</button>
+        <div id="servicesMessage"></div>
+      </div>
+    </section>
+
+    <section id="gallery" class="tab-section">
+      <div class="card wide">
+        <h3>Upload Gallery Image</h3>
+
+        <input id="imageUpload" type="file" accept="image/*">
+        <button onclick="uploadImage()">Upload Image</button>
+
+        <div id="uploadMessage"></div>
+
+        <div id="galleryPreview" class="gallery-preview"></div>
+      </div>
+    </section>
+
+    <section id="analytics" class="tab-section">
+      <div class="grid">
+        <div class="card">
+          <h3>Visitors</h3>
+          <p class="stat">Coming Soon</p>
+        </div>
+
+        <div class="card">
+          <h3>Page Views</h3>
+          <p class="stat">Coming Soon</p>
+        </div>
+
+        <div class="card">
+          <h3>Contact Clicks</h3>
+          <p class="stat">Coming Soon</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="logs" class="tab-section">
+      <div class="card wide">
+        <h3>Change Log</h3>
+        <ul id="changeLog">
+          <li>No changes yet.</li>
+        </ul>
+      </div>
     </section>
 
   </main>
