@@ -375,7 +375,12 @@ padding:18px;
     <section id="clientsPage" class="page-section active">
 
       <section class="card" id="clientFormCard">
-        <h2>Add / Update Client</h2>
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;">
+    <h2 style="margin:0;">Add / Update Client</h2>
+    <button class="primary" onclick="toggleClientForm()">Open Form</button>
+  </div>
+
+  <div id="clientFormWrap" style="display:none;margin-top:18px;">
 
         <div class="notice">
           Billing Override keeps a site active even if Stripe/subscriptions are not active. Use Manual Payment, Free/Comped, Trial, Past Due, or Paused to keep your records clean.
