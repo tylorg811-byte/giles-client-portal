@@ -362,3 +362,30 @@ display:block!important;
 height:100%!important;
 min-height:650px!important;
 }
+
+/* CENTER THE WEBSITE CANVAS LIKE WIX */
+
+.gjs-cv-canvas{
+display:flex!important;
+justify-content:center!important;
+align-items:flex-start!important;
+padding:40px 0!important;
+}
+
+/* constrain the website width */
+.gjs-frame-wrapper{
+width:100%!important;
+display:flex!important;
+justify-content:center!important;
+}
+
+/* actual website frame */
+.gjs-frame{
+width:1200px!important; /* desktop width */
+max-width:100%!important;
+margin:0 auto!important;
+background:white!important;
+border-radius:12px!important;
+box-shadow:0 20px 60px rgba(0,0,0,.12)!important;
+overflow:hidden!important;
+}
