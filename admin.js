@@ -1,6 +1,7 @@
 let adminUser = null;
 let clientSites = [];
 let changeRequests = [];
+let notifications = [];
 
 const BASE_URL = "https://tylorg811-byte.github.io/giles-client-portal";
 
@@ -114,7 +115,6 @@ function renderClientSites(){
     card.className = "client-card";
 
     const domainText = site.domain || "No domain yet";
-
     const liveUrl = getClientLiveUrl(site);
 
     const editorUrl = site.client_user_id
@@ -180,6 +180,7 @@ function renderChangeRequests(){
         <h3>${escapeHtml(req.business_name || req.client_email || "Client Request")}</h3>
         <p>${escapeHtml(req.client_email || "")}</p>
         <span class="badge">${escapeHtml(req.status || "new")}</span>
+        <p style="margin-top:8px;">${timeAgo(req.created_at)}</p>
       </div>
 
       <div>
@@ -201,7 +202,7 @@ function renderChangeRequests(){
       </div>
 
       <div class="actions">
-        <button onclick="updateChangeRequest('${req.id}')">Update</button>
+        <button onclick="updateChangeRequest('${req.id}', '${req.client_user_id || ""}')">Update</button>
         <a href="${editorUrl}" target="_blank">Open Editor</a>
         <a href="${liveUrl}" target="_blank">View Site</a>
         <button class="danger" onclick="deleteChangeRequest('${req.id}')">Delete</button>
@@ -212,9 +213,13 @@ function renderChangeRequests(){
   });
 }
 
-async function updateChangeRequest(id){
+async function updateChangeRequest(id, clientUserId){
   const status = document.getElementById(`status-${id}`).value;
   const notes = document.getElementById(`notes-${id}`).value.trim();
+
+  const request = changeRequests.find(req => req.id === id);
+
+  const oldStatus = request?.status || "new";
 
   const { error } = await db
     .from("change_requests")
@@ -231,7 +236,22 @@ async function updateChangeRequest(id){
     return;
   }
 
+  if(clientUserId){
+    await db.from("notifications").insert({
+      user_id: clientUserId,
+      title: "Request status updated",
+      message: `Your request is now marked as "${status}".${notes ? " Note: " + notes : ""}`,
+      type: "request"
+    });
+  }
+
   await loadChangeRequests();
+
+  if(oldStatus !== status){
+    alert("Request updated and client notification created.");
+  } else {
+    alert("Request updated.");
+  }
 }
 
 async function deleteChangeRequest(id){
@@ -284,6 +304,15 @@ async function saveClientSite(){
     document.getElementById("message").textContent = "Save failed.";
     console.error(response.error);
     return;
+  }
+
+  if(payload.client_user_id){
+    await db.from("notifications").insert({
+      user_id: payload.client_user_id,
+      title: "Website status updated",
+      message: `Your website status is now "${payload.site_status}". Domain status: "${payload.domain_status}".`,
+      type: "site"
+    });
   }
 
   document.getElementById("message").textContent = "Client site saved.";
@@ -362,6 +391,24 @@ function copyText(text){
 function cleanValue(id){
   const el = document.getElementById(id);
   return el ? el.value.trim() : "";
+}
+
+function timeAgo(dateString){
+  const date = new Date(dateString);
+  const seconds = Math.floor((new Date() - date) / 1000);
+
+  if(seconds < 60) return "just now";
+
+  const minutes = Math.floor(seconds / 60);
+  if(minutes < 60) return `${minutes} min ago`;
+
+  const hours = Math.floor(minutes / 60);
+  if(hours < 24) return `${hours} hr ago`;
+
+  const days = Math.floor(hours / 24);
+  if(days < 7) return `${days} day${days === 1 ? "" : "s"} ago`;
+
+  return date.toLocaleDateString();
 }
 
 function escapeHtml(value){
