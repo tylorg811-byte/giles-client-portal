@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="styles.css">
 </head>
 
-<body class="builder-body">
+<body class="builder-body desktop-preview">
 
 <header class="builder-topbar">
   <div class="brand-area">
@@ -21,8 +21,9 @@
   </div>
 
   <div class="page-switcher">
+    <label>Page</label>
     <select id="pageSelect" onchange="switchPage(this.value)"></select>
-    <button onclick="createNewPage()">+ Page</button>
+    <button onclick="createNewPage()">+ New Page</button>
   </div>
 
   <div class="builder-actions">
@@ -47,11 +48,7 @@
   <aside class="builder-panel active-panel" id="addPanel">
     <h2>Add Elements</h2>
     <p>Drag elements onto the page. These create new content instead of changing existing content.</p>
-
-    <div class="panel-section">
-      <h3>Text</h3>
-      <div id="blocks"></div>
-    </div>
+    <div id="blocks"></div>
   </aside>
 
   <aside class="builder-panel" id="designPanel">
@@ -144,10 +141,15 @@
   <main class="builder-canvas-wrap">
     <div class="canvas-toolbar">
       <span id="currentPageLabel">Home Page</span>
-      <button onclick="editor.runCommand('core:preview')">Preview</button>
+
+      <div class="preview-controls">
+        <button class="view-btn active" onclick="setPreviewMode('desktop', this)">Desktop</button>
+        <button class="view-btn" onclick="setPreviewMode('mobile', this)">Mobile</button>
+        <button onclick="editor.runCommand('core:preview')">Preview</button>
+      </div>
     </div>
 
-    <div class="canvas-frame">
+    <div class="canvas-frame desktop-frame" id="canvasFrame">
       <div id="gjs"></div>
     </div>
   </main>
@@ -181,6 +183,23 @@ function openBuilderPanel(id, btn){
 
   document.getElementById(id).classList.add('active-panel');
   btn.classList.add('active');
+}
+
+function setPreviewMode(mode, btn){
+  const frame = document.getElementById('canvasFrame');
+
+  frame.classList.remove('desktop-frame','mobile-frame');
+  frame.classList.add(mode === 'mobile' ? 'mobile-frame' : 'desktop-frame');
+
+  document.querySelectorAll('.view-btn').forEach(button=>{
+    button.classList.remove('active');
+  });
+
+  btn.classList.add('active');
+
+  if(window.editor){
+    setTimeout(()=>editor.refresh(), 200);
+  }
 }
 </script>
 
