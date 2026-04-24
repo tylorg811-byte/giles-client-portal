@@ -1,6 +1,7 @@
 let dashboardUser = null;
 let dashboardSite = null;
 let clientSiteRecord = null;
+let analyticsEvents = [];
 
 const BASE_URL = "https://tylorg811-byte.github.io/giles-client-portal";
 
@@ -15,11 +16,13 @@ async function loadClientDashboard(){
 
   await loadClientSiteRecord();
   await loadClientSiteInfo();
+  await loadAnalytics();
   await loadChangeRequests();
   await loadNotifications();
 
   updateLiveSiteLinks();
   renderBillingCard();
+  renderAnalyticsCard();
 }
 
 async function loadClientSiteRecord(){
@@ -52,6 +55,90 @@ async function loadClientSiteInfo(){
   document.getElementById("lastUpdated").textContent = data.updated_at
     ? timeAgo(data.updated_at)
     : "—";
+}
+
+async function loadAnalytics(){
+  const since = new Date();
+  since.setDate(since.getDate() - 30);
+
+  const { data, error } = await db
+    .from("site_analytics_events")
+    .select("*")
+    .eq("client_user_id", dashboardUser.id)
+    .gte("created_at", since.toISOString())
+    .order("created_at", { ascending:false });
+
+  if(error){
+    console.error(error);
+    analyticsEvents = [];
+    return;
+  }
+
+  analyticsEvents = data || [];
+}
+
+function renderAnalyticsCard(){
+  let panel = document.getElementById("analyticsCard");
+
+  if(!panel){
+    const main = document.querySelector(".main");
+    const card = document.createElement("section");
+    card.className = "card";
+    card.id = "analyticsCard";
+    main.insertBefore(card, main.children[2]);
+    panel = card;
+  }
+
+  const todayCount = analyticsEvents.filter(event=>isToday(event.created_at)).length;
+  const weekCount = analyticsEvents.filter(event=>isWithinDays(event.created_at,7)).length;
+  const totalCount = analyticsEvents.length;
+  const topPage = getTopValue(analyticsEvents,"page") || "—";
+  const topDevice = getTopValue(analyticsEvents,"device") || "—";
+
+  const recentRows = analyticsEvents.slice(0,6).map(event=>`
+    <div class="request-item">
+      <h3>${escapeHtml(event.page || "home")}</h3>
+      <p>${escapeHtml(event.device || "unknown")} • ${escapeHtml(event.browser || "unknown")} • ${timeAgo(event.created_at)}</p>
+      <p>Referrer: ${escapeHtml(cleanReferrer(event.referrer))}</p>
+    </div>
+  `).join("");
+
+  panel.innerHTML = `
+    <h2>Website Analytics</h2>
+    <p>Performance from the last 30 days.</p>
+
+    <div class="grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:18px;">
+      <div class="stat">
+        <span>Today</span>
+        <strong>${todayCount}</strong>
+      </div>
+
+      <div class="stat">
+        <span>7 Days</span>
+        <strong>${weekCount}</strong>
+      </div>
+
+      <div class="stat">
+        <span>30 Days</span>
+        <strong>${totalCount}</strong>
+      </div>
+
+      <div class="stat">
+        <span>Top Page</span>
+        <strong style="font-size:20px;">${escapeHtml(topPage)}</strong>
+      </div>
+    </div>
+
+    <div class="request-item">
+      <h3>Top Device</h3>
+      <p>${escapeHtml(topDevice)}</p>
+    </div>
+
+    <h3 style="margin:18px 0 10px;">Recent Visits</h3>
+    <div class="request-list">
+      ${recentRows || "<p>No analytics yet. Visits will appear after the live site is viewed.</p>"}
+    </div>
+  `;
 }
 
 function getClientBillingStatus(){
@@ -133,7 +220,7 @@ function renderBillingCard(){
     const card = document.createElement("section");
     card.className = "card";
     card.id = "billingCard";
-    main.insertBefore(card, main.children[2]);
+    main.insertBefore(card, main.children[3]);
     panel = card;
   }
 
@@ -280,7 +367,7 @@ async function loadNotifications(){
       <h2>Notifications</h2>
       <div id="notificationList" class="request-list">Loading notifications...</div>
     `;
-    main.insertBefore(notificationCard, main.children[3]);
+    main.insertBefore(notificationCard, main.children[4]);
     panel = document.getElementById("notificationList");
   }
 
@@ -329,6 +416,44 @@ async function markNotificationRead(id){
     .eq("id", id);
 
   await loadNotifications();
+}
+
+function getTopValue(items,key){
+  const counts = {};
+
+  items.forEach(item=>{
+    const value = item[key] || "unknown";
+    counts[value] = (counts[value] || 0) + 1;
+  });
+
+  return Object.entries(counts)
+    .sort((a,b)=>b[1]-a[1])[0]?.[0] || null;
+}
+
+function isToday(dateString){
+  const date = new Date(dateString);
+  const today = new Date();
+
+  return date.getFullYear() === today.getFullYear() &&
+    date.getMonth() === today.getMonth() &&
+    date.getDate() === today.getDate();
+}
+
+function isWithinDays(dateString,days){
+  const date = new Date(dateString);
+  const now = new Date();
+  const diff = now - date;
+  return diff <= days * 24 * 60 * 60 * 1000;
+}
+
+function cleanReferrer(ref){
+  if(!ref || ref === "direct") return "direct";
+
+  try{
+    return new URL(ref).hostname;
+  }catch(e){
+    return ref;
+  }
 }
 
 function timeAgo(dateString){
