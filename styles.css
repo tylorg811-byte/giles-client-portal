@@ -182,3 +182,109 @@ grid-template-columns:1fr;
 height:70vh;
 }
 }
+
+/* CLEANER CLIENT EDITOR UI */
+.editor-sidebar,
+.editor-styles{
+background:#181824;
+color:#fff;
+}
+
+.editor-sidebar h3,
+.editor-styles h3{
+font-size:18px;
+margin-bottom:18px;
+color:#ffffff;
+}
+
+.gjs-block{
+background:#242437!important;
+border:1px solid rgba(255,255,255,.14)!important;
+color:#ffffff!important;
+box-shadow:0 8px 20px rgba(0,0,0,.25);
+}
+
+.gjs-block:hover{
+background:#302f48!important;
+border-color:#9F7BFF!important;
+transform:translateY(-2px);
+}
+
+.gjs-block-label{
+color:#ffffff!important;
+font-size:14px!important;
+font-weight:600!important;
+}
+
+.gjs-block-category .gjs-title{
+background:#242437!important;
+color:#ffffff!important;
+font-size:14px!important;
+font-weight:700!important;
+padding:12px!important;
+border-radius:12px!important;
+margin-bottom:12px!important;
+border:1px solid rgba(255,255,255,.12)!important;
+}
+
+.gjs-sm-sector{
+background:#1f1f2e!important;
+border-radius:14px!important;
+margin-bottom:14px!important;
+border:1px solid rgba(255,255,255,.1)!important;
+}
+
+.gjs-sm-sector-title{
+background:#29293d!important;
+color:#ffffff!important;
+padding:12px!important;
+font-size:15px!important;
+font-weight:700!important;
+border-radius:14px 14px 0 0!important;
+}
+
+.gjs-sm-property{
+padding:10px!important;
+color:#ffffff!important;
+}
+
+.gjs-sm-label,
+.gjs-sm-label span{
+color:#ffffff!important;
+font-size:13px!important;
+font-weight:600!important;
+}
+
+.gjs-field,
+.gjs-field input,
+.gjs-field select,
+.gjs-field textarea{
+background:#11111b!important;
+color:#ffffff!important;
+border-radius:10px!important;
+border:1px solid rgba(255,255,255,.16)!important;
+}
+
+.gjs-radio-items{
+background:#11111b!important;
+border-radius:10px!important;
+overflow:hidden;
+}
+
+.gjs-radio-item{
+color:#ffffff!important;
+background:#11111b!important;
+}
+
+.gjs-radio-item input:checked + label{
+background:#7B5CFF!important;
+color:#ffffff!important;
+}
+
+.gjs-sm-clear{
+color:#9F7BFF!important;
+}
+
+.gjs-cv-canvas{
+background:#101018!important;
+}
