@@ -20,6 +20,11 @@
     </div>
   </div>
 
+  <div class="page-switcher">
+    <select id="pageSelect" onchange="switchPage(this.value)"></select>
+    <button onclick="createNewPage()">+ Page</button>
+  </div>
+
   <div class="builder-actions">
     <button class="ghost-btn" onclick="logout()">Logout</button>
     <button class="soft-btn" onclick="savePage()">Save Draft</button>
@@ -30,54 +35,115 @@
 <div class="builder-app">
 
   <nav class="builder-rail">
-    <button class="rail-btn active" onclick="openBuilderPanel('blocksPanel', this)">＋<span>Add</span></button>
+    <button class="rail-btn active" onclick="openBuilderPanel('addPanel', this)">＋<span>Add</span></button>
     <button class="rail-btn" onclick="openBuilderPanel('designPanel', this)">✦<span>Design</span></button>
-    <button class="rail-btn" onclick="openBuilderPanel('uploadsPanel', this)">▧<span>Uploads</span></button>
+    <button class="rail-btn" onclick="openBuilderPanel('imagesPanel', this)">▧<span>Images</span></button>
+    <button class="rail-btn" onclick="openBuilderPanel('backgroundPanel', this)">◐<span>BG</span></button>
+    <button class="rail-btn" onclick="openBuilderPanel('fontsPanel', this)">Aa<span>Fonts</span></button>
+    <button class="rail-btn" onclick="openBuilderPanel('pagesPanel', this)">☰<span>Pages</span></button>
     <button class="rail-btn" onclick="openBuilderPanel('stylePanel', this)">⚙<span>Style</span></button>
   </nav>
 
-  <aside class="builder-panel active-panel" id="blocksPanel">
+  <aside class="builder-panel active-panel" id="addPanel">
     <h2>Add Elements</h2>
-    <p>Drag sections, text, buttons, and cards onto the page.</p>
-    <div id="blocks"></div>
+    <p>Drag elements onto the page. These create new content instead of changing existing content.</p>
+
+    <div class="panel-section">
+      <h3>Text</h3>
+      <div id="blocks"></div>
+    </div>
   </aside>
 
   <aside class="builder-panel" id="designPanel">
-    <h2>Design Library</h2>
-    <p>Search and apply hundreds of button, text, card, background, gradient, image, and font styles.</p>
+    <h2>Design Styles</h2>
+    <p>Select an element on the page, then apply button, card, text, or image styles.</p>
 
-    <input id="designSearch" class="design-search" placeholder="Search styles...">
+    <input id="styleSearch" class="smart-search" placeholder="Search: blue, luxury, rounded, glow, bold...">
 
-    <div class="design-tabs">
-      <button class="active" onclick="setDesignCategory('all', this)">All</button>
-      <button onclick="setDesignCategory('buttons', this)">Buttons</button>
-      <button onclick="setDesignCategory('text', this)">Text</button>
-      <button onclick="setDesignCategory('cards', this)">Cards</button>
-      <button onclick="setDesignCategory('backgrounds', this)">Backgrounds</button>
-      <button onclick="setDesignCategory('gradients', this)">Gradients</button>
-      <button onclick="setDesignCategory('dividers', this)">Dividers</button>
-      <button onclick="setDesignCategory('images', this)">Images</button>
-      <button onclick="setDesignCategory('fonts', this)">Fonts</button>
+    <div class="filter-row">
+      <button class="active" onclick="setPresetCategory('all', this)">All</button>
+      <button onclick="setPresetCategory('buttons', this)">Buttons</button>
+      <button onclick="setPresetCategory('text', this)">Text</button>
+      <button onclick="setPresetCategory('cards', this)">Cards</button>
+      <button onclick="setPresetCategory('images', this)">Images</button>
+      <button onclick="setPresetCategory('gradients', this)">Gradients</button>
     </div>
 
-    <div id="designCount" class="design-count">Loading styles...</div>
-    <div id="designLibrary" class="design-library"></div>
+    <div id="presetCount" class="small-note">Loading presets...</div>
+    <div id="presetLibrary" class="preset-grid"></div>
   </aside>
 
-  <aside class="builder-panel" id="uploadsPanel">
-    <h2>Uploads</h2>
-    <p>Add images to your website.</p>
+  <aside class="builder-panel" id="imagesPanel">
+    <h2>Stock Images</h2>
+    <p>Search by type, industry, color, or mood. Click an image to add it to the page.</p>
 
-    <div class="upload-card">
+    <input id="imageSearch" class="smart-search" placeholder="Search: floral, bar, landscaping, dark, luxury...">
+
+    <div class="filter-row">
+      <button class="active" onclick="setImageCategory('all', this)">All</button>
+      <button onclick="setImageCategory('business', this)">Business</button>
+      <button onclick="setImageCategory('floral', this)">Floral</button>
+      <button onclick="setImageCategory('bar', this)">Bar</button>
+      <button onclick="setImageCategory('landscaping', this)">Landscape</button>
+      <button onclick="setImageCategory('beauty', this)">Beauty</button>
+    </div>
+
+    <div id="imageCount" class="small-note">Loading images...</div>
+    <div id="stockImages" class="image-grid"></div>
+
+    <div class="upload-box">
+      <h3>Upload Your Own</h3>
       <input id="customImageUpload" type="file" accept="image/*">
       <button id="uploadImageBtn">Upload Image</button>
       <p id="uploadStatus"></p>
     </div>
   </aside>
 
+  <aside class="builder-panel" id="backgroundPanel">
+    <h2>Backgrounds</h2>
+    <p>Apply colors, gradients, or image backgrounds to the selected section.</p>
+
+    <input id="backgroundSearch" class="smart-search" placeholder="Search: black, blue, gold, floral, luxury...">
+
+    <div class="filter-row">
+      <button class="active" onclick="setBackgroundCategory('all', this)">All</button>
+      <button onclick="setBackgroundCategory('colors', this)">Colors</button>
+      <button onclick="setBackgroundCategory('gradients', this)">Gradients</button>
+      <button onclick="setBackgroundCategory('images', this)">Images</button>
+    </div>
+
+    <div id="backgroundCount" class="small-note">Loading backgrounds...</div>
+    <div id="backgroundLibrary" class="preset-grid"></div>
+  </aside>
+
+  <aside class="builder-panel" id="fontsPanel">
+    <h2>Fonts</h2>
+    <p>Search by style and apply font combinations to selected text.</p>
+
+    <input id="fontSearch" class="smart-search" placeholder="Search: luxury, bold, clean, serif, modern...">
+
+    <div id="fontCount" class="small-note">Loading fonts...</div>
+    <div id="fontLibrary" class="preset-grid"></div>
+  </aside>
+
+  <aside class="builder-panel" id="pagesPanel">
+    <h2>Pages</h2>
+    <p>Create pages like About, Services, Contact, Gallery, and more.</p>
+
+    <div class="page-actions">
+      <button onclick="createPresetPage('about')">+ About Page</button>
+      <button onclick="createPresetPage('services')">+ Services Page</button>
+      <button onclick="createPresetPage('contact')">+ Contact Page</button>
+      <button onclick="createPresetPage('gallery')">+ Gallery Page</button>
+      <button onclick="createNewPage()">+ Custom Page</button>
+    </div>
+
+    <div id="pageList" class="page-list"></div>
+  </aside>
+
   <main class="builder-canvas-wrap">
     <div class="canvas-toolbar">
-      <span>Desktop Preview</span>
+      <span id="currentPageLabel">Home Page</span>
       <button onclick="editor.runCommand('core:preview')">Preview</button>
     </div>
 
@@ -87,8 +153,8 @@
   </main>
 
   <aside class="builder-style-panel" id="stylePanel">
-    <h2>Design</h2>
-    <p>Select an item on the page to style it.</p>
+    <h2>Style Settings</h2>
+    <p>Select something on the page for detailed styling.</p>
     <div id="styles"></div>
   </aside>
 
@@ -107,6 +173,10 @@ function openBuilderPanel(id, btn){
 
   document.querySelectorAll('.rail-btn').forEach(button=>{
     button.classList.remove('active');
+  });
+
+  document.querySelectorAll('.add-section-btn').forEach(button=>{
+    button.remove();
   });
 
   document.getElementById(id).classList.add('active-panel');
