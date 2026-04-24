@@ -56,7 +56,6 @@ body{
   z-index:1999;
 }
 
-/* SIDEBAR */
 .sidebar{
   background:var(--dark);
   color:white;
@@ -138,11 +137,8 @@ body{
   transform:translateX(3px);
 }
 
-.logout{
-  color:#ff8a8a!important;
-}
+.logout{color:#ff8a8a!important;}
 
-/* MAIN */
 .main{
   padding:34px;
   min-width:0;
@@ -232,7 +228,6 @@ button:hover{
   transform:translateY(-1px);
 }
 
-/* STATS */
 .grid{
   display:grid;
   grid-template-columns:repeat(4,1fr);
@@ -266,7 +261,6 @@ button:hover{
   line-height:1;
 }
 
-/* FORMS */
 .form-grid{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -326,7 +320,6 @@ textarea{min-height:105px;resize:vertical;}
   margin:18px 0 4px;
 }
 
-/* CLIENT FILTERS */
 .filter-panel{
   display:grid;
   grid-template-columns:1.4fr repeat(4,1fr);
@@ -335,7 +328,6 @@ textarea{min-height:105px;resize:vertical;}
   margin-bottom:20px;
 }
 
-/* CLIENT CARDS */
 .client-list,
 .request-list{
   display:flex;
@@ -409,9 +401,7 @@ textarea{min-height:105px;resize:vertical;}
 }
 
 .actions .wide,
-.release-btn{
-  grid-column:1 / -1;
-}
+.release-btn{grid-column:1 / -1;}
 
 .release-btn{
   background:#fff1f2!important;
@@ -431,7 +421,6 @@ textarea{min-height:105px;resize:vertical;}
   color:white!important;
 }
 
-/* BADGES */
 .badge{
   display:inline-block;
   padding:7px 10px;
@@ -449,7 +438,6 @@ textarea{min-height:105px;resize:vertical;}
 .badge.danger{background:#fee2e2;color:var(--red);}
 .badge.dark{background:#111827;color:white;}
 
-/* DETAIL */
 .detail-grid{
   display:grid;
   grid-template-columns:1.2fr 1fr;
@@ -488,7 +476,6 @@ textarea{min-height:105px;resize:vertical;}
   text-align:right;
 }
 
-/* REQUESTS */
 .request-card{
   background:white;
   border:1px solid var(--line);
@@ -512,7 +499,6 @@ textarea{min-height:105px;resize:vertical;}
   margin-bottom:6px;
 }
 
-/* ANALYTICS */
 .analytics-header-grid{
   display:grid;
   grid-template-columns:repeat(4,1fr);
@@ -569,7 +555,55 @@ textarea{min-height:105px;resize:vertical;}
   margin-top:12px;
 }
 
-/* IMPORTER */
+.seo-score-ring{
+  width:120px;
+  height:120px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:conic-gradient(var(--purple) 0deg, var(--purple2) 220deg, #e5e7eb 220deg);
+  margin:auto;
+}
+
+.seo-score-ring-inner{
+  width:92px;
+  height:92px;
+  border-radius:50%;
+  background:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  font-weight:900;
+}
+
+.seo-preview{
+  border:1px solid #dce1ec;
+  border-radius:18px;
+  padding:18px;
+  background:#fff;
+}
+
+.seo-preview .url{
+  font-size:13px;
+  color:#027a48;
+  margin-bottom:6px;
+}
+
+.seo-preview .title{
+  font-size:19px;
+  color:#1a0dab;
+  margin-bottom:6px;
+  line-height:1.25;
+}
+
+.seo-preview .desc{
+  font-size:14px;
+  color:#4b5563;
+  line-height:1.45;
+}
+
 .step-title{
   display:flex;
   align-items:center;
@@ -624,14 +658,14 @@ textarea{min-height:105px;resize:vertical;}
   font-weight:900;
 }
 
-#message{
+#message,
+#seoMessage{
   font-size:13px;
   font-weight:900;
   margin-top:12px;
   color:#5a4cff;
 }
 
-/* RESPONSIVE */
 @media(max-width:1150px){
   body{display:block;}
 
@@ -704,11 +738,12 @@ textarea{min-height:105px;resize:vertical;}
     </div>
   </div>
 
-  <p>Manage clients, websites, domains, billing, analytics, and change requests.</p>
+  <p>Manage clients, websites, domains, billing, SEO, analytics, and change requests.</p>
 
   <div class="nav">
     <button id="navClients" class="active-nav" onclick="showAdminPage('clients')">👥 Clients</button>
     <button id="navImporter" onclick="showAdminPage('importer')">📥 Importer</button>
+    <button id="navSEO" onclick="showAdminPage('seo')">🔎 SEO Panel</button>
     <button id="navAnalytics" onclick="showAdminPage('analytics')">📊 Analytics</button>
     <button id="navRequests" onclick="showAdminPage('requests')">💬 Change Requests</button>
     <button id="navBilling" onclick="showAdminPage('billing')">💳 Billing</button>
@@ -744,7 +779,6 @@ textarea{min-height:105px;resize:vertical;}
     <div class="stat"><b>Requests</b><div id="newRequests">0</div></div>
   </section>
 
-  <!-- CLIENTS -->
   <section id="clientsPage" class="page-section active">
 
     <section class="card" id="clientFormCard">
@@ -779,6 +813,9 @@ textarea{min-height:105px;resize:vertical;}
               <option value="Maintenance">Maintenance</option>
             </select>
           </div>
+
+          <div><label>Business Type</label><input id="businessType" placeholder="Landscaping, Barber, Florist, Music Artist..."></div>
+          <div><label>Business Location</label><input id="businessLocation" placeholder="Tampa, FL"></div>
 
           <div><label>Domain</label><input id="domain" placeholder="clientdomain.com"></div>
 
@@ -936,7 +973,6 @@ textarea{min-height:105px;resize:vertical;}
     </section>
   </section>
 
-  <!-- CLIENT DETAIL -->
   <section id="clientDetailPage" class="page-section">
     <section class="card">
       <div style="display:flex;justify-content:space-between;gap:16px;align-items:center;">
@@ -951,7 +987,6 @@ textarea{min-height:105px;resize:vertical;}
     <div id="clientDetailContent"></div>
   </section>
 
-  <!-- IMPORTER -->
   <section id="importerPage" class="page-section">
     <section class="dark-card">
       <div class="step-title">
@@ -1015,7 +1050,80 @@ textarea{min-height:105px;resize:vertical;}
     </section>
   </section>
 
-  <!-- ANALYTICS -->
+  <section id="seoPage" class="page-section">
+    <section class="card">
+      <h2>SEO Panel</h2>
+      <p style="color:#64748b;margin-bottom:20px;">Generate, edit, score, and save SEO for each client website.</p>
+
+      <div class="form-grid">
+        <div>
+          <label>Select Client</label>
+          <select id="seoClientSelect" onchange="loadSEOClient()"></select>
+        </div>
+
+        <div>
+          <label>SEO Image / Social Preview Image</label>
+          <input id="seoImage" placeholder="https://clientsite.com/images/cover.jpg">
+        </div>
+
+        <div>
+          <label>Business Type</label>
+          <input id="seoBusinessType" placeholder="Landscaping, Barber, Florist, Music Artist...">
+        </div>
+
+        <div>
+          <label>Business Location</label>
+          <input id="seoBusinessLocation" placeholder="Tampa, FL">
+        </div>
+
+        <div class="full">
+          <label>SEO Title</label>
+          <input id="seoTitle" maxlength="70" placeholder="Business Name | Service in City">
+        </div>
+
+        <div class="full">
+          <label>SEO Description</label>
+          <textarea id="seoDescription" maxlength="180" placeholder="Write a search-friendly description..."></textarea>
+        </div>
+
+        <div class="full">
+          <label>SEO Keywords</label>
+          <input id="seoKeywords" placeholder="business name, service, city, affordable website">
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;">
+        <button class="primary" onclick="autoGenerateSEO()">Auto Generate SEO</button>
+        <button class="secondary" onclick="scoreSEO()">Score SEO</button>
+        <button class="primary" onclick="saveSEO()">Save SEO</button>
+      </div>
+
+      <div id="seoMessage"></div>
+    </section>
+
+    <section class="detail-grid">
+      <div class="detail-card">
+        <h3>SEO Score</h3>
+        <div class="seo-score-ring" id="seoScoreRing">
+          <div class="seo-score-ring-inner">
+            <strong id="seoScoreText" style="font-size:28px;">0</strong>
+            <span style="font-size:12px;color:#64748b;">/ 100</span>
+          </div>
+        </div>
+        <p id="seoScoreNotes" style="color:#64748b;text-align:center;margin-top:14px;">Fill out SEO fields to calculate score.</p>
+      </div>
+
+      <div class="detail-card">
+        <h3>Google Preview</h3>
+        <div class="seo-preview">
+          <div class="url" id="seoPreviewUrl">https://clientsite.com</div>
+          <div class="title" id="seoPreviewTitle">SEO title preview</div>
+          <div class="desc" id="seoPreviewDesc">SEO description preview will show here.</div>
+        </div>
+      </div>
+    </section>
+  </section>
+
   <section id="analyticsPage" class="page-section">
     <section class="card">
       <h2>Analytics Dashboard</h2>
@@ -1030,7 +1138,6 @@ textarea{min-height:105px;resize:vertical;}
     </section>
   </section>
 
-  <!-- REQUESTS -->
   <section id="requestsPage" class="page-section">
     <section class="card">
       <h2>Change Requests</h2>
@@ -1038,7 +1145,6 @@ textarea{min-height:105px;resize:vertical;}
     </section>
   </section>
 
-  <!-- BILLING -->
   <section id="billingPage" class="page-section">
     <section class="card">
       <h2>Billing Overview</h2>
