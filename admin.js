@@ -1313,3 +1313,59 @@ Copy this info before closing.`
 function generateClientPassword(){
   return "Site" + Math.random().toString(36).slice(2,10) + "!";
 }
+
+async function createCheckoutForClient(clientSiteId){
+  const site = clientSites.find(item => item.id === clientSiteId);
+
+  if(!site){
+    alert("Client not found.");
+    return;
+  }
+
+  if(!site.client_user_id){
+    alert("This client needs a Supabase User ID first.");
+    return;
+  }
+
+  const priceId = prompt(
+    "Paste the Stripe recurring Price ID for this client:",
+    site.stripe_price_id || ""
+  );
+
+  if(!priceId) return;
+
+  try{
+    const response = await fetch("https://giles-sites.netlify.app/.netlify/functions/create-checkout-session", {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        client_user_id:site.client_user_id,
+        price_id:priceId
+      })
+    });
+
+    const result = await response.json();
+
+    if(!response.ok){
+      alert(result.error || "Could not create checkout session.");
+      console.error(result);
+      return;
+    }
+
+    const message =
+`Stripe Checkout created.
+
+Client: ${site.business_name || site.client_email}
+Checkout Link:
+${result.url}`;
+
+    navigator.clipboard.writeText(result.url);
+    alert(message + "\n\nLink copied to clipboard.");
+
+  }catch(error){
+    console.error(error);
+    alert("Checkout creation failed.");
+  }
+}
