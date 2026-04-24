@@ -753,3 +753,86 @@ grid-template-columns:1fr!important;
 padding:20px!important;
 }
 }
+
+/* ================= FIX ALL STYLE PREVIEW CARDS ================= */
+
+.preset-grid{
+display:grid!important;
+grid-template-columns:repeat(2,minmax(0,1fr))!important;
+gap:12px!important;
+padding-bottom:50px!important;
+}
+
+.clean-preview-card,
+.preset-card{
+width:100%!important;
+height:132px!important;
+min-height:132px!important;
+border:1px solid #e6e6ef!important;
+border-radius:18px!important;
+background:#ffffff!important;
+padding:12px!important;
+display:flex!important;
+flex-direction:column!important;
+align-items:center!important;
+justify-content:center!important;
+gap:8px!important;
+position:relative!important;
+overflow:hidden!important;
+box-shadow:0 8px 22px rgba(20,20,40,.08)!important;
+cursor:pointer!important;
+color:#111827!important;
+}
+
+.clean-preview-card:hover,
+.preset-card:hover{
+transform:translateY(-3px)!important;
+box-shadow:0 14px 30px rgba(20,20,40,.14)!important;
+border-color:#7B5CFF!important;
+}
+
+.clean-preview-card span,
+.preset-card span{
+position:absolute!important;
+top:8px!important;
+left:8px!important;
+font-size:9px!important;
+text-transform:uppercase!important;
+letter-spacing:.5px!important;
+background:#f3f2ff!important;
+color:#5a4cff!important;
+padding:5px 7px!important;
+border-radius:999px!important;
+font-weight:900!important;
+}
+
+.style-preview-box{
+width:74px!important;
+height:42px!important;
+display:flex!important;
+align-items:center!important;
+justify-content:center!important;
+font-size:16px!important;
+line-height:1!important;
+overflow:hidden!important;
+border-radius:12px!important;
+background:#f4f4fb;
+}
+
+.bg-preview{
+width:82px!important;
+height:46px!important;
+}
+
+.clean-preview-card strong,
+.preset-card strong{
+font-size:12px!important;
+line-height:1.2!important;
+font-weight:900!important;
+color:#111827!important;
+text-align:center!important;
+max-width:100%!important;
+white-space:nowrap!important;
+overflow:hidden!important;
+text-overflow:ellipsis!important;
+}
