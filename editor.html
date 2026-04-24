@@ -9,41 +9,87 @@
 <link rel="stylesheet" href="styles.css">
 </head>
 
-<body>
+<body class="builder-body">
 
-<div class="editor-topbar">
-  <div>
-    <strong>Giles Visual Editor</strong>
-    <span id="userEmail"></span>
+<header class="builder-topbar">
+  <div class="brand-area">
+    <div class="brand-mark">G</div>
+    <div>
+      <strong>Giles Visual Editor</strong>
+      <span id="userEmail"></span>
+    </div>
   </div>
 
-  <div class="editor-actions">
-    <button onclick="savePage()">Save Draft</button>
-    <button onclick="publishPage()">Publish</button>
-    <button onclick="logout()">Logout</button>
+  <div class="builder-actions">
+    <button class="ghost-btn" onclick="logout()">Logout</button>
+    <button class="soft-btn" onclick="savePage()">Save Draft</button>
+    <button class="publish-btn" onclick="publishPage()">Publish</button>
   </div>
-</div>
+</header>
 
-<div class="editor-shell">
-  <aside class="editor-sidebar">
-    <h3>Blocks</h3>
+<div class="builder-app">
+
+  <nav class="builder-rail">
+    <button class="rail-btn active" onclick="openBuilderPanel('blocksPanel')">＋<span>Add</span></button>
+    <button class="rail-btn" onclick="openBuilderPanel('uploadsPanel')">▧<span>Uploads</span></button>
+    <button class="rail-btn" onclick="openBuilderPanel('stylePanel')">✦<span>Style</span></button>
+  </nav>
+
+  <aside class="builder-panel active-panel" id="blocksPanel">
+    <h2>Add Elements</h2>
+    <p>Drag sections, text, buttons, and cards onto the page.</p>
     <div id="blocks"></div>
   </aside>
 
-  <main class="editor-canvas">
-    <div id="gjs"></div>
+  <aside class="builder-panel" id="uploadsPanel">
+    <h2>Uploads</h2>
+    <p>Add images to your website.</p>
+
+    <div class="upload-card">
+      <input id="customImageUpload" type="file" accept="image/*">
+      <button id="uploadImageBtn">Upload Image</button>
+      <p id="uploadStatus"></p>
+    </div>
+  </aside>
+
+  <main class="builder-canvas-wrap">
+    <div class="canvas-toolbar">
+      <span>Desktop Preview</span>
+      <button onclick="editor.runCommand('core:preview')">Preview</button>
+    </div>
+
+    <div class="canvas-frame">
+      <div id="gjs"></div>
+    </div>
   </main>
 
-  <aside class="editor-styles">
-    <h3>Style</h3>
+  <aside class="builder-style-panel" id="stylePanel">
+    <h2>Design</h2>
+    <p>Select an item on the page to style it.</p>
     <div id="styles"></div>
   </aside>
+
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/grapesjs"></script>
 <script src="app.js"></script>
 <script src="editor.js"></script>
+
+<script>
+function openBuilderPanel(id){
+  document.querySelectorAll('.builder-panel, .builder-style-panel').forEach(panel=>{
+    panel.classList.remove('active-panel');
+  });
+
+  document.querySelectorAll('.rail-btn').forEach(btn=>{
+    btn.classList.remove('active');
+  });
+
+  document.getElementById(id).classList.add('active-panel');
+  event.currentTarget.classList.add('active');
+}
+</script>
 
 </body>
 </html>
