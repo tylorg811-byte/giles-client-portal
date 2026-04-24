@@ -435,11 +435,23 @@ function renderPresetLibrary(){
   document.getElementById("presetCount").textContent = `${filtered.length} styles found`;
 
   box.innerHTML = "";
+
   filtered.forEach(item=>{
     const btn = document.createElement("button");
-    btn.className = "preset-card";
-    btn.innerHTML = `<span>${item.category}</span><strong>${item.name}</strong>`;
-    Object.assign(btn.style, item.css);
+    btn.className = "preset-card clean-preview-card";
+
+    btn.innerHTML = `
+      <span>${item.category}</span>
+      <div class="style-preview-box">Aa</div>
+      <strong>${item.name}</strong>
+    `;
+
+    const preview = btn.querySelector(".style-preview-box");
+
+    if(item.css){
+      Object.assign(preview.style, item.css);
+    }
+
     btn.onclick = ()=>applyStylePreset(item);
     box.appendChild(btn);
   });
@@ -484,11 +496,23 @@ function renderBackgroundLibrary(){
   document.getElementById("backgroundCount").textContent = `${filtered.length} backgrounds found`;
 
   box.innerHTML = "";
+
   filtered.forEach(bg=>{
     const card = document.createElement("button");
-    card.className = "preset-card";
-    card.innerHTML = `<span>${bg.category}</span><strong>${bg.name}</strong>`;
-    Object.assign(card.style, bg.css);
+    card.className = "preset-card clean-preview-card";
+
+    card.innerHTML = `
+      <span>${bg.category}</span>
+      <div class="style-preview-box bg-preview"></div>
+      <strong>${bg.name}</strong>
+    `;
+
+    const preview = card.querySelector(".style-preview-box");
+
+    if(bg.css){
+      Object.assign(preview.style, bg.css);
+    }
+
     card.onclick = ()=>applyBackground(bg);
     box.appendChild(card);
   });
@@ -508,11 +532,23 @@ function renderFontLibrary(){
   document.getElementById("fontCount").textContent = `${filtered.length} fonts found`;
 
   box.innerHTML = "";
+
   filtered.forEach(font=>{
     const card = document.createElement("button");
-    card.className = "preset-card";
-    card.innerHTML = `<span>font</span><strong>${font.name}</strong><small>Sample text</small>`;
-    Object.assign(card.style, font.css);
+    card.className = "preset-card clean-preview-card";
+
+    card.innerHTML = `
+      <span>font</span>
+      <div class="style-preview-box">Aa</div>
+      <strong>${font.name}</strong>
+    `;
+
+    const preview = card.querySelector(".style-preview-box");
+
+    if(font.css){
+      Object.assign(preview.style, font.css);
+    }
+
     card.onclick = ()=>applyFont(font);
     box.appendChild(card);
   });
