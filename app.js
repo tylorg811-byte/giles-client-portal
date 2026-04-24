@@ -51,8 +51,10 @@ async function logout(){
 
 /* FORGOT PASSWORD */
 async function sendPasswordReset(){
-  const email = document.getElementById("resetEmail").value.trim();
-  const message = document.getElementById("message");
+  const input = document.getElementById("resetEmail");
+  const message = document.getElementById("resetMessage") || document.getElementById("message");
+
+  const email = input.value.trim();
 
   if(!email){
     message.textContent = "Enter your email first.";
@@ -100,10 +102,24 @@ async function updatePassword(){
     return;
   }
 
-  message.textContent = "Password updated. Redirecting...";
-  setTimeout(() => {
-    window.location.href = "login.html";
-  }, 1200);
+  message.textContent = "Password updated successfully.";
+}
+
+/* ACCOUNT PAGE */
+async function loadAccount(){
+  const user = await checkUser();
+  if(!user) return;
+
+  const accountEmail = document.getElementById("accountEmail");
+  const resetEmail = document.getElementById("resetEmail");
+
+  if(accountEmail){
+    accountEmail.textContent = user.email;
+  }
+
+  if(resetEmail){
+    resetEmail.value = user.email;
+  }
 }
 
 /* DASHBOARD DATA */
