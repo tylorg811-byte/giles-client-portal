@@ -88,13 +88,22 @@ padding:22px;
 border-radius:22px;
 border:1px solid #e6e8f0;
 box-shadow:0 12px 35px rgba(15,23,42,.05);
-font-size:20px;
 }
 
-.stat b{
+.stat span{
 display:block;
-font-size:16px;
+font-size:14px;
+font-weight:800;
+color:#64748b;
 margin-bottom:8px;
+}
+
+.stat strong{
+display:block;
+font-size:34px;
+font-weight:900;
+color:#07111f;
+line-height:1;
 }
 
 .client-card{
@@ -310,10 +319,23 @@ body{display:block;}
           <input id="domainStatus" placeholder="Domain Status">
 
           <input id="siteStatus" placeholder="Site Status">
-          <input id="editorAccess" placeholder="Editor Access">
+          <select id="editorAccess">
+  <option value="safe">Safe Mode</option>
+  <option value="full">Full Editor Access</option>
+</select>
 
-          <input id="billingStatus" placeholder="Billing Status">
-          <input id="billingOverride" placeholder="Billing Override">
+         <select id="billingStatus">
+  <option value="active">Active / Paid</option>
+  <option value="manual paid">Manual Payment Received</option>
+  <option value="free">Free / Family / Comped</option>
+  <option value="trial">Trial</option>
+  <option value="past due">Past Due</option>
+  <option value="paused">Paused</option>
+</select>
+         <select id="billingOverride">
+  <option value="false">No Override</option>
+  <option value="true">Override Enabled</option>
+</select>
 
           <input id="billingCycle" placeholder="Billing Cycle">
           <input id="nextPaymentDate" placeholder="Next Payment Date">
