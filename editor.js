@@ -23,6 +23,126 @@ p{font-size:18px;line-height:1.6;color:#555;}
 .site-image{max-width:100%;border-radius:20px;display:block;}
 .open-menu{display:block!important;}
 @media(max-width:700px){h1{font-size:38px;}h2{font-size:30px;}}
+
+.site-header{
+position:sticky;
+top:0;
+z-index:999;
+padding:18px 26px;
+background:white;
+border-bottom:1px solid #e6e6ef;
+}
+
+.site-header-inner{
+max-width:1200px;
+margin:auto;
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:20px;
+}
+
+.site-brand{
+display:flex;
+align-items:center;
+gap:12px;
+font-weight:900;
+font-size:22px;
+color:#111827;
+}
+
+.site-logo{
+width:46px;
+height:46px;
+border-radius:14px;
+background:#7B5CFF;
+color:white;
+display:flex;
+align-items:center;
+justify-content:center;
+font-weight:900;
+}
+
+.site-nav{
+display:flex;
+gap:22px;
+align-items:center;
+}
+
+.site-nav a{
+color:#111827;
+text-decoration:none;
+font-weight:800;
+}
+
+.site-header.dark{
+background:#07111f;
+border-bottom:1px solid rgba(255,255,255,.14);
+}
+
+.site-header.dark .site-brand,
+.site-header.dark .site-nav a{
+color:white;
+}
+
+.site-header.glass{
+background:rgba(255,255,255,.72);
+backdrop-filter:blur(18px);
+}
+
+.site-header.gradient{
+background:linear-gradient(135deg,#7B5CFF,#9F7BFF);
+}
+
+.site-header.gradient .site-brand,
+.site-header.gradient .site-nav a{
+color:white;
+}
+
+.menu-toggle{
+border:none;
+background:#7B5CFF;
+color:white;
+border-radius:12px;
+padding:12px 15px;
+font-weight:900;
+cursor:pointer;
+}
+
+.mobile-menu{
+display:none;
+position:absolute;
+right:26px;
+top:76px;
+background:white;
+border:1px solid #e6e6ef;
+border-radius:18px;
+box-shadow:0 20px 50px rgba(0,0,0,.14);
+padding:16px;
+min-width:210px;
+}
+
+.mobile-menu.open-menu{
+display:block!important;
+}
+
+.mobile-menu a{
+display:block;
+color:#111827;
+text-decoration:none;
+font-weight:800;
+padding:10px;
+}
+
+@media(max-width:700px){
+.site-nav{
+display:none;
+}
+
+.site-header-inner{
+position:relative;
+}
+}
 `;
 
 const pageTemplates = {
@@ -96,96 +216,150 @@ addSectionAddButtons();
 function addBlocks(){
 
   editor.BlockManager.add("header-logo-text-nav",{
-    label:"Logo + Text Header",
-    category:"Headers",
-    content:`
-<header data-site-header="true" style="position:sticky;top:0;z-index:999;background:white;border-bottom:1px solid #e6e6ef;padding:18px 24px;">
-  <div style="max-width:1200px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:20px;">
-    <div style="display:flex;align-items:center;gap:12px;">
-      <div style="width:42px;height:42px;border-radius:12px;background:#7B5CFF;color:white;display:flex;align-items:center;justify-content:center;font-weight:900;">Logo</div>
-      <strong style="font-size:22px;">Business Name</strong>
+  label:"Logo + Text Header",
+  category:"Headers",
+  content:`
+<header data-site-header="true" class="site-header">
+  <div class="site-header-inner">
+    <div class="site-brand">
+      <div class="site-logo">G</div>
+      <span>Business Name</span>
     </div>
 
-    <nav style="display:flex;gap:22px;align-items:center;">
-      <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Home</a>
-      <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">About</a>
-      <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Services</a>
-      <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Contact</a>
+    <nav class="site-nav">
+      <a href="#">Home</a>
+      <a href="#">About</a>
+      <a href="#">Services</a>
+      <a href="#">Contact</a>
     </nav>
   </div>
 </header>`
-  });
+});
 
-  editor.BlockManager.add("header-logo-only",{
-    label:"Logo Only Header",
-    category:"Headers",
-    content:`
-<header data-site-header="true" style="position:sticky;top:0;z-index:999;background:white;border-bottom:1px solid #e6e6ef;padding:18px 24px;">
-  <div style="max-width:1200px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:20px;">
-    <div style="width:52px;height:52px;border-radius:14px;background:#7B5CFF;color:white;display:flex;align-items:center;justify-content:center;font-weight:900;">Logo</div>
+editor.BlockManager.add("header-logo-only",{
+  label:"Logo Header",
+  category:"Headers",
+  content:`
+<header data-site-header="true" class="site-header">
+  <div class="site-header-inner">
+    <div class="site-brand">
+      <div class="site-logo">Logo</div>
+    </div>
 
-    <nav style="display:flex;gap:22px;align-items:center;">
-      <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Home</a>
-      <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Services</a>
-      <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Contact</a>
+    <nav class="site-nav">
+      <a href="#">Home</a>
+      <a href="#">Services</a>
+      <a href="#">Contact</a>
     </nav>
   </div>
 </header>`
-  });
+});
 
-  editor.BlockManager.add("header-text-only",{
-    label:"Text Only Header",
-    category:"Headers",
-    content:`
-<header data-site-header="true" style="position:sticky;top:0;z-index:999;background:white;border-bottom:1px solid #e6e6ef;padding:18px 24px;">
-  <div style="max-width:1200px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:20px;">
-    <strong style="font-size:24px;">Business Name</strong>
+editor.BlockManager.add("header-text-only",{
+  label:"Text Header",
+  category:"Headers",
+  content:`
+<header data-site-header="true" class="site-header">
+  <div class="site-header-inner">
+    <div class="site-brand">
+      <span>Business Name</span>
+    </div>
 
-    <nav style="display:flex;gap:22px;align-items:center;">
-      <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Home</a>
-      <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">About</a>
-      <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Services</a>
-      <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Contact</a>
+    <nav class="site-nav">
+      <a href="#">Home</a>
+      <a href="#">About</a>
+      <a href="#">Services</a>
+      <a href="#">Contact</a>
     </nav>
   </div>
 </header>`
-  });
+});
 
-  editor.BlockManager.add("header-plain-nav",{
-    label:"Plain Header",
-    category:"Headers",
-    content:`
-<header data-site-header="true" style="position:sticky;top:0;z-index:999;background:white;border-bottom:1px solid #e6e6ef;padding:16px 24px;">
-  <div style="max-width:1200px;margin:auto;display:flex;align-items:center;justify-content:center;gap:26px;">
-    <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Home</a>
-    <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">About</a>
-    <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Services</a>
-    <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Contact</a>
-  </div>
-</header>`
-  });
+editor.BlockManager.add("header-menu-button",{
+  label:"Menu Header",
+  category:"Headers",
+  content:`
+<header data-site-header="true" class="site-header">
+  <div class="site-header-inner">
+    <div class="site-brand">
+      <div class="site-logo">G</div>
+      <span>Business Name</span>
+    </div>
 
-  editor.BlockManager.add("header-menu-button",{
-    label:"Menu Button Header",
-    category:"Headers",
-    content:`
-<header data-site-header="true" style="position:sticky;top:0;z-index:999;background:white;border-bottom:1px solid #e6e6ef;padding:18px 24px;">
-  <div style="max-width:1200px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:20px;position:relative;">
-    <strong style="font-size:22px;">Business Name</strong>
+    <button class="menu-toggle" onclick="this.nextElementSibling.classList.toggle('open-menu')">☰ Menu</button>
 
-    <button onclick="this.nextElementSibling.classList.toggle('open-menu')" style="border:none;background:#7B5CFF;color:white;border-radius:12px;padding:12px 15px;font-weight:900;cursor:pointer;">
-      ☰ Menu
-    </button>
-
-    <nav class="mobile-menu" style="display:none;position:absolute;right:0;top:58px;background:white;border:1px solid #e6e6ef;border-radius:18px;box-shadow:0 20px 50px rgba(0,0,0,.14);padding:16px;min-width:210px;">
-      <a href="#" style="display:block;color:#111827;text-decoration:none;font-weight:800;padding:10px;">Home</a>
-      <a href="#" style="display:block;color:#111827;text-decoration:none;font-weight:800;padding:10px;">About</a>
-      <a href="#" style="display:block;color:#111827;text-decoration:none;font-weight:800;padding:10px;">Services</a>
-      <a href="#" style="display:block;color:#111827;text-decoration:none;font-weight:800;padding:10px;">Contact</a>
+    <nav class="mobile-menu">
+      <a href="#">Home</a>
+      <a href="#">About</a>
+      <a href="#">Services</a>
+      <a href="#">Contact</a>
     </nav>
   </div>
 </header>`
-  });
+});
+
+editor.BlockManager.add("header-dark-luxe",{
+  label:"Dark Luxe Header",
+  category:"Headers",
+  content:`
+<header data-site-header="true" class="site-header dark">
+  <div class="site-header-inner">
+    <div class="site-brand">
+      <div class="site-logo">G</div>
+      <span>Business Name</span>
+    </div>
+
+    <nav class="site-nav">
+      <a href="#">Home</a>
+      <a href="#">About</a>
+      <a href="#">Services</a>
+      <a href="#">Contact</a>
+    </nav>
+  </div>
+</header>`
+});
+
+editor.BlockManager.add("header-glass",{
+  label:"Glass Header",
+  category:"Headers",
+  content:`
+<header data-site-header="true" class="site-header glass">
+  <div class="site-header-inner">
+    <div class="site-brand">
+      <div class="site-logo">G</div>
+      <span>Business Name</span>
+    </div>
+
+    <nav class="site-nav">
+      <a href="#">Home</a>
+      <a href="#">About</a>
+      <a href="#">Services</a>
+      <a href="#">Contact</a>
+    </nav>
+  </div>
+</header>`
+});
+
+editor.BlockManager.add("header-gradient",{
+  label:"Gradient Header",
+  category:"Headers",
+  content:`
+<header data-site-header="true" class="site-header gradient">
+  <div class="site-header-inner">
+    <div class="site-brand">
+      <div class="site-logo">G</div>
+      <span>Business Name</span>
+    </div>
+
+    <nav class="site-nav">
+      <a href="#">Home</a>
+      <a href="#">About</a>
+      <a href="#">Services</a>
+      <a href="#">Contact</a>
+    </nav>
+  </div>
+</header>`
+});
 
   editor.BlockManager.add("hero-section",{
     label:"Hero Section",
@@ -615,12 +789,11 @@ function setupHeaderRules(){
     const wrapper = editor.DomComponents.getWrapper();
     const headers = wrapper.find("header");
 
-    if(headers.length === 0){
+    if(!headers.length){
       fixingHeader = false;
       return;
     }
 
-    // Keep only the newest/header last added
     const headerToKeep = headers[headers.length - 1];
 
     headers.forEach(header => {
@@ -629,28 +802,25 @@ function setupHeaderRules(){
       }
     });
 
-    // Rebuild header at very top only
-    const headerHtml = headerToKeep.toHTML();
-
-    if(headerToKeep.index() !== 0 || headerToKeep.parent() !== wrapper){
+    if(headerToKeep.parent() !== wrapper || headerToKeep.index() !== 0){
+      const clone = headerToKeep.clone();
       headerToKeep.remove();
-      wrapper.components().add(headerHtml, { at: 0 });
+      wrapper.components().add(clone, { at:0 });
     }
 
     const finalHeader = wrapper.find("header")[0];
 
     if(finalHeader){
       finalHeader.set({
-        draggable: false,
-        droppable: true,
-        removable: true,
-        copyable: false,
-        selectable: true
+        draggable:false,
+        droppable:true,
+        removable:true,
+        copyable:false,
+        selectable:true
       });
     }
 
     editor.refresh();
-
     fixingHeader = false;
   }
 
@@ -659,16 +829,10 @@ function setupHeaderRules(){
       if(component.get("tagName") === "header"){
         enforceHeaderPosition();
       }
-    }, 150);
+    }, 100);
   });
 
   editor.on("component:drag:end", () => {
-    setTimeout(enforceHeaderPosition, 150);
-  });
-
-  editor.on("component:update", component => {
-    if(component.get("tagName") === "header"){
-      setTimeout(enforceHeaderPosition, 150);
-    }
+    setTimeout(enforceHeaderPosition, 100);
   });
 }
