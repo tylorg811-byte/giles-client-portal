@@ -743,7 +743,9 @@ function setupFormspreeEndpoint(){
         const attrs = form.getAttributes();
 
         if(attrs["data-needs-formspree"] === "true" && attrs.action === "FORM_ENDPOINT_HERE"){
-          const endpoint = prompt("This form needs a Formspree endpoint so submissions go to email.\n\nPaste the Formspree form link here, or press Cancel to leave it for later.");
+          const endpoint = prompt(
+            "This form needs a Formspree endpoint so submissions go to email.\n\nPaste the Formspree form link here, or press Cancel to leave it for later."
+          );
 
           if(endpoint){
             form.addAttributes({
@@ -752,13 +754,16 @@ function setupFormspreeEndpoint(){
             });
 
             alert("Form endpoint added successfully.");
+          } else {
+            form.addAttributes({
+              "data-needs-formspree":"later"
+            });
           }
         }
       });
     },300);
   });
 }
-
 /* HELPERS */
 function styleObjToString(obj){
   return Object.entries(obj)
