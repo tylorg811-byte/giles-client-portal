@@ -5,1159 +5,261 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin Panel | Giles Web Design</title>
 
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 
-:root{
-  --dark:#07111f;
-  --dark2:#101d2f;
-  --dark3:#152335;
-  --purple:#7B5CFF;
-  --purple2:#9F7BFF;
-  --bg:#f5f6fb;
-  --card:#ffffff;
-  --line:#e6e8f0;
-  --text:#07111f;
-  --muted:#64748b;
-  --green:#027a48;
-  --red:#b91c1c;
-  --orange:#c2410c;
-}
-
 body{
-  font-family:Inter,Arial,sans-serif;
-  background:var(--bg);
-  color:var(--text);
-  min-height:100vh;
+  font-family:'Inter',sans-serif;
+  background:#0a0f1c;
+  color:#111827;
   display:grid;
-  grid-template-columns:300px 1fr;
+  grid-template-columns:260px 1fr;
 }
 
-.mobile-menu-btn{
-  display:none;
-  position:fixed;
-  top:14px;
-  left:14px;
-  z-index:3000;
-  border:none;
-  background:linear-gradient(135deg,var(--purple),var(--purple2));
-  color:white;
-  font-weight:900;
-  padding:12px 14px;
-  border-radius:14px;
-  box-shadow:0 14px 35px rgba(0,0,0,.25);
-}
-
-.sidebar-overlay{
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.55);
-  z-index:1999;
-}
-
+/* SIDEBAR */
 .sidebar{
-  background:var(--dark);
+  background:linear-gradient(180deg,#0b0f1a,#121a2b);
   color:white;
-  padding:30px 20px;
-  min-height:100vh;
   height:100vh;
+  padding:24px;
   position:sticky;
   top:0;
-  overflow-y:auto;
-  overflow-x:hidden;
-}
-
-.sidebar::-webkit-scrollbar{width:6px;}
-.sidebar::-webkit-scrollbar-thumb{
-  background:rgba(255,255,255,.2);
-  border-radius:999px;
-}
-
-.brand{
-  display:flex;
-  align-items:center;
-  gap:14px;
-  margin-bottom:22px;
+  border-right:1px solid rgba(255,255,255,0.05);
 }
 
 .logo{
-  width:56px;
-  height:56px;
-  border-radius:18px;
-  background:linear-gradient(135deg,var(--purple),var(--purple2));
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:26px;
+  font-size:28px;
   font-weight:900;
+  margin-bottom:20px;
+  background:linear-gradient(135deg,#7B5CFF,#9F7BFF);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
 }
 
-.brand h2{
-  font-size:23px;
-  line-height:1.1;
-}
-
-.sidebar p{
-  color:#cbd5e1;
-  font-size:15px;
-  line-height:1.5;
-  margin-bottom:24px;
-}
-
-.nav{
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-}
-
-.sidebar button,
-.sidebar a{
+.sidebar button{
   width:100%;
+  margin-bottom:10px;
+  padding:14px;
   border:none;
-  background:var(--dark3);
-  color:white;
-  padding:15px 16px;
-  border-radius:15px;
+  border-radius:12px;
+  background:#182033;
+  color:#cbd5e1;
   cursor:pointer;
-  text-decoration:none;
-  text-align:left;
-  font-weight:900;
-  font-size:15px;
-  display:flex;
-  align-items:center;
-  gap:10px;
-  transition:.18s ease;
+  font-weight:600;
+  transition:.2s;
 }
 
 .sidebar button:hover,
-.sidebar a:hover,
 .sidebar .active-nav{
-  background:linear-gradient(135deg,var(--purple),var(--purple2));
-  transform:translateX(3px);
+  background:linear-gradient(135deg,#7B5CFF,#9F7BFF);
+  color:white;
 }
 
-.logout{color:#ff8a8a!important;}
-
+/* MAIN */
 .main{
-  padding:34px;
-  min-width:0;
+  padding:28px;
+  background:#f5f7fb;
 }
 
-.top{
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
-  gap:18px;
-  margin-bottom:22px;
-}
-
+/* TOP */
 .top h1{
-  font-size:40px;
-  letter-spacing:-1.2px;
-  line-height:1;
+  font-size:34px;
+  font-weight:800;
 }
-
 .top p{
-  margin-top:7px;
-  color:var(--muted);
-  font-size:15px;
+  color:#64748b;
 }
 
-.top-actions{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-}
-
-.card{
-  background:var(--card);
-  border:1px solid var(--line);
-  border-radius:24px;
-  padding:24px;
-  margin-bottom:22px;
-  box-shadow:0 12px 35px rgba(15,23,42,.06);
-}
-
-.dark-card{
-  background:#0d1a2b;
-  border:1px solid #22324a;
-  color:white;
-  border-radius:24px;
-  padding:24px;
-  margin-bottom:22px;
-  box-shadow:0 16px 45px rgba(0,0,0,.18);
-}
-
-.dark-card p{color:#b8c4d8;line-height:1.5;}
-
-.page-section{display:none;}
-.page-section.active{display:block;}
-
-button,
-.primary,
-.secondary{
-  border:none;
-  border-radius:14px;
-  font-weight:900;
-  cursor:pointer;
-  text-decoration:none;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:8px;
-  transition:.18s ease;
-}
-
-.primary{
-  background:linear-gradient(135deg,var(--purple),var(--purple2));
-  color:white;
-  padding:13px 18px;
-  box-shadow:0 12px 28px rgba(123,92,255,.22);
-}
-
-.secondary{
-  background:#f1f3f8;
-  color:#111827;
-  padding:13px 18px;
-}
-
-.primary:hover,
-.secondary:hover,
-button:hover{
-  transform:translateY(-1px);
-}
-
+/* STATS */
 .grid{
   display:grid;
   grid-template-columns:repeat(4,1fr);
   gap:16px;
-  margin-bottom:22px;
+  margin:20px 0;
 }
 
 .stat{
   background:white;
-  padding:22px;
-  border-radius:22px;
-  border:1px solid var(--line);
-  box-shadow:0 12px 35px rgba(15,23,42,.05);
+  padding:20px;
+  border-radius:18px;
+  box-shadow:0 10px 25px rgba(0,0,0,0.05);
 }
 
-.stat b,
-.stat span{
-  display:block;
+.stat b{
   font-size:14px;
-  font-weight:900;
-  color:var(--muted);
-  margin-bottom:10px;
+  color:#64748b;
 }
-
-.stat div,
-.stat strong{
-  display:block;
-  font-size:34px;
-  font-weight:900;
-  color:var(--text);
-  line-height:1;
-}
-
-.form-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:14px;
-  margin-top:18px;
-}
-
-label{
-  display:block;
-  font-size:13px;
-  font-weight:900;
-  margin-bottom:7px;
-  color:#334155;
-}
-
-.dark-card label{color:#e5e7eb;}
-
-input,
-select,
-textarea{
-  width:100%;
-  padding:14px;
-  border-radius:14px;
-  border:1px solid #dce1ec;
-  background:#fbfcff;
-  font-size:15px;
-  outline:none;
-}
-
-.dark-card input,
-.dark-card select,
-.dark-card textarea{
-  background:#152335;
-  color:white;
-  border:1px solid #31435f;
-}
-
-input:focus,
-select:focus,
-textarea:focus{
-  border-color:var(--purple);
-  box-shadow:0 0 0 4px rgba(123,92,255,.12);
-}
-
-textarea{min-height:105px;resize:vertical;}
-.full{grid-column:1 / -1;}
-
-.notice{
-  background:#fff7ed;
-  border:1px solid #fed7aa;
-  color:#9a3412;
-  padding:14px;
-  border-radius:16px;
-  font-size:13px;
+.stat div{
+  font-size:32px;
   font-weight:800;
-  line-height:1.5;
-  margin:18px 0 4px;
 }
 
-.filter-panel{
-  display:grid;
-  grid-template-columns:1.4fr repeat(4,1fr);
-  gap:12px;
-  align-items:end;
-  margin-bottom:20px;
-}
-
-.client-list,
-.request-list{
-  display:flex;
-  flex-direction:column;
-  gap:16px;
-}
-
-.client-card{
+/* CARDS */
+.card{
   background:white;
-  border:1px solid var(--line);
-  border-radius:24px;
+  border-radius:20px;
   padding:22px;
+  margin-bottom:20px;
+  box-shadow:0 12px 30px rgba(0,0,0,0.06);
+}
+
+/* BUTTONS */
+.primary{
+  background:linear-gradient(135deg,#7B5CFF,#9F7BFF);
+  color:white;
+  border:none;
+  padding:12px 16px;
+  border-radius:12px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.secondary{
+  background:#eef1f7;
+  border:none;
+  padding:12px 16px;
+  border-radius:12px;
+  cursor:pointer;
+}
+
+/* CLIENT CARDS */
+.client-card{
   display:grid;
-  grid-template-columns:1.25fr .75fr .75fr 1.25fr;
-  gap:22px;
-  align-items:start;
-  box-shadow:0 10px 28px rgba(15,23,42,.055);
+  grid-template-columns:1fr 1fr 1fr;
+  gap:16px;
+  padding:18px;
+  border-radius:18px;
+  border:1px solid #e6e9f2;
+  background:white;
+  margin-bottom:14px;
 }
 
 .client-card h3{
-  font-size:22px;
+  font-size:20px;
   margin-bottom:6px;
-}
-
-.client-card p{
-  font-size:14px;
-  color:var(--muted);
-  line-height:1.45;
-  margin-bottom:5px;
-}
-
-.card-group-title{
-  font-size:12px;
-  text-transform:uppercase;
-  letter-spacing:.08em;
-  color:#94a3b8;
-  font-weight:900;
-  margin-bottom:8px;
 }
 
 .actions{
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:9px;
+  gap:8px;
 }
 
-.actions button,
-.actions a{
-  min-height:42px;
+.actions button{
+  padding:10px;
   border:none;
+  border-radius:10px;
   background:#f1f3f8;
-  color:#111827;
-  padding:10px 12px;
-  border-radius:13px;
-  font-size:12px;
-  font-weight:900;
   cursor:pointer;
-  text-decoration:none;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-  transition:.18s ease;
+  font-weight:600;
 }
 
-.actions button:hover,
-.actions a:hover{
-  background:var(--purple);
+.actions button:hover{
+  background:#7B5CFF;
   color:white;
-  transform:translateY(-1px);
 }
 
-.actions .wide,
-.release-btn{grid-column:1 / -1;}
-
-.release-btn{
-  background:#fff1f2!important;
-  color:var(--red)!important;
-}
-
-.danger,
-.actions .danger{
-  background:#fee2e2!important;
-  color:var(--red)!important;
-}
-
-.danger:hover,
-.actions .danger:hover,
-.release-btn:hover{
-  background:#dc2626!important;
-  color:white!important;
-}
-
-.badge{
-  display:inline-block;
-  padding:7px 10px;
-  border-radius:999px;
-  font-size:12px;
-  font-weight:900;
-  background:#f3f2ff;
-  color:#5a4cff;
-  margin:2px 4px 2px 0;
-  text-transform:capitalize;
-}
-
-.badge.full{background:#ecfdf3;color:var(--green);}
-.badge.safe{background:#fff7ed;color:var(--orange);}
-.badge.danger{background:#fee2e2;color:var(--red);}
-.badge.dark{background:#111827;color:white;}
-
-.detail-grid{
-  display:grid;
-  grid-template-columns:1.2fr 1fr;
-  gap:18px;
-}
-
-.detail-card{
-  background:white;
-  border:1px solid var(--line);
-  border-radius:22px;
-  padding:22px;
-  box-shadow:0 10px 28px rgba(15,23,42,.05);
-}
-
-.detail-card h3{
-  font-size:18px;
-  margin-bottom:12px;
-}
-
-.detail-row{
-  display:flex;
-  justify-content:space-between;
-  gap:14px;
-  border-bottom:1px solid #eef0f6;
-  padding:10px 0;
-  font-size:14px;
-}
-
-.detail-row span:first-child{
-  color:var(--muted);
-  font-weight:800;
-}
-
-.detail-row span:last-child{
-  font-weight:900;
-  text-align:right;
-}
-
-.request-card{
-  background:white;
-  border:1px solid var(--line);
-  border-radius:24px;
-  padding:22px;
-  display:grid;
-  grid-template-columns:1.1fr 1.5fr 1fr 1.2fr;
-  gap:18px;
-  box-shadow:0 10px 28px rgba(15,23,42,.055);
-}
-
-.request-card h3{
-  font-size:19px;
-  margin-bottom:6px;
-}
-
-.request-card p{
-  font-size:14px;
-  color:var(--muted);
-  line-height:1.5;
-  margin-bottom:6px;
-}
-
-.analytics-header-grid{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:16px;
-  margin:18px 0;
-}
-
-.analytics-breakdown{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:16px;
-  margin-top:18px;
-}
-
-.analytics-client-card{
-  background:white;
-  border:1px solid var(--line);
-  border-radius:20px;
-  padding:18px;
-  box-shadow:0 8px 22px rgba(15,23,42,.045);
-}
-
-.source-grid{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:14px;
-  margin-top:14px;
-}
-
-.source-card{
-  background:#f8fafc;
-  border:1px solid #e6e8f0;
-  border-radius:18px;
-  padding:16px;
-}
-
-.source-card span{
-  display:block;
-  color:var(--muted);
-  font-size:13px;
-  font-weight:900;
-  margin-bottom:8px;
-}
-
-.source-card strong{
-  font-size:22px;
-  word-break:break-word;
-}
-
-.visit-list{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:12px;
-  margin-top:12px;
-}
-
-.seo-score-ring{
-  width:120px;
-  height:120px;
-  border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:conic-gradient(var(--purple) 0deg, var(--purple2) 220deg, #e5e7eb 220deg);
-  margin:auto;
-}
-
-.seo-score-ring-inner{
-  width:92px;
-  height:92px;
-  border-radius:50%;
-  background:white;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  flex-direction:column;
-  font-weight:900;
-}
-
+/* SEO PANEL */
 .seo-preview{
-  border:1px solid #dce1ec;
-  border-radius:18px;
-  padding:18px;
-  background:#fff;
-}
-
-.seo-preview .url{
-  font-size:13px;
-  color:#027a48;
-  margin-bottom:6px;
+  border:1px solid #e5e7eb;
+  padding:16px;
+  border-radius:14px;
 }
 
 .seo-preview .title{
-  font-size:19px;
   color:#1a0dab;
-  margin-bottom:6px;
-  line-height:1.25;
+  font-weight:600;
 }
 
 .seo-preview .desc{
-  font-size:14px;
   color:#4b5563;
-  line-height:1.45;
+  font-size:14px;
 }
 
-.step-title{
-  display:flex;
-  align-items:center;
-  gap:14px;
-  margin-bottom:14px;
-}
-
-.step-num{
-  width:42px;
-  height:42px;
-  border-radius:14px;
-  background:linear-gradient(135deg,var(--purple),var(--purple2));
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:900;
-}
-
-#importHtml{
-  min-height:260px;
-  font-family:Consolas,monospace;
-}
-
-.import-preview{
-  border:1px dashed #3b4d68;
-  border-radius:18px;
-  padding:22px;
-  min-height:120px;
-  background:#07111f;
-  color:#cbd5e1;
-}
-
-.import-page-row{
-  display:grid;
-  grid-template-columns:1fr 180px 120px;
-  gap:12px;
-  align-items:center;
-  background:#152335;
-  border:1px solid #31435f;
-  border-radius:16px;
-  padding:14px;
-  margin-top:10px;
-}
-
-.empty-state{
-  background:#f8fafc;
-  border:1px dashed #d9deea;
-  border-radius:20px;
-  padding:28px;
-  text-align:center;
-  color:var(--muted);
-  font-weight:900;
-}
-
-#message,
-#seoMessage{
-  font-size:13px;
-  font-weight:900;
-  margin-top:12px;
-  color:#5a4cff;
-}
-
-@media(max-width:1150px){
-  body{display:block;}
-
-  .mobile-menu-btn{display:block;}
-
-  .sidebar{
-    position:fixed;
-    top:0;
-    left:0;
-    z-index:2000;
-    width:310px;
-    max-width:86vw;
-    transform:translateX(-105%);
-    transition:.25s ease;
-  }
-
-  body.sidebar-open .sidebar{transform:translateX(0);}
-  body.sidebar-open .sidebar-overlay{display:block;}
-
-  .main{padding:78px 18px 24px;}
-
-  .grid,
-  .filter-panel,
-  .detail-grid,
-  .analytics-header-grid,
-  .analytics-breakdown,
-  .source-grid{
-    grid-template-columns:1fr 1fr;
-  }
-
-  .client-card,
-  .request-card{
-    grid-template-columns:1fr;
-  }
-}
-
-@media(max-width:700px){
-  .main{padding:76px 16px 22px;}
-
-  .top{display:block;}
-  .top-actions{margin-top:14px;}
-
-  .grid,
-  .form-grid,
-  .filter-panel,
-  .detail-grid,
-  .analytics-header-grid,
-  .analytics-breakdown,
-  .source-grid,
-  .visit-list,
-  .import-page-row{
-    grid-template-columns:1fr;
-  }
-
-  .actions{grid-template-columns:1fr;}
-}
 </style>
 </head>
 
 <body>
 
-<button class="mobile-menu-btn" onclick="toggleSidebar()">☰ Menu</button>
-<div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="logo">Giles</div>
 
-<aside class="sidebar">
-  <div class="brand">
-    <div class="logo">G</div>
-    <div>
-      <h2>Admin Panel</h2>
-    </div>
-  </div>
+  <button class="active-nav" onclick="showAdminPage('clients')">Clients</button>
+  <button onclick="showAdminPage('seo')">SEO Panel</button>
+  <button onclick="showAdminPage('analytics')">Analytics</button>
+  <button onclick="showAdminPage('requests')">Requests</button>
+  <button onclick="showAdminPage('billing')">Billing</button>
 
-  <p>Manage clients, websites, domains, billing, SEO, analytics, and change requests.</p>
+  <button onclick="logout()">Logout</button>
+</div>
 
-  <div class="nav">
-    <button id="navClients" class="active-nav" onclick="showAdminPage('clients')">👥 Clients</button>
-    <button id="navImporter" onclick="showAdminPage('importer')">📥 Importer</button>
-    <button id="navSEO" onclick="showAdminPage('seo')">🔎 SEO Panel</button>
-    <button id="navAnalytics" onclick="showAdminPage('analytics')">📊 Analytics</button>
-    <button id="navRequests" onclick="showAdminPage('requests')">💬 Change Requests</button>
-    <button id="navBilling" onclick="showAdminPage('billing')">💳 Billing</button>
-
-    <a href="dashboard.html">🖥 Client Dashboard</a>
-    <a href="editor.html">✎ Open Editor</a>
-    <a href="login.html">🔐 Login Page</a>
-    <button class="logout" onclick="logout()">↪ Logout</button>
-  </div>
-</aside>
-
-<main class="main">
+<!-- MAIN -->
+<div class="main">
 
   <div class="top">
-    <div>
-      <h1 id="pageTitle">Client Websites</h1>
-      <p id="adminEmail">Loading...</p>
-    </div>
-
-    <div class="top-actions">
-      <button class="primary" onclick="createClientAccount()">+ Create Client Account</button>
-      <button class="secondary" onclick="showAdminPage('clients')">View Clients</button>
-      <button class="primary" onclick="scrollToForm()">+ Add Client</button>
-    </div>
+    <h1 id="pageTitle">Dashboard</h1>
+    <p id="adminEmail"></p>
   </div>
 
-  <section id="smartAlerts" class="card"></section>
-
-  <section class="grid">
+  <!-- STATS -->
+  <div class="grid">
     <div class="stat"><b>Total Clients</b><div id="totalClients">0</div></div>
     <div class="stat"><b>Published</b><div id="publishedClients">0</div></div>
     <div class="stat"><b>Past Due</b><div id="pastDueClients">0</div></div>
     <div class="stat"><b>Requests</b><div id="newRequests">0</div></div>
+  </div>
+
+  <!-- CLIENTS -->
+  <section id="clientsPage" class="card">
+    <h2>Clients</h2>
+    <div id="clientList">Loading...</div>
   </section>
 
-  <section id="clientsPage" class="page-section active">
+  <!-- SEO -->
+  <section id="seoPage" class="card" style="display:none;">
+    <h2>SEO Panel</h2>
 
-    <section class="card" id="clientFormCard">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:14px;">
-        <h2 style="margin:0;">Add / Update Client</h2>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;">
-          <button class="primary" onclick="toggleClientForm()">Open Form</button>
-          <button class="secondary" onclick="closeClientForm()">Close</button>
-        </div>
-      </div>
+    <select id="seoClientSelect"></select>
 
-      <div id="clientFormWrap" style="display:none;">
+    <input id="seoTitle" placeholder="SEO Title">
+    <textarea id="seoDescription" placeholder="SEO Description"></textarea>
+    <input id="seoKeywords" placeholder="Keywords">
 
-        <div class="notice">
-          Billing Override keeps a site active even if Stripe/subscriptions are not active. Editor Lock fully blocks client access to the editor.
-        </div>
+    <button class="primary" onclick="autoGenerateSEO()">Auto Generate</button>
+    <button class="secondary" onclick="saveSEO()">Save</button>
 
-        <div class="form-grid">
-          <input type="hidden" id="clientRecordId">
-
-          <div><label>Business Name</label><input id="businessName" placeholder="Greenscape Landscaping"></div>
-          <div><label>Client Email</label><input id="clientEmail" placeholder="client@email.com"></div>
-
-          <div><label>Client Supabase User ID</label><input id="clientUserId" placeholder="Paste client UUID here"></div>
-
-          <div>
-            <label>Package</label>
-            <select id="packageName">
-              <option value="Starter">Starter</option>
-              <option value="Standard">Standard</option>
-              <option value="Premium">Premium</option>
-              <option value="Maintenance">Maintenance</option>
-            </select>
-          </div>
-
-          <div><label>Business Type</label><input id="businessType" placeholder="Landscaping, Barber, Florist, Music Artist..."></div>
-          <div><label>Business Location</label><input id="businessLocation" placeholder="Tampa, FL"></div>
-
-          <div><label>Domain</label><input id="domain" placeholder="clientdomain.com"></div>
-
-          <div>
-            <label>Domain Status</label>
-            <select id="domainStatus">
-              <option value="not connected">Not Connected</option>
-              <option value="pending">Pending</option>
-              <option value="live">Live</option>
-              <option value="released">Released</option>
-            </select>
-          </div>
-
-          <div>
-            <label>Domain Release Status</label>
-            <select id="domainReleaseStatus">
-              <option value="connected">Connected / Managed</option>
-              <option value="release requested">Release Requested</option>
-              <option value="released">Released</option>
-            </select>
-          </div>
-
-          <div>
-            <label>Site Status</label>
-            <select id="siteStatus">
-              <option value="draft">Draft</option>
-              <option value="published">Published</option>
-              <option value="needs review">Needs Review</option>
-              <option value="paused">Paused</option>
-            </select>
-          </div>
-
-          <div>
-            <label>Editor Access</label>
-            <select id="editorAccess">
-              <option value="safe">Safe Mode</option>
-              <option value="full">Full Editor Access</option>
-            </select>
-          </div>
-
-          <div>
-            <label>Editor Lock</label>
-            <select id="editorLocked">
-              <option value="false">Unlocked</option>
-              <option value="true">Locked - No Editor Access</option>
-            </select>
-          </div>
-
-          <div><label>Editor Lock Reason</label><input id="editorLockedReason" placeholder="Non-payment, safety, preference, etc."></div>
-
-          <div>
-            <label>Billing Status</label>
-            <select id="billingStatus">
-              <option value="active">Active / Paid</option>
-              <option value="manual paid">Manual Payment Received</option>
-              <option value="free">Free / Family / Comped</option>
-              <option value="trial">Trial</option>
-              <option value="past due">Past Due</option>
-              <option value="paused">Paused</option>
-            </select>
-          </div>
-
-          <div>
-            <label>Billing Override</label>
-            <select id="billingOverride">
-              <option value="false">No Override</option>
-              <option value="true">Override Enabled</option>
-            </select>
-          </div>
-
-          <div>
-            <label>Billing Cycle</label>
-            <select id="billingCycle">
-              <option value="monthly">Monthly</option>
-              <option value="yearly">Yearly</option>
-              <option value="one-time">One Time</option>
-            </select>
-          </div>
-
-          <div><label>Next Payment Date</label><input type="date" id="nextPaymentDate"></div>
-          <div><label>Last Payment Date</label><input type="date" id="lastPaymentDate"></div>
-
-          <div class="full"><label>Client Tags</label><input id="clientTags" placeholder="VIP, fast pay, high maintenance"></div>
-          <div class="full"><label>Override Reason</label><input id="billingOverrideReason" placeholder="Mom's business, paid cash, comped client, etc."></div>
-          <div class="full"><label>Billing Notes</label><textarea id="billingNotes" placeholder="Payment notes, renewal notes, outside payment details..."></textarea></div>
-          <div class="full"><label>Domain Release Notes</label><textarea id="domainReleaseNotes" placeholder="Domain release notes..."></textarea></div>
-          <div class="full"><label>General Notes</label><textarea id="notes" placeholder="Client notes..."></textarea></div>
-        </div>
-
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;">
-          <button class="primary" onclick="saveClientSite()">Save Client Site</button>
-          <button class="secondary" onclick="clearClientForm()">Clear</button>
-        </div>
-
-        <div id="message"></div>
-      </div>
-    </section>
-
-    <section class="card">
-      <h2>Client Directory</h2>
-
-      <div class="filter-panel">
-        <div>
-          <label>Search</label>
-          <input id="clientSearch" placeholder="Business, email, domain, tags..." oninput="applyClientFilters()">
-        </div>
-
-        <div>
-          <label>Billing</label>
-          <select id="billingFilter" onchange="applyClientFilters()">
-            <option value="all">All</option>
-            <option value="active">Active</option>
-            <option value="past">Past Due</option>
-            <option value="covered">Covered</option>
-            <option value="free">Free</option>
-            <option value="trial">Trial</option>
-            <option value="paused">Paused</option>
-            <option value="manual paid">Manual Paid</option>
-          </select>
-        </div>
-
-        <div>
-          <label>Site</label>
-          <select id="siteStatusFilter" onchange="applyClientFilters()">
-            <option value="all">All</option>
-            <option value="draft">Draft</option>
-            <option value="published">Published</option>
-            <option value="needs review">Needs Review</option>
-            <option value="paused">Paused</option>
-          </select>
-        </div>
-
-        <div>
-          <label>Editor</label>
-          <select id="editorAccessFilter" onchange="applyClientFilters()">
-            <option value="all">All</option>
-            <option value="safe">Safe Mode</option>
-            <option value="full">Full Access</option>
-          </select>
-        </div>
-
-        <div>
-          <label>Domain</label>
-          <select id="domainFilter" onchange="applyClientFilters()">
-            <option value="all">All</option>
-            <option value="live">Live</option>
-            <option value="pending">Pending</option>
-            <option value="not connected">Not Connected</option>
-            <option value="released">Released</option>
-          </select>
-        </div>
-      </div>
-
-      <div id="clientList" class="client-list">Loading clients...</div>
-    </section>
+    <div class="seo-preview">
+      <div class="title" id="seoPreviewTitle">Preview Title</div>
+      <div class="desc" id="seoPreviewDesc">Preview Description</div>
+    </div>
   </section>
 
-  <section id="clientDetailPage" class="page-section">
-    <section class="card">
-      <div style="display:flex;justify-content:space-between;gap:16px;align-items:center;">
-        <div>
-          <h2 id="detailBusinessName" style="margin-bottom:4px;">Client Details</h2>
-          <p id="detailClientEmail" style="color:#64748b;">Select a client.</p>
-        </div>
-        <button class="secondary" onclick="showAdminPage('clients')">← Back</button>
-      </div>
-    </section>
-
-    <div id="clientDetailContent"></div>
+  <!-- ANALYTICS -->
+  <section id="analyticsPage" class="card" style="display:none;">
+    <h2>Analytics</h2>
+    <div id="analyticsOverview"></div>
   </section>
 
-  <section id="importerPage" class="page-section">
-    <section class="dark-card">
-      <div class="step-title">
-        <div class="step-num">1</div>
-        <div>
-          <h2>Import Existing Website</h2>
-          <p>Paste a full HTML file or upload one. Scripts are removed for safety.</p>
-        </div>
-      </div>
-
-      <textarea id="importHtml" placeholder="Paste full HTML here..."></textarea>
-
-      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:16px;align-items:center;">
-        <button class="primary" onclick="analyzeImportHtml()">Paste & Analyze</button>
-        <button class="secondary" onclick="document.getElementById('importFile').click()">Upload HTML File</button>
-        <input type="file" id="importFile" accept=".html,.htm,text/html" style="display:none;">
-        <span id="importCharCount" style="color:#b8c4d8;font-size:13px;">0 characters</span>
-      </div>
-    </section>
-
-    <section class="dark-card">
-      <div class="step-title">
-        <div class="step-num">2</div>
-        <div>
-          <h2>Review Page</h2>
-          <p>Choose a page name and confirm the cleaned content.</p>
-        </div>
-      </div>
-
-      <div id="importDetected" class="import-preview">
-        Imported page details will appear here.
-      </div>
-    </section>
-
-    <section class="dark-card">
-      <div class="step-title">
-        <div class="step-num">3</div>
-        <div>
-          <h2>Import to Client Website</h2>
-          <p>Select the client and save this page into their portal editor.</p>
-        </div>
-      </div>
-
-      <div class="form-grid">
-        <div>
-          <label>Client Website</label>
-          <div style="display:flex;gap:10px;align-items:center;">
-            <select id="importClientSelect" style="flex:1;"></select>
-            <button class="secondary" type="button" onclick="populateImportClientSelect()">Refresh</button>
-          </div>
-        </div>
-
-        <div>
-          <label>Page Name</label>
-          <input id="importPageName" placeholder="home, about, services, contact">
-        </div>
-      </div>
-
-      <button class="primary" style="margin-top:16px;" onclick="importPageToClient()">Import Page to Client</button>
-      <div id="importMessage" style="margin-top:12px;color:#b8c4d8;font-weight:900;"></div>
-    </section>
+  <!-- REQUESTS -->
+  <section id="requestsPage" class="card" style="display:none;">
+    <h2>Requests</h2>
+    <div id="changeRequestList"></div>
   </section>
 
-  <section id="seoPage" class="page-section">
-    <section class="card">
-      <h2>SEO Panel</h2>
-      <p style="color:#64748b;margin-bottom:20px;">Generate, edit, score, and save SEO for each client website.</p>
-
-      <div class="form-grid">
-        <div>
-          <label>Select Client</label>
-          <select id="seoClientSelect" onchange="loadSEOClient()"></select>
-        </div>
-
-        <div>
-          <label>SEO Image / Social Preview Image</label>
-          <input id="seoImage" placeholder="https://clientsite.com/images/cover.jpg">
-        </div>
-
-        <div>
-          <label>Business Type</label>
-          <input id="seoBusinessType" placeholder="Landscaping, Barber, Florist, Music Artist...">
-        </div>
-
-        <div>
-          <label>Business Location</label>
-          <input id="seoBusinessLocation" placeholder="Tampa, FL">
-        </div>
-
-        <div class="full">
-          <label>SEO Title</label>
-          <input id="seoTitle" maxlength="70" placeholder="Business Name | Service in City">
-        </div>
-
-        <div class="full">
-          <label>SEO Description</label>
-          <textarea id="seoDescription" maxlength="180" placeholder="Write a search-friendly description..."></textarea>
-        </div>
-
-        <div class="full">
-          <label>SEO Keywords</label>
-          <input id="seoKeywords" placeholder="business name, service, city, affordable website">
-        </div>
-      </div>
-
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;">
-        <button class="primary" onclick="autoGenerateSEO()">Auto Generate SEO</button>
-        <button class="secondary" onclick="scoreSEO()">Score SEO</button>
-        <button class="primary" onclick="saveSEO()">Save SEO</button>
-      </div>
-
-      <div id="seoMessage"></div>
-    </section>
-
-    <section class="detail-grid">
-      <div class="detail-card">
-        <h3>SEO Score</h3>
-        <div class="seo-score-ring" id="seoScoreRing">
-          <div class="seo-score-ring-inner">
-            <strong id="seoScoreText" style="font-size:28px;">0</strong>
-            <span style="font-size:12px;color:#64748b;">/ 100</span>
-          </div>
-        </div>
-        <p id="seoScoreNotes" style="color:#64748b;text-align:center;margin-top:14px;">Fill out SEO fields to calculate score.</p>
-      </div>
-
-      <div class="detail-card">
-        <h3>Google Preview</h3>
-        <div class="seo-preview">
-          <div class="url" id="seoPreviewUrl">https://clientsite.com</div>
-          <div class="title" id="seoPreviewTitle">SEO title preview</div>
-          <div class="desc" id="seoPreviewDesc">SEO description preview will show here.</div>
-        </div>
-      </div>
-    </section>
+  <!-- BILLING -->
+  <section id="billingPage" class="card" style="display:none;">
+    <h2>Billing</h2>
+    <div id="billingOverview"></div>
   </section>
 
-  <section id="analyticsPage" class="page-section">
-    <section class="card">
-      <h2>Analytics Dashboard</h2>
-      <div id="analyticsOverview"></div>
-
-      <div style="margin-top:22px;">
-        <label>Select Client</label>
-        <select id="analyticsClientSelect" onchange="loadClientAnalyticsView()"></select>
-      </div>
-
-      <div id="analyticsClientView" style="margin-top:22px;"></div>
-    </section>
-  </section>
-
-  <section id="requestsPage" class="page-section">
-    <section class="card">
-      <h2>Change Requests</h2>
-      <div id="changeRequestList" class="request-list">Loading requests...</div>
-    </section>
-  </section>
-
-  <section id="billingPage" class="page-section">
-    <section class="card">
-      <h2>Billing Overview</h2>
-      <div id="billingOverview"></div>
-    </section>
-  </section>
-
-</main>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="app.js"></script>
 <script src="admin.js"></script>
-<script src="admin-importer.js?v=5"></script>
 
 </body>
 </html>
