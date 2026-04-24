@@ -121,7 +121,13 @@ if(!isAdminEditing && (lockValue === "true" || billingLocked)){
         <h1 style="margin-bottom:12px;">Editor Access Locked</h1>
         <p style="color:#cbd5e1;line-height:1.6;">
           Your editor access is currently locked.
-          ${clientSiteRecord.editor_locked_reason ? `<br><br><strong>Reason:</strong> ${clientSiteRecord.editor_locked_reason}` : ""}
+        ${
+  lockValue === "true" && clientSiteRecord.editor_locked_reason
+    ? `<br><br><strong>Reason:</strong> ${clientSiteRecord.editor_locked_reason}`
+    : billingLocked
+      ? `<br><br><strong>Reason:</strong> Billing needs attention.`
+      : ""
+}
         </p>
         <a href="dashboard.html" style="display:inline-block;margin-top:22px;background:linear-gradient(135deg,#7B5CFF,#9F7BFF);color:white;text-decoration:none;font-weight:900;padding:13px 20px;border-radius:14px;">Back to Dashboard</a>
       </div>
