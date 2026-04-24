@@ -161,7 +161,17 @@ function addBlocks(){
   editor.BlockManager.add("hero-section",{label:"Hero Section",category:"Sections",content:`<section class="content-section" style="min-height:80vh;display:flex;align-items:center;text-align:center;background:linear-gradient(135deg,#07111f,#141b5f);color:white;"><div style="max-width:800px;margin:auto;"><p style="letter-spacing:3px;color:#cbd5e1;">YOUR TAGLINE HERE</p><h1>Build Something Beautiful</h1><p style="color:#dbeafe;">Add your business message here.</p><a href="#contact" class="main-btn">Get Started</a></div></section>`});
   editor.BlockManager.add("heading",{label:"Heading",category:"Text",content:`<h2>New Heading</h2>`});
   editor.BlockManager.add("paragraph",{label:"Paragraph",category:"Text",content:`<p>Add your text here.</p>`});
-  editor.BlockManager.add("button-primary",{label:"Button",category:"Buttons",content:`<a href="#" class="main-btn">Button Text</a>`});
+ editor.BlockManager.add("button-primary",{
+  label:"Button",
+  category:"Buttons",
+  content:`
+    <div style="display:inline-block;padding:10px;">
+      <a href="#" class="main-btn" style="display:inline-block;padding:14px 30px;border-radius:999px;background:linear-gradient(135deg,#7B5CFF,#9F7BFF);color:white;text-decoration:none;font-weight:800;">
+        Button Text
+      </a>
+    </div>
+  `
+});
   editor.BlockManager.add("image",{label:"Image",category:"Images",content:`<img class="site-image" src="https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=900&q=80">`});
   editor.BlockManager.add("two-column",{label:"Two Columns",category:"Sections",content:`<section class="content-section"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:32px;align-items:center;max-width:1100px;margin:auto;"><div><h2>Section Title</h2><p>Add content here.</p><a href="#" class="main-btn">Learn More</a></div><img class="site-image" src="https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=900&q=80"></div></section>`});
   editor.BlockManager.add("services-grid",{label:"Services Grid",category:"Sections",content:`<section class="content-section"><div style="max-width:1000px;margin:auto;text-align:center;"><h2>Our Services</h2><p>Highlight what your business offers.</p><div class="grid-3" style="margin-top:35px;"><div class="card"><h3>Service One</h3><p>Describe this service.</p></div><div class="card"><h3>Service Two</h3><p>Describe this service.</p></div><div class="card"><h3>Service Three</h3><p>Describe this service.</p></div></div></div></section>`});
