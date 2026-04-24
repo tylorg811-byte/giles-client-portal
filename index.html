@@ -4,10 +4,40 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Live Website</title>
+
 <style>
-body{margin:0;font-family:Arial,sans-serif;background:#fff;}
-#loading{display:flex;align-items:center;justify-content:center;height:100vh;font-size:18px;color:#666;}
-#site{display:none;}
+body{
+margin:0;
+font-family:Arial,sans-serif;
+background:#fff;
+}
+
+#loading{
+display:flex;
+align-items:center;
+justify-content:center;
+height:100vh;
+font-size:18px;
+color:#667085;
+}
+
+#site{
+display:none;
+}
+
+.error-box{
+max-width:620px;
+margin:80px auto;
+padding:30px;
+border-radius:24px;
+background:#f8fafc;
+border:1px solid #e6e6ef;
+text-align:center;
+}
+
+.error-box h1{
+margin-bottom:12px;
+}
 </style>
 </head>
 
@@ -23,21 +53,39 @@ const SUPABASE_URL = "https://ujxuirmeikbzakqaerec.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_gLnNGeQUUbjLoQlN5g2t9g_XXQpy9P3";
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const userId = "REPLACE_THIS_WITH_CLIENT_ID";
-
 async function loadSite(){
   const params = new URLSearchParams(window.location.search);
-  const pageName = params.get("page") || "home";
 
-  const { data, error } = await db
+  const clientId = params.get("client");
+  const pageName = params.get("page") || "home";
+  const host = window.location.hostname;
+
+  let query = db
     .from("visual_pages")
     .select("*")
-    .eq("user_id", userId)
-    .eq("status", "published")
-    .single();
+    .eq("status", "published");
+
+  if(clientId){
+    query = query.eq("user_id", clientId);
+  } else {
+    const { data: siteRecord } = await db
+      .from("client_sites")
+      .select("*")
+      .eq("domain", host)
+      .single();
+
+    if(siteRecord && siteRecord.client_user_id){
+      query = query.eq("user_id", siteRecord.client_user_id);
+    } else {
+      showError("No client website selected.", "Use a live link with ?client=CLIENT_ID or connect a custom domain.");
+      return;
+    }
+  }
+
+  const { data, error } = await query.single();
 
   if(error || !data){
-    document.getElementById("loading").innerText = "No website published yet.";
+    showError("No website published yet.", "Publish this client’s website from the editor first.");
     return;
   }
 
@@ -54,14 +102,47 @@ async function loadSite(){
     };
   }
 
-  document.getElementById("site").innerHTML = page.html;
+  document.title =
+    data.site_settings?.businessName
+      ? data.site_settings.businessName
+      : "Live Website";
 
   const style = document.createElement("style");
   style.innerHTML = page.css || data.css || "";
   document.head.appendChild(style);
 
+  document.getElementById("site").innerHTML = page.html;
+
+  fixInternalLinks(clientId);
+
   document.getElementById("loading").style.display = "none";
   document.getElementById("site").style.display = "block";
+}
+
+function fixInternalLinks(clientId){
+  const links = document.querySelectorAll("#site a[href^='?page=']");
+
+  links.forEach(link=>{
+    const url = new URL(link.href);
+    const page = url.searchParams.get("page") || "home";
+
+    if(clientId){
+      link.href = `index.html?client=${clientId}&page=${page}`;
+    } else {
+      link.href = `?page=${page}`;
+    }
+  });
+}
+
+function showError(title,message){
+  document.getElementById("loading").style.display = "none";
+  document.getElementById("site").style.display = "block";
+  document.getElementById("site").innerHTML = `
+    <div class="error-box">
+      <h1>${title}</h1>
+      <p>${message}</p>
+    </div>
+  `;
 }
 
 loadSite();
