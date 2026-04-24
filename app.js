@@ -16,14 +16,29 @@ async function login(){
     return;
   }
 
-  const { error } = await db.auth.signInWithPassword({ email, password });
+  const { data, error } = await db.auth.signInWithPassword({
+    email,
+    password
+  });
 
   if(error){
     message.textContent = error.message;
     return;
   }
 
-  window.location.href = "dashboard.html";
+  const user = data.user;
+
+  const { data: adminRow } = await db
+    .from("admin_users")
+    .select("*")
+    .eq("user_id", user.id)
+    .single();
+
+  if(adminRow){
+    window.location.href = "admin.html";
+  } else {
+    window.location.href = "dashboard.html";
+  }
 }
 
 /* CHECK USER */
