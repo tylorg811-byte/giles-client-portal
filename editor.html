@@ -27,10 +27,12 @@
   </div>
 
   <div class="builder-actions">
-    <button class="ghost-btn" onclick="logout()">Logout</button>
-    <button class="soft-btn" onclick="savePage()">Save Draft</button>
-    <button class="publish-btn" onclick="publishPage()">Publish</button>
-  </div>
+  <button class="ghost-btn" onclick="editor.runCommand('core:undo')">Undo</button>
+  <button class="ghost-btn" onclick="editor.runCommand('core:redo')">Redo</button>
+  <button class="ghost-btn" onclick="logout()">Logout</button>
+  <button class="soft-btn" onclick="savePage()">Save Draft</button>
+  <button class="publish-btn" onclick="publishPage()">Publish</button>
+</div>
 </header>
 
 <div class="builder-app">
