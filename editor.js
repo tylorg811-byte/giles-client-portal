@@ -1,32 +1,44 @@
 let editor;
 let currentUser;
-let currentDesignCategory = "all";
-let designStyles = [];
+let activePage = "home";
+let pages = {};
+let savedRecord = null;
+
+let currentPresetCategory = "all";
+let currentImageCategory = "all";
+let currentBackgroundCategory = "all";
+
+let stylePresets = [];
+let stockImages = [];
+let backgroundPresets = [];
+let fontPresets = [];
 
 /* =========================
-   STARTER PAGE
+   STARTER PAGES
 =========================*/
-const starterHtml = `
-<section class="hero-section content-section">
-  <div style="max-width:700px;margin:auto;text-align:center;">
-    <p style="letter-spacing:3px;color:#888;">AFFORDABLE — YOUR WAY</p>
-    <h1>Look Professional.<br>Get More Customers.</h1>
-    <p>Affordable websites designed to turn visitors into paying customers.</p>
-    <a href="#" class="main-btn">Message Me</a>
-  </div>
-</section>
-`;
-
 const starterCss = `
 body{
 margin:0;
 font-family:Arial,sans-serif;
 background:#fff;
+color:#111827;
 }
 
 h1{
-font-size:48px;
+font-size:52px;
+line-height:1.05;
 margin:20px 0;
+}
+
+h2{
+font-size:38px;
+margin:0 0 18px;
+}
+
+p{
+font-size:18px;
+line-height:1.6;
+color:#555;
 }
 
 .content-section{
@@ -43,21 +55,108 @@ text-decoration:none;
 font-weight:800;
 }
 
-.preset-divider{
-height:2px;
-width:80%;
-margin:40px auto;
-background:linear-gradient(90deg,transparent,#7B5CFF,transparent);
+.card{
+padding:30px;
+border-radius:24px;
+background:white;
+box-shadow:0 15px 45px rgba(0,0,0,.12);
 }
 
-.preset-shape{
-width:120px;
-height:120px;
-border-radius:30px;
-background:linear-gradient(135deg,#7B5CFF,#9F7BFF);
-margin:30px auto;
+.grid-3{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+gap:24px;
+max-width:1100px;
+margin:auto;
+}
+
+.site-image{
+max-width:100%;
+border-radius:20px;
+display:block;
+}
+
+@media(max-width:700px){
+h1{font-size:38px;}
+h2{font-size:30px;}
 }
 `;
+
+const pageTemplates = {
+  home: `
+<section class="content-section" style="min-height:85vh;display:flex;align-items:center;background:linear-gradient(135deg,#07111f,#141b5f);color:white;text-align:center;">
+  <div style="max-width:760px;margin:auto;">
+    <p style="letter-spacing:3px;color:#cbd5e1;">AFFORDABLE — YOUR WAY</p>
+    <h1>Look Professional.<br>Get More Customers.</h1>
+    <p style="color:#dbeafe;">Affordable websites designed to turn visitors into paying customers.</p>
+    <a href="#" class="main-btn">Message Me</a>
+  </div>
+</section>
+
+<section class="content-section">
+  <div style="max-width:900px;margin:auto;text-align:center;">
+    <h2>Website Packages</h2>
+    <p>Choose a website package that fits your business and budget.</p>
+  </div>
+</section>
+`,
+
+  about: `
+<section class="content-section" style="background:#f8fafc;text-align:center;">
+  <div style="max-width:850px;margin:auto;">
+    <h1>About Us</h1>
+    <p>Share your story, your experience, and what makes your business different.</p>
+  </div>
+</section>
+
+<section class="content-section">
+  <div style="max-width:850px;margin:auto;">
+    <h2>Our Story</h2>
+    <p>Replace this with your business background, mission, and why customers trust you.</p>
+  </div>
+</section>
+`,
+
+  services: `
+<section class="content-section" style="text-align:center;">
+  <h1>Our Services</h1>
+  <p>Highlight what your business offers.</p>
+</section>
+
+<section class="content-section">
+  <div class="grid-3">
+    <div class="card"><h2>Service One</h2><p>Describe this service.</p></div>
+    <div class="card"><h2>Service Two</h2><p>Describe this service.</p></div>
+    <div class="card"><h2>Service Three</h2><p>Describe this service.</p></div>
+  </div>
+</section>
+`,
+
+  contact: `
+<section class="content-section" style="text-align:center;background:#07111f;color:white;">
+  <div style="max-width:760px;margin:auto;">
+    <h1>Contact Us</h1>
+    <p style="color:#dbeafe;">Ready to get started? Reach out today.</p>
+    <a href="mailto:you@example.com" class="main-btn">Send Message</a>
+  </div>
+</section>
+`,
+
+  gallery: `
+<section class="content-section" style="text-align:center;">
+  <h1>Gallery</h1>
+  <p>Showcase your work with professional images.</p>
+</section>
+
+<section class="content-section">
+  <div class="grid-3">
+    <img class="site-image" src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=80">
+    <img class="site-image" src="https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=900&q=80">
+    <img class="site-image" src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=900&q=80">
+  </div>
+</section>
+`
+};
 
 /* =========================
    INIT
@@ -74,9 +173,7 @@ async function initEditor(){
     fromElement: false,
     storageManager: false,
 
-    blockManager:{
-      appendTo:"#blocks"
-    },
+    blockManager:{ appendTo:"#blocks" },
 
     styleManager:{
       appendTo:"#styles",
@@ -103,343 +200,365 @@ async function initEditor(){
   });
 
   addBlocks();
+  buildLibraries();
 
-  editor.setComponents(starterHtml);
-  editor.setStyle(starterCss);
+  savedRecord = await loadSavedPage();
 
-  setTimeout(()=>editor.refresh(),300);
-
-  const saved = await loadSavedPage();
-
-  if(saved && saved.html){
-    editor.setComponents(saved.html);
-    editor.setStyle(saved.css || starterCss);
-    setTimeout(()=>editor.refresh(),300);
+  if(savedRecord && savedRecord.pages && Object.keys(savedRecord.pages).length){
+    pages = savedRecord.pages;
+    activePage = savedRecord.active_page || "home";
+  } else if(savedRecord && savedRecord.html){
+    pages = {
+      home: {
+        html: savedRecord.html,
+        css: savedRecord.css || starterCss
+      }
+    };
+    activePage = "home";
+  } else {
+    pages = {
+      home: {
+        html: pageTemplates.home,
+        css: starterCss
+      }
+    };
+    activePage = "home";
   }
 
-  buildDesignLibrary();
-  renderDesignLibrary();
-  setupDesignSearch();
+  loadPageIntoEditor(activePage);
+  renderPageSelect();
+  renderPageList();
+
+  renderPresetLibrary();
+  renderStockImages();
+  renderBackgroundLibrary();
+  renderFontLibrary();
+
+  setupSearches();
   setupImageUploader();
   addWixControls();
   addSectionAddButtons();
+
+  setTimeout(()=>editor.refresh(),300);
 }
 
 /* =========================
-   BASIC BLOCKS
+   ELEMENT BLOCKS
 =========================*/
 function addBlocks(){
+  editor.BlockManager.add("button-primary",{
+    label:"Button",
+    category:"Buttons",
+    content:`<a href="#" class="main-btn">Button Text</a>`
+  });
 
   editor.BlockManager.add("heading",{
     label:"Heading",
     category:"Text",
-    content:`<h2>Heading</h2>`
+    content:`<h2>New Heading</h2>`
   });
 
-  editor.BlockManager.add("text",{
-    label:"Text",
+  editor.BlockManager.add("paragraph",{
+    label:"Paragraph",
     category:"Text",
-    content:`<p>Add text here</p>`
-  });
-
-  editor.BlockManager.add("button",{
-    label:"Button",
-    category:"Text",
-    content:`<a href="#" class="main-btn">Button</a>`
-  });
-
-  editor.BlockManager.add("section",{
-    label:"Section",
-    category:"Layout",
-    content:`
-      <section class="content-section">
-        <h2>New Section</h2>
-        <p>Content here</p>
-      </section>
-    `
-  });
-
-  editor.BlockManager.add("image",{
-    label:"Image",
-    category:"Media",
-    content:`<img src="https://via.placeholder.com/900x500" style="max-width:100%;border-radius:18px;">`
+    content:`<p>Add your text here.</p>`
   });
 
   editor.BlockManager.add("card",{
     label:"Card",
-    category:"Layout",
+    category:"Cards",
+    content:`<div class="card"><h2>Card Title</h2><p>Card text goes here.</p></div>`
+  });
+
+  editor.BlockManager.add("section",{
+    label:"Section",
+    category:"Sections",
+    content:`<section class="content-section"><h2>New Section</h2><p>Add your content here.</p></section>`
+  });
+
+  editor.BlockManager.add("two-column",{
+    label:"2 Columns",
+    category:"Sections",
     content:`
-      <div style="padding:30px;border-radius:22px;background:white;box-shadow:0 15px 45px rgba(0,0,0,.12);">
-        <h3>Card Title</h3>
-        <p>Card text goes here.</p>
-      </div>
-    `
+<section class="content-section">
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:28px;align-items:center;max-width:1100px;margin:auto;">
+    <div><h2>Section Title</h2><p>Add content here.</p></div>
+    <div class="card"><p>Feature content here.</p></div>
+  </div>
+</section>
+`
+  });
+
+  editor.BlockManager.add("image",{
+    label:"Image",
+    category:"Images",
+    content:`<img class="site-image" src="https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=900&q=80">`
+  });
+
+  editor.BlockManager.add("divider",{
+    label:"Divider",
+    category:"Graphics",
+    content:`<div style="height:2px;width:80%;margin:40px auto;background:linear-gradient(90deg,transparent,#7B5CFF,transparent);"></div>`
   });
 }
 
 /* =========================
-   HUGE DESIGN LIBRARY ENGINE
+   LIBRARIES
 =========================*/
-function buildDesignLibrary(){
-  designStyles = [];
+function buildLibraries(){
+  buildStylePresets();
+  buildStockImages();
+  buildBackgrounds();
+  buildFonts();
+}
 
-  const palettes = [
-    ["#7B5CFF","#9F7BFF"],["#0EA5E9","#22D3EE"],["#10B981","#A7F3D0"],["#F97316","#FDBA74"],
-    ["#EC4899","#F9A8D4"],["#EF4444","#FCA5A5"],["#111827","#374151"],["#F59E0B","#FDE68A"],
-    ["#8B5CF6","#C4B5FD"],["#06B6D4","#67E8F9"],["#14B8A6","#99F6E4"],["#84CC16","#D9F99D"],
-    ["#6366F1","#A5B4FC"],["#D946EF","#F5D0FE"],["#FB7185","#FDA4AF"],["#2DD4BF","#0F766E"],
-    ["#334155","#94A3B8"],["#020617","#1E293B"],["#4F46E5","#7C3AED"],["#CA8A04","#FACC15"]
+function buildStylePresets(){
+  stylePresets = [
+    {category:"buttons", name:"Purple Gradient Button", keywords:"purple gradient rounded modern", css:{background:"linear-gradient(135deg,#7B5CFF,#9F7BFF)",color:"#fff",borderRadius:"999px",boxShadow:"0 12px 28px rgba(123,92,255,.35)",fontWeight:"800",padding:"14px 30px"}},
+    {category:"buttons", name:"Black Luxury Button", keywords:"black luxury premium dark", css:{background:"#020617",color:"#fff",borderRadius:"14px",boxShadow:"0 14px 34px rgba(0,0,0,.25)",fontWeight:"800",padding:"14px 30px"}},
+    {category:"buttons", name:"Gold Premium Button", keywords:"gold luxury premium elegant", css:{background:"linear-gradient(135deg,#B7791F,#FACC15)",color:"#111",borderRadius:"999px",fontWeight:"900",padding:"14px 32px"}},
+    {category:"buttons", name:"Blue Tech Button", keywords:"blue tech clean modern", css:{background:"linear-gradient(135deg,#0EA5E9,#22D3EE)",color:"#fff",borderRadius:"12px",fontWeight:"800",padding:"14px 30px"}},
+    {category:"buttons", name:"Pink Beauty Button", keywords:"pink beauty feminine soft", css:{background:"linear-gradient(135deg,#EC4899,#F9A8D4)",color:"#fff",borderRadius:"999px",fontWeight:"800",padding:"14px 30px"}},
+    {category:"buttons", name:"Outline Button", keywords:"outline simple minimal white", css:{background:"transparent",color:"#111827",border:"2px solid currentColor",borderRadius:"999px",fontWeight:"800",padding:"12px 28px"}},
+    {category:"text", name:"Luxury Heading", keywords:"luxury serif elegant heading", css:{fontFamily:"Georgia, serif",fontSize:"56px",fontWeight:"700",letterSpacing:"-1px",lineHeight:"1.05"}},
+    {category:"text", name:"Modern Bold Heading", keywords:"modern bold clean heading", css:{fontFamily:"Inter, Arial, sans-serif",fontSize:"48px",fontWeight:"900",letterSpacing:"-1.5px",lineHeight:"1.05"}},
+    {category:"text", name:"Small Caps Label", keywords:"small caps label uppercase spaced", css:{fontSize:"12px",fontWeight:"900",letterSpacing:"3px",textTransform:"uppercase",color:"#7B5CFF"}},
+    {category:"text", name:"Soft Paragraph", keywords:"paragraph soft readable gray", css:{fontSize:"18px",lineHeight:"1.7",color:"#667085"}},
+    {category:"cards", name:"Soft White Card", keywords:"white soft clean card", css:{background:"#fff",borderRadius:"24px",boxShadow:"0 18px 45px rgba(20,20,40,.10)",padding:"30px",border:"1px solid #e6e6ef"}},
+    {category:"cards", name:"Dark Glass Card", keywords:"dark glass blur card", css:{background:"rgba(15,23,42,.72)",color:"#fff",borderRadius:"24px",boxShadow:"0 18px 50px rgba(0,0,0,.25)",padding:"30px",border:"1px solid rgba(255,255,255,.12)"}},
+    {category:"cards", name:"Purple Glow Card", keywords:"purple glow modern card", css:{background:"#fff",borderRadius:"26px",boxShadow:"0 0 40px rgba(123,92,255,.38)",padding:"32px",border:"1px solid rgba(123,92,255,.25)"}},
+    {category:"images", name:"Rounded Image", keywords:"image rounded soft", css:{borderRadius:"24px",boxShadow:"0 16px 38px rgba(0,0,0,.15)"}},
+    {category:"images", name:"Luxury Image Frame", keywords:"image luxury border frame", css:{borderRadius:"18px",boxShadow:"0 20px 50px rgba(0,0,0,.22)",border:"8px solid #fff"}},
+    {category:"images", name:"Black & White Image", keywords:"image grayscale black white", css:{filter:"grayscale(1)",borderRadius:"18px"}},
+    {category:"gradients", name:"Purple Gradient", keywords:"purple gradient", css:{background:"linear-gradient(135deg,#7B5CFF,#9F7BFF)",color:"#fff"}},
+    {category:"gradients", name:"Ocean Gradient", keywords:"blue ocean gradient", css:{background:"linear-gradient(135deg,#0EA5E9,#22D3EE)",color:"#fff"}},
+    {category:"gradients", name:"Sunset Gradient", keywords:"orange pink sunset gradient", css:{background:"linear-gradient(135deg,#F97316,#EC4899)",color:"#fff"}},
+    {category:"gradients", name:"Dark Navy Gradient", keywords:"dark navy gradient luxury", css:{background:"linear-gradient(135deg,#07111f,#141b5f)",color:"#fff"}}
   ];
 
-  const fontFamilies = [
-    "Arial, sans-serif","Georgia, serif","'Times New Roman', serif","Verdana, sans-serif",
-    "'Trebuchet MS', sans-serif","Impact, sans-serif","Tahoma, sans-serif","Courier New, monospace",
-    "Inter, Arial, sans-serif","Playfair Display, serif"
+  const colors = [
+    ["Red","#EF4444"],["Orange","#F97316"],["Gold","#FACC15"],["Green","#10B981"],
+    ["Teal","#14B8A6"],["Blue","#0EA5E9"],["Indigo","#6366F1"],["Purple","#7B5CFF"],
+    ["Pink","#EC4899"],["Black","#020617"],["Gray","#64748B"]
   ];
 
-  const shadows = [
-    "0 8px 20px rgba(0,0,0,.12)",
-    "0 14px 34px rgba(0,0,0,.18)",
-    "0 20px 55px rgba(0,0,0,.24)",
-    "0 0 30px rgba(123,92,255,.45)",
-    "inset 0 1px 0 rgba(255,255,255,.35), 0 14px 34px rgba(0,0,0,.18)"
-  ];
-
-  const radii = ["0px","8px","14px","22px","999px"];
-  const borders = ["none","1px solid rgba(0,0,0,.12)","2px solid currentColor","1px solid rgba(255,255,255,.25)"];
-  const textAligns = ["left","center","right"];
-  const fontSizes = ["16px","18px","22px","28px","36px","48px","64px"];
-  const weights = ["400","500","600","700","800","900"];
-
-  /* 220 BUTTON STYLES */
-  for(let i=0;i<220;i++){
-    const p = palettes[i % palettes.length];
-    const radius = radii[i % radii.length];
-    const shadow = shadows[i % shadows.length];
-    const border = borders[i % borders.length];
-    const solid = i % 4 === 0;
-
-    designStyles.push({
+  colors.forEach(([label,color])=>{
+    stylePresets.push({
       category:"buttons",
-      name:`Button Style ${i+1}`,
-      preview:"Button",
-      css:{
-        display:"inline-block",
-        padding:`${12 + (i % 5)}px ${22 + (i % 7) * 3}px`,
-        borderRadius:radius,
-        background: solid ? p[0] : `linear-gradient(135deg,${p[0]},${p[1]})`,
-        color:"#ffffff",
-        textDecoration:"none",
-        fontWeight:weights[i % weights.length],
-        boxShadow:shadow,
-        border:border,
-        letterSpacing: i % 3 === 0 ? ".5px" : "0px"
-      }
+      name:`${label} Button`,
+      keywords:`${label.toLowerCase()} button color solid`,
+      css:{background:color,color:"#fff",borderRadius:"999px",fontWeight:"800",padding:"14px 30px"}
     });
-  }
 
-  /* 160 TEXT STYLES */
-  for(let i=0;i<160;i++){
-    const p = palettes[i % palettes.length];
-
-    designStyles.push({
-      category:"text",
-      name:`Text Style ${i+1}`,
-      preview:"Sample Text",
-      css:{
-        color:p[0],
-        fontSize:fontSizes[i % fontSizes.length],
-        fontWeight:weights[i % weights.length],
-        textAlign:textAligns[i % textAligns.length],
-        letterSpacing:i % 4 === 0 ? "2px" : "0px",
-        lineHeight:i % 3 === 0 ? "1.1" : "1.45",
-        textTransform:i % 6 === 0 ? "uppercase" : "none"
-      }
-    });
-  }
-
-  /* 150 CARD STYLES */
-  for(let i=0;i<150;i++){
-    const p = palettes[i % palettes.length];
-
-    designStyles.push({
+    stylePresets.push({
       category:"cards",
-      name:`Card Style ${i+1}`,
-      preview:"Card",
-      css:{
-        padding:`${22 + (i % 6) * 3}px`,
-        borderRadius:radii[(i+2) % radii.length],
-        background:i % 3 === 0 ? `linear-gradient(135deg,${p[0]},${p[1]})` : "#ffffff",
-        color:i % 3 === 0 ? "#ffffff" : "#111827",
-        boxShadow:shadows[i % shadows.length],
-        border:borders[i % borders.length]
-      }
+      name:`${label} Accent Card`,
+      keywords:`${label.toLowerCase()} card color accent`,
+      css:{border:`2px solid ${color}`,borderRadius:"22px",padding:"30px",boxShadow:`0 18px 45px ${hexToRgba(color,.18)}`}
     });
-  }
+  });
+}
 
-  /* 170 BACKGROUND STYLES */
-  for(let i=0;i<170;i++){
-    const p = palettes[i % palettes.length];
+function buildStockImages(){
+  stockImages = [
+    {name:"Luxury Office", category:"business", keywords:"business office premium corporate modern dark", src:"https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=80"},
+    {name:"Laptop Workspace", category:"business", keywords:"website laptop desk work design", src:"https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80"},
+    {name:"Team Meeting", category:"business", keywords:"team meeting business corporate", src:"https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=1200&q=80"},
+    {name:"Floral Arrangement", category:"floral", keywords:"floral flowers bouquet pink elegant wedding", src:"https://images.unsplash.com/photo-1525310072745-f49212b5ac6d?auto=format&fit=crop&w=1200&q=80"},
+    {name:"Wedding Flowers", category:"floral", keywords:"wedding flowers bouquet white luxury", src:"https://images.unsplash.com/photo-1526047932273-341f2a7631f9?auto=format&fit=crop&w=1200&q=80"},
+    {name:"Flower Shop", category:"floral", keywords:"flower shop florist floral business", src:"https://images.unsplash.com/photo-1487530903081-59e0e3331512?auto=format&fit=crop&w=1200&q=80"},
+    {name:"Bar Counter", category:"bar", keywords:"bar drinks restaurant nightlife", src:"https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=1200&q=80"},
+    {name:"Cocktail Bar", category:"bar", keywords:"cocktail bar drink lounge luxury", src:"https://images.unsplash.com/photo-1470337458703-46ad1756a187?auto=format&fit=crop&w=1200&q=80"},
+    {name:"Patriotic Hall", category:"bar", keywords:"hall venue event community", src:"https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=1200&q=80"},
+    {name:"Landscaping Lawn", category:"landscaping", keywords:"landscaping lawn grass green", src:"https://images.unsplash.com/photo-1558904541-efa843a96f01?auto=format&fit=crop&w=1200&q=80"},
+    {name:"Garden Path", category:"landscaping", keywords:"garden path landscape plants", src:"https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=1200&q=80"},
+    {name:"Outdoor Home", category:"landscaping", keywords:"outdoor home yard lawn", src:"https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80"},
+    {name:"Beauty Salon", category:"beauty", keywords:"beauty salon spa clean", src:"https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1200&q=80"},
+    {name:"Barber Shop", category:"beauty", keywords:"barber haircut salon", src:"https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=1200&q=80"},
+    {name:"Spa Luxury", category:"beauty", keywords:"spa luxury wellness beauty", src:"https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1200&q=80"}
+  ];
+}
 
-    designStyles.push({
-      category:"backgrounds",
-      name:`Background ${i+1}`,
-      preview:"Background",
-      css:{
-        background:i % 2 === 0
-          ? `linear-gradient(${90 + (i % 180)}deg,${p[0]},${p[1]})`
-          : `radial-gradient(circle at ${20 + (i % 60)}% ${20 + (i % 60)}%,${p[1]},${p[0]})`,
-        color:"#ffffff"
-      }
-    });
-  }
+function buildBackgrounds(){
+  backgroundPresets = [
+    {category:"colors", name:"White", keywords:"white clean", css:{background:"#ffffff",color:"#111827"}},
+    {category:"colors", name:"Soft Gray", keywords:"gray light clean", css:{background:"#f8fafc",color:"#111827"}},
+    {category:"colors", name:"Black", keywords:"black dark luxury", css:{background:"#020617",color:"#ffffff"}},
+    {category:"colors", name:"Navy", keywords:"navy blue dark", css:{background:"#07111f",color:"#ffffff"}},
+    {category:"colors", name:"Purple", keywords:"purple brand", css:{background:"#7B5CFF",color:"#ffffff"}},
+    {category:"gradients", name:"Purple Glow", keywords:"purple gradient glow", css:{background:"linear-gradient(135deg,#7B5CFF,#9F7BFF)",color:"#ffffff"}},
+    {category:"gradients", name:"Dark Blue Motion", keywords:"dark blue animated premium", css:{background:"linear-gradient(135deg,#07111f,#102a4c,#141b5f)",color:"#ffffff"}},
+    {category:"gradients", name:"Gold Luxury", keywords:"gold luxury gradient", css:{background:"linear-gradient(135deg,#B7791F,#FACC15)",color:"#111827"}},
+    {category:"gradients", name:"Ocean Blue", keywords:"blue ocean clean", css:{background:"linear-gradient(135deg,#0EA5E9,#22D3EE)",color:"#ffffff"}}
+  ];
 
-  /* 150 GRADIENTS */
-  for(let i=0;i<150;i++){
-    const p = palettes[i % palettes.length];
-    const q = palettes[(i+5) % palettes.length];
-
-    designStyles.push({
-      category:"gradients",
-      name:`Gradient ${i+1}`,
-      preview:"Gradient",
-      css:{
-        background:`linear-gradient(${i * 7 % 360}deg,${p[0]},${p[1]},${q[0]})`,
-        color:"#ffffff"
-      }
-    });
-  }
-
-  /* 100 DIVIDERS / GRAPHICS */
-  for(let i=0;i<100;i++){
-    const p = palettes[i % palettes.length];
-
-    designStyles.push({
-      category:"dividers",
-      name:`Divider / Graphic ${i+1}`,
-      preview:"Divider",
-      html:`<div class="preset-divider" style="height:${1 + (i % 6)}px;width:${50 + (i % 45)}%;background:linear-gradient(90deg,transparent,${p[0]},${p[1]},transparent);border-radius:999px;margin:40px auto;"></div>`
-    });
-  }
-
-  /* 100 IMAGE TREATMENTS */
-  for(let i=0;i<100;i++){
-    designStyles.push({
+  stockImages.forEach(img=>{
+    backgroundPresets.push({
       category:"images",
-      name:`Image Treatment ${i+1}`,
-      preview:"Image",
+      name:`${img.name} Background`,
+      keywords:img.keywords,
       css:{
-        borderRadius:radii[(i+1) % radii.length],
-        boxShadow:shadows[i % shadows.length],
-        filter:i % 5 === 0 ? "grayscale(1)" : i % 5 === 1 ? "contrast(1.18)" : i % 5 === 2 ? "saturate(1.3)" : "none",
-        border:borders[i % borders.length]
+        background:`linear-gradient(rgba(0,0,0,.45),rgba(0,0,0,.45)), url('${img.src}') center/cover no-repeat`,
+        color:"#ffffff"
       }
     });
-  }
+  });
+}
 
-  /* 60 FONT COMBINATIONS */
-  for(let i=0;i<60;i++){
-    designStyles.push({
-      category:"fonts",
-      name:`Font Combo ${i+1}`,
-      preview:"Font Style",
-      css:{
-        fontFamily:fontFamilies[i % fontFamilies.length],
-        fontWeight:weights[i % weights.length],
-        letterSpacing:i % 4 === 0 ? "1px" : "0px",
-        lineHeight:i % 3 === 0 ? "1.2" : "1.5"
-      }
-    });
-  }
-
-  /* 100 SECTION LAYOUT PRESETS */
-  for(let i=0;i<100;i++){
-    const p = palettes[i % palettes.length];
-
-    designStyles.push({
-      category:"sections",
-      name:`Section Layout ${i+1}`,
-      preview:"Section",
-      html:`
-        <section class="content-section" style="padding:${60 + (i % 5) * 12}px 20px;text-align:${textAligns[i % textAligns.length]};background:${i % 2 === 0 ? "#ffffff" : `linear-gradient(135deg,${p[0]},${p[1]})`};color:${i % 2 === 0 ? "#111827" : "#ffffff"};">
-          <div style="max-width:${760 + (i % 5) * 80}px;margin:auto;">
-            <h2>Premium Section</h2>
-            <p>Add your content here and customize it visually.</p>
-            <a href="#" class="main-btn">Call To Action</a>
-          </div>
-        </section>
-      `
-    });
-  }
+function buildFonts(){
+  fontPresets = [
+    {name:"Modern Clean", keywords:"modern clean simple", css:{fontFamily:"Inter, Arial, sans-serif",fontWeight:"700",letterSpacing:"-0.5px"}},
+    {name:"Luxury Serif", keywords:"luxury serif elegant", css:{fontFamily:"Georgia, serif",fontWeight:"700",letterSpacing:"-0.8px"}},
+    {name:"Bold Impact", keywords:"bold strong impact", css:{fontFamily:"Impact, sans-serif",fontWeight:"900",letterSpacing:"0px"}},
+    {name:"Classic Editorial", keywords:"classic editorial serif", css:{fontFamily:"'Times New Roman', serif",fontWeight:"700"}},
+    {name:"Friendly Rounded", keywords:"friendly rounded soft", css:{fontFamily:"Verdana, sans-serif",fontWeight:"700"}},
+    {name:"Tech Mono", keywords:"tech mono code", css:{fontFamily:"'Courier New', monospace",fontWeight:"700"}},
+    {name:"Premium Sans", keywords:"premium sans business", css:{fontFamily:"Trebuchet MS, Arial, sans-serif",fontWeight:"800"}}
+  ];
 }
 
 /* =========================
-   RENDER DESIGN LIBRARY
+   RENDERERS
 =========================*/
-function renderDesignLibrary(){
-  const box = document.getElementById("designLibrary");
-  const count = document.getElementById("designCount");
+function renderPresetLibrary(){
+  const box = document.getElementById("presetLibrary");
   if(!box) return;
 
-  const search = document.getElementById("designSearch")?.value.toLowerCase() || "";
+  const search = (document.getElementById("styleSearch")?.value || "").toLowerCase();
 
-  const filtered = designStyles.filter(item => {
-    const categoryMatch = currentDesignCategory === "all" || item.category === currentDesignCategory;
-    const searchMatch = item.name.toLowerCase().includes(search) || item.category.toLowerCase().includes(search);
-    return categoryMatch && searchMatch;
+  const filtered = stylePresets.filter(item=>{
+    const cat = currentPresetCategory === "all" || item.category === currentPresetCategory;
+    const text = `${item.name} ${item.category} ${item.keywords}`.toLowerCase();
+    return cat && text.includes(search);
   });
 
-  count.textContent = `${filtered.length} styles showing • ${designStyles.length}+ total styles`;
+  document.getElementById("presetCount").textContent = `${filtered.length} styles found`;
 
   box.innerHTML = "";
+  filtered.forEach(item=>{
+    const btn = document.createElement("button");
+    btn.className = "preset-card";
+    btn.innerHTML = `<span>${item.category}</span><strong>${item.name}</strong>`;
+    Object.assign(btn.style, item.css);
+    btn.onclick = ()=>applyStylePreset(item);
+    box.appendChild(btn);
+  });
+}
 
-  filtered.forEach((item, index)=>{
+function renderStockImages(){
+  const box = document.getElementById("stockImages");
+  if(!box) return;
+
+  const search = (document.getElementById("imageSearch")?.value || "").toLowerCase();
+
+  const filtered = stockImages.filter(img=>{
+    const cat = currentImageCategory === "all" || img.category === currentImageCategory;
+    const text = `${img.name} ${img.category} ${img.keywords}`.toLowerCase();
+    return cat && text.includes(search);
+  });
+
+  document.getElementById("imageCount").textContent = `${filtered.length} images found`;
+
+  box.innerHTML = "";
+  filtered.forEach(img=>{
     const card = document.createElement("button");
-    card.className = "design-style-card";
-    card.innerHTML = `
-      <span>${item.category}</span>
-      <strong>${item.preview}</strong>
-      <small>${item.name}</small>
-    `;
-
-    if(item.css){
-      Object.entries(item.css).forEach(([key,value])=>{
-        card.style[key] = value;
-      });
-    }
-
-    card.onclick = () => applyDesignStyle(item);
+    card.className = "stock-card";
+    card.innerHTML = `<img src="${img.src}"><span>${img.name}</span>`;
+    card.onclick = ()=>addImageToPage(img.src);
     box.appendChild(card);
   });
 }
 
-function setupDesignSearch(){
-  const search = document.getElementById("designSearch");
-  if(search){
-    search.addEventListener("input", renderDesignLibrary);
-  }
+function renderBackgroundLibrary(){
+  const box = document.getElementById("backgroundLibrary");
+  if(!box) return;
+
+  const search = (document.getElementById("backgroundSearch")?.value || "").toLowerCase();
+
+  const filtered = backgroundPresets.filter(bg=>{
+    const cat = currentBackgroundCategory === "all" || bg.category === currentBackgroundCategory;
+    const text = `${bg.name} ${bg.category} ${bg.keywords}`.toLowerCase();
+    return cat && text.includes(search);
+  });
+
+  document.getElementById("backgroundCount").textContent = `${filtered.length} backgrounds found`;
+
+  box.innerHTML = "";
+  filtered.forEach(bg=>{
+    const card = document.createElement("button");
+    card.className = "preset-card";
+    card.innerHTML = `<span>${bg.category}</span><strong>${bg.name}</strong>`;
+    Object.assign(card.style, bg.css);
+    card.onclick = ()=>applyBackground(bg);
+    box.appendChild(card);
+  });
 }
 
-function setDesignCategory(category, btn){
-  currentDesignCategory = category;
+function renderFontLibrary(){
+  const box = document.getElementById("fontLibrary");
+  if(!box) return;
 
-  document.querySelectorAll(".design-tabs button").forEach(b=>b.classList.remove("active"));
+  const search = (document.getElementById("fontSearch")?.value || "").toLowerCase();
+
+  const filtered = fontPresets.filter(font=>{
+    const text = `${font.name} ${font.keywords}`.toLowerCase();
+    return text.includes(search);
+  });
+
+  document.getElementById("fontCount").textContent = `${filtered.length} fonts found`;
+
+  box.innerHTML = "";
+  filtered.forEach(font=>{
+    const card = document.createElement("button");
+    card.className = "preset-card";
+    card.innerHTML = `<span>font</span><strong>${font.name}</strong><small>Sample text</small>`;
+    Object.assign(card.style, font.css);
+    card.onclick = ()=>applyFont(font);
+    box.appendChild(card);
+  });
+}
+
+/* =========================
+   SEARCH + FILTERS
+=========================*/
+function setupSearches(){
+  document.getElementById("styleSearch")?.addEventListener("input", renderPresetLibrary);
+  document.getElementById("imageSearch")?.addEventListener("input", renderStockImages);
+  document.getElementById("backgroundSearch")?.addEventListener("input", renderBackgroundLibrary);
+  document.getElementById("fontSearch")?.addEventListener("input", renderFontLibrary);
+}
+
+function setPresetCategory(category, btn){
+  currentPresetCategory = category;
+  setActiveFilter(btn);
+  renderPresetLibrary();
+}
+
+function setImageCategory(category, btn){
+  currentImageCategory = category;
+  setActiveFilter(btn);
+  renderStockImages();
+}
+
+function setBackgroundCategory(category, btn){
+  currentBackgroundCategory = category;
+  setActiveFilter(btn);
+  renderBackgroundLibrary();
+}
+
+function setActiveFilter(btn){
+  btn.parentElement.querySelectorAll("button").forEach(b=>b.classList.remove("active"));
   btn.classList.add("active");
-
-  renderDesignLibrary();
 }
 
-function applyDesignStyle(item){
-  if(item.html){
-    editor.addComponents(item.html);
-    editor.refresh();
-    return;
-  }
-
+/* =========================
+   APPLY / ADD ACTIONS
+=========================*/
+function applyStylePreset(item){
   const selected = editor.getSelected();
 
   if(!selected){
-    alert("Select something on the page first.");
+    editor.addComponents(`<a href="#" class="main-btn" style="${styleObjToString(item.css)}">${item.name}</a>`);
     return;
   }
 
@@ -447,8 +566,37 @@ function applyDesignStyle(item){
   editor.refresh();
 }
 
+function applyBackground(bg){
+  const selected = editor.getSelected();
+
+  if(!selected){
+    editor.addComponents(`<section class="content-section" style="${styleObjToString(bg.css)}"><h2>${bg.name}</h2><p>Add your content here.</p></section>`);
+    return;
+  }
+
+  selected.addStyle(bg.css);
+  editor.refresh();
+}
+
+function applyFont(font){
+  const selected = editor.getSelected();
+
+  if(!selected){
+    editor.addComponents(`<h2 style="${styleObjToString(font.css)}">${font.name}</h2>`);
+    return;
+  }
+
+  selected.addStyle(font.css);
+  editor.refresh();
+}
+
+function addImageToPage(src){
+  editor.addComponents(`<img class="site-image" src="${src}">`);
+  editor.refresh();
+}
+
 /* =========================
-   IMAGE UPLOADER
+   UPLOADS
 =========================*/
 function setupImageUploader(){
   const btn = document.getElementById("uploadImageBtn");
@@ -485,13 +633,128 @@ async function uploadImageToSupabase(){
     .from("site-images")
     .getPublicUrl(filePath);
 
-  editor.addComponents(`<img src="${data.publicUrl}" style="max-width:100%;border-radius:18px;">`);
+  addImageToPage(data.publicUrl);
   status.textContent = "Image uploaded and added.";
   input.value = "";
 }
 
 /* =========================
-   LOAD / SAVE / PUBLISH
+   PAGE MANAGER
+=========================*/
+function saveCurrentPageToMemory(){
+  pages[activePage] = {
+    html: editor.getHtml(),
+    css: editor.getCss()
+  };
+}
+
+function loadPageIntoEditor(pageName){
+  activePage = pageName;
+  const page = pages[pageName] || { html: pageTemplates.home, css: starterCss };
+
+  editor.setComponents(page.html);
+  editor.setStyle(page.css || starterCss);
+
+  document.getElementById("currentPageLabel").textContent = `${formatPageName(pageName)} Page`;
+
+  setTimeout(()=>editor.refresh(),300);
+}
+
+function switchPage(pageName){
+  saveCurrentPageToMemory();
+  loadPageIntoEditor(pageName);
+  renderPageList();
+}
+
+function createNewPage(){
+  const name = prompt("Page name? Example: testimonials, booking, menu");
+  if(!name) return;
+
+  const slug = slugify(name);
+
+  if(pages[slug]){
+    alert("That page already exists.");
+    return;
+  }
+
+  saveCurrentPageToMemory();
+
+  pages[slug] = {
+    html:`<section class="content-section"><h1>${formatPageName(slug)}</h1><p>Start building this page.</p></section>`,
+    css:starterCss
+  };
+
+  loadPageIntoEditor(slug);
+  renderPageSelect();
+  renderPageList();
+}
+
+function createPresetPage(type){
+  const slug = type;
+
+  if(pages[slug] && !confirm(`${formatPageName(slug)} already exists. Replace it?`)){
+    return;
+  }
+
+  saveCurrentPageToMemory();
+
+  pages[slug] = {
+    html:pageTemplates[type] || pageTemplates.home,
+    css:starterCss
+  };
+
+  loadPageIntoEditor(slug);
+  renderPageSelect();
+  renderPageList();
+}
+
+function deletePage(pageName){
+  if(pageName === "home"){
+    alert("Home page cannot be deleted.");
+    return;
+  }
+
+  if(!confirm(`Delete ${formatPageName(pageName)} page?`)) return;
+
+  delete pages[pageName];
+  activePage = "home";
+  loadPageIntoEditor("home");
+  renderPageSelect();
+  renderPageList();
+}
+
+function renderPageSelect(){
+  const select = document.getElementById("pageSelect");
+  select.innerHTML = "";
+
+  Object.keys(pages).forEach(page=>{
+    const option = document.createElement("option");
+    option.value = page;
+    option.textContent = formatPageName(page);
+    if(page === activePage) option.selected = true;
+    select.appendChild(option);
+  });
+}
+
+function renderPageList(){
+  const box = document.getElementById("pageList");
+  if(!box) return;
+
+  box.innerHTML = "";
+
+  Object.keys(pages).forEach(page=>{
+    const item = document.createElement("div");
+    item.className = page === activePage ? "page-item active" : "page-item";
+    item.innerHTML = `
+      <button onclick="switchPage('${page}')">${formatPageName(page)}</button>
+      ${page !== "home" ? `<button class="delete-page" onclick="deletePage('${page}')">Delete</button>` : ""}
+    `;
+    box.appendChild(item);
+  });
+}
+
+/* =========================
+   SAVE / PUBLISH
 =========================*/
 async function loadSavedPage(){
   const { data, error } = await db
@@ -509,12 +772,16 @@ async function loadSavedPage(){
 }
 
 async function savePage(){
+  saveCurrentPageToMemory();
+
   const { error } = await db
     .from("visual_pages")
     .upsert({
       user_id: currentUser.id,
-      html: editor.getHtml(),
-      css: editor.getCss(),
+      html: pages.home?.html || editor.getHtml(),
+      css: pages.home?.css || editor.getCss(),
+      pages: pages,
+      active_page: activePage,
       status:"draft",
       updated_at:new Date().toISOString()
     },{onConflict:"user_id"});
@@ -530,12 +797,16 @@ async function savePage(){
 }
 
 async function publishPage(){
+  saveCurrentPageToMemory();
+
   const { error } = await db
     .from("visual_pages")
     .upsert({
       user_id: currentUser.id,
-      html: editor.getHtml(),
-      css: editor.getCss(),
+      html: pages.home?.html || editor.getHtml(),
+      css: pages.home?.css || editor.getCss(),
+      pages: pages,
+      active_page: activePage,
       status:"published",
       updated_at:new Date().toISOString()
     },{onConflict:"user_id"});
@@ -626,14 +897,10 @@ function addWixControls(){
   });
 }
 
-/* =========================
-   ADD SECTION BUTTONS
-=========================*/
 function addSectionAddButtons(){
   editor.on("component:selected", () => renderAddButtons());
   editor.on("component:update", () => renderAddButtons());
   editor.on("component:add", () => renderAddButtons());
-
   setTimeout(renderAddButtons, 800);
 }
 
@@ -670,4 +937,30 @@ function renderAddButtons(){
 
     document.body.appendChild(btn);
   });
+}
+
+/* =========================
+   HELPERS
+=========================*/
+function styleObjToString(obj){
+  return Object.entries(obj).map(([k,v])=>{
+    const cssKey = k.replace(/[A-Z]/g, m => "-" + m.toLowerCase());
+    return `${cssKey}:${v}`;
+  }).join(";");
+}
+
+function slugify(text){
+  return text.toLowerCase().trim().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+}
+
+function formatPageName(slug){
+  return slug.replace(/-/g," ").replace(/\b\w/g, l=>l.toUpperCase());
+}
+
+function hexToRgba(hex, alpha){
+  const bigint = parseInt(hex.replace("#",""),16);
+  const r = (bigint >> 16) & 255;
+  const g = (bigint >> 8) & 255;
+  const b = bigint & 255;
+  return `rgba(${r},${g},${b},${alpha})`;
 }
