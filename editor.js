@@ -936,14 +936,15 @@ function renderPageList(){
   Object.keys(pages).forEach(page=>{
     const item = document.createElement("div");
     item.className = page === activePage ? "page-item active" : "page-item";
+
     item.innerHTML = `
       <button onclick="switchPage('${page}')">${formatPageName(page)}</button>
       ${page !== "home" ? `<button class="delete-page" onclick="deletePage('${page}')">Delete</button>` : ""}
     `;
+
     box.appendChild(item);
   });
 }
-
 /* =========================
    SAVE / PUBLISH
 =========================*/
