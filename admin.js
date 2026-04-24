@@ -539,7 +539,12 @@ async function releaseDomain(id){
 
   alert("Domain marked as released.");
   await loadClientSites();
+  
+  // Refresh importer dropdown if it's open
+if(typeof populateImportClientSelect === "function"){
+  populateImportClientSelect();
 }
+  }, 300);
 
 async function updateChangeRequest(id, clientUserId){
   const status = document.getElementById(`status-${id}`).value;
