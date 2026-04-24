@@ -1,6 +1,7 @@
 let adminUser = null;
 let clientSites = [];
 let changeRequests = [];
+let activeBillingFilter = "all";
 
 const BASE_URL = "https://tylorg811-byte.github.io/giles-client-portal";
 
@@ -52,7 +53,7 @@ async function loadClientSites(){
 
   clientSites = data || [];
   renderStats();
-  renderClientSites();
+  applyBillingFilter();
 }
 
 async function loadChangeRequests(){
@@ -78,8 +79,8 @@ function renderStats(){
   document.getElementById("publishedClients").textContent =
     clientSites.filter(site => site.site_status === "published").length;
 
-  document.getElementById("liveDomains").textContent =
-    clientSites.filter(site => site.domain_status === "live").length;
+  document.getElementById("pastDueClients").textContent =
+    clientSites.filter(site => getBillingStatus(site).text === "Past Due").length;
 
   const requestCounter = document.getElementById("newRequests");
   if(requestCounter){
@@ -100,23 +101,83 @@ function getClientLiveUrl(site){
   return `${BASE_URL}/index.html`;
 }
 
-function getBillingLiveAllowed(site){
-  if(site.billing_override) return true;
+function getBillingStatus(site){
+  if(site.billing_override){
+    return { text:"Covered by Giles", class:"full" };
+  }
 
-  const allowed = ["active","manual paid","free","trial"];
-  return allowed.includes(site.billing_status || "active");
+  if(site.billing_status === "free"){
+    return { text:"Free / Comped", class:"full" };
+  }
+
+  if(site.billing_status === "manual paid"){
+    return { text:"Manual Paid", class:"full" };
+  }
+
+  if(site.billing_status === "trial"){
+    return { text:"Trial", class:"safe" };
+  }
+
+  if(site.billing_status === "paused"){
+    return { text:"Paused", class:"dark" };
+  }
+
+  if(site.billing_status === "past due"){
+    return { text:"Past Due", class:"danger" };
+  }
+
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  const next = site.next_payment_date ? new Date(site.next_payment_date + "T00:00:00") : null;
+
+  if(!next){
+    return { text:"Active", class:"full" };
+  }
+
+  if(next < today){
+    return { text:"Past Due", class:"danger" };
+  }
+
+  return { text:"Active", class:"full" };
 }
 
-function renderClientSites(){
+function applyBillingFilter(){
+  const filter = document.getElementById("billingFilter")?.value || "all";
+  activeBillingFilter = filter;
+
+  let filtered = [...clientSites];
+
+  if(filter !== "all"){
+    filtered = clientSites.filter(site=>{
+      const status = getBillingStatus(site).text.toLowerCase();
+      const raw = (site.billing_status || "").toLowerCase();
+
+      if(filter === "active") return status === "active";
+      if(filter === "past") return status === "past due";
+      if(filter === "covered") return status === "covered by giles";
+      if(filter === "free") return raw === "free";
+      if(filter === "trial") return raw === "trial";
+      if(filter === "paused") return raw === "paused";
+      if(filter === "manual paid") return raw === "manual paid";
+
+      return true;
+    });
+  }
+
+  renderClientSites(filtered);
+}
+
+function renderClientSites(sites = clientSites){
   const list = document.getElementById("clientList");
   list.innerHTML = "";
 
-  if(!clientSites.length){
-    list.innerHTML = "<p>No client sites yet.</p>";
+  if(!sites.length){
+    list.innerHTML = "<p>No client sites match this filter.</p>";
     return;
   }
 
-  clientSites.forEach(site=>{
+  sites.forEach(site=>{
     const card = document.createElement("div");
     card.className = "client-card";
 
@@ -130,8 +191,7 @@ function renderClientSites(){
     const accessText = site.editor_access === "full" ? "Full Editor Access" : "Safe Mode";
     const accessClass = site.editor_access === "full" ? "full" : "safe";
 
-    const billingAllowed = getBillingLiveAllowed(site);
-    const billingClass = billingAllowed ? "full" : "danger";
+    const billing = getBillingStatus(site);
 
     const releaseStatus = site.domain_release_status || "connected";
     const releaseClass = releaseStatus === "released" ? "danger" : releaseStatus === "release requested" ? "safe" : "";
@@ -142,7 +202,10 @@ function renderClientSites(){
         <p>${escapeHtml(site.client_email || "No email")}</p>
         <p><strong>User ID:</strong> ${escapeHtml(site.client_user_id || "Not assigned")}</p>
         <p><strong>Editor:</strong> <span class="badge ${accessClass}">${accessText}</span></p>
-        <p><strong>Billing:</strong> <span class="badge ${billingClass}">${escapeHtml(site.billing_status || "active")}</span></p>
+        <p><strong>Billing:</strong> <span class="badge ${billing.class}">${billing.text}</span></p>
+        <p><strong>Cycle:</strong> ${escapeHtml(site.billing_cycle || "monthly")}</p>
+        ${site.last_payment_date ? `<p><strong>Last Paid:</strong> ${formatDate(site.last_payment_date)}</p>` : ""}
+        ${site.next_payment_date ? `<p><strong>Next Due:</strong> ${formatDate(site.next_payment_date)}</p>` : ""}
         ${site.billing_override ? `<p><strong>Override:</strong> <span class="badge full">Enabled</span></p>` : ""}
       </div>
 
@@ -240,17 +303,13 @@ async function releaseDomain(id){
   if(!site) return;
 
   const reason = prompt(
-    `Release domain for ${site.business_name || site.client_email}?\n\nThis will mark the domain as released in your portal and stop using it as the live managed URL.\n\nImportant: this does not remove DNS at Namecheap/Netlify/GitHub yet unless API automation is added.\n\nReason:`,
+    `Release domain for ${site.business_name || site.client_email}?\n\nThis will mark the domain as released in your portal and stop using it as the live managed URL.\n\nReason:`,
     "Client requested domain release"
   );
 
   if(reason === null) return;
 
-  const confirmRelease = confirm(
-    `Confirm release for ${site.domain}?\n\nAfter this, the portal will use the fallback client live link instead of this custom domain.`
-  );
-
-  if(!confirmRelease) return;
+  if(!confirm(`Confirm release for ${site.domain}?`)) return;
 
   const { error } = await db
     .from("client_sites")
@@ -350,6 +409,9 @@ async function saveClientSite(){
     billing_override: cleanValue("billingOverride") === "true",
     billing_override_reason: cleanValue("billingOverrideReason"),
     billing_notes: cleanValue("billingNotes"),
+    billing_cycle: cleanValue("billingCycle") || "monthly",
+    next_payment_date: cleanValue("nextPaymentDate") || null,
+    last_payment_date: cleanValue("lastPaymentDate") || null,
     notes: cleanValue("notes"),
     updated_at: new Date().toISOString()
   };
@@ -379,10 +441,12 @@ async function saveClientSite(){
   }
 
   if(payload.client_user_id){
+    const billing = getBillingStatus(payload);
+
     await db.from("notifications").insert({
       user_id: payload.client_user_id,
       title: "Website account updated",
-      message: `Your website status is "${payload.site_status}". Editor access: "${payload.editor_access === "full" ? "Full Editor Access" : "Safe Mode"}". Billing status: "${payload.billing_status}".`,
+      message: `Your website status is "${payload.site_status}". Billing: "${billing.text}".${payload.next_payment_date ? " Next payment: " + payload.next_payment_date + "." : ""}`,
       type: "site"
     });
   }
@@ -411,6 +475,9 @@ function editClientSite(id){
   document.getElementById("billingOverride").value = site.billing_override ? "true" : "false";
   document.getElementById("billingOverrideReason").value = site.billing_override_reason || "";
   document.getElementById("billingNotes").value = site.billing_notes || "";
+  document.getElementById("billingCycle").value = site.billing_cycle || "monthly";
+  document.getElementById("nextPaymentDate").value = site.next_payment_date || "";
+  document.getElementById("lastPaymentDate").value = site.last_payment_date || "";
   document.getElementById("notes").value = site.notes || "";
 
   scrollToForm();
@@ -449,6 +516,9 @@ function clearClientForm(){
   document.getElementById("billingOverride").value = "false";
   document.getElementById("billingOverrideReason").value = "";
   document.getElementById("billingNotes").value = "";
+  document.getElementById("billingCycle").value = "monthly";
+  document.getElementById("nextPaymentDate").value = "";
+  document.getElementById("lastPaymentDate").value = "";
   document.getElementById("notes").value = "";
 }
 
@@ -495,6 +565,11 @@ function timeAgo(dateString){
   if(days < 7) return `${days} day${days === 1 ? "" : "s"} ago`;
 
   return date.toLocaleDateString();
+}
+
+function formatDate(dateString){
+  if(!dateString) return "—";
+  return new Date(dateString + "T00:00:00").toLocaleDateString();
 }
 
 function escapeHtml(value){
