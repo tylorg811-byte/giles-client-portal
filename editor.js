@@ -2,42 +2,48 @@ let editor;
 let currentUser;
 
 const starterHtml = `
-<section class="hero-section">
+<section class="hero-section locked-section">
   <div class="hero-inner">
-    <p class="eyebrow">AFFORDABLE — YOUR WAY</p>
-    <h1>Look Professional.<br>Get More Customers.</h1>
-    <p>Affordable websites designed to turn visitors into paying customers.</p>
-    <a href="#contact" class="main-btn">Message Me</a>
+    <p class="eyebrow editable-text">AFFORDABLE — YOUR WAY</p>
+    <h1 class="editable-text">Look Professional.<br>Get More Customers.</h1>
+    <p class="editable-text">Affordable websites designed to turn visitors into paying customers.</p>
+    <a href="#contact" class="main-btn editable-text">Message Me</a>
   </div>
 </section>
 
-<section class="content-section">
-  <h2>Website Packages</h2>
+<section class="content-section locked-section">
+  <h2 class="editable-text">Website Packages</h2>
+
   <div class="package-grid">
-    <div class="package-card">
-      <h3>Starter</h3>
-      <p class="price">$100</p>
-      <p>Simple site to get online fast.</p>
+    <div class="package-card editable-card">
+      <h3 class="editable-text">Starter</h3>
+      <p class="price editable-text">$100</p>
+      <p class="editable-text">Simple site to get online fast.</p>
     </div>
 
-    <div class="package-card featured">
-      <h3>Business Growth</h3>
-      <p class="price">$250</p>
-      <p>Best option to attract customers.</p>
+    <div class="package-card featured editable-card">
+      <h3 class="editable-text">Business Growth</h3>
+      <p class="price editable-text">$250</p>
+      <p class="editable-text">Best option to attract customers.</p>
     </div>
 
-    <div class="package-card">
-      <h3>Premium</h3>
-      <p class="price">$500</p>
-      <p>High-end business presence.</p>
+    <div class="package-card editable-card">
+      <h3 class="editable-text">Premium</h3>
+      <p class="price editable-text">$500</p>
+      <p class="editable-text">High-end business presence.</p>
     </div>
   </div>
 </section>
 
-<section class="content-section" id="contact">
-  <h2>Let’s Build Your Website</h2>
-  <p>Ready to get started?</p>
-  <a href="mailto:you@example.com" class="main-btn">Contact Me</a>
+<section class="content-section locked-section">
+  <h2 class="editable-text">Why Choose Me</h2>
+  <p class="about-text editable-text">I've been designing websites since 2015, helping small businesses look professional and convert visitors into customers.</p>
+</section>
+
+<section class="content-section locked-section" id="contact">
+  <h2 class="editable-text">Let’s Build Your Website</h2>
+  <p class="editable-text">Ready to get started?</p>
+  <a href="mailto:you@example.com" class="main-btn editable-text">Contact Me</a>
 </section>
 `;
 
@@ -124,6 +130,17 @@ box-shadow:0 0 35px rgba(123,92,255,.45);
 font-size:34px;
 color:#9F7BFF;
 }
+
+.about-text{
+max-width:700px;
+margin:auto;
+text-align:center;
+}
+
+@media(max-width:700px){
+h1{font-size:36px;}
+.package-card{width:100%;}
+}
 `;
 
 initEditor();
@@ -142,53 +159,170 @@ async function initEditor(){
       appendTo: "#blocks"
     },
 
+    layerManager: {
+      appendTo: null
+    },
+
+    selectorManager: {
+      appendTo: null
+    },
+
+    traitManager: {
+      appendTo: null
+    },
+
     styleManager: {
       appendTo: "#styles",
-      sectors: [{
-        name: "Allowed Styling",
-        open: true,
-        buildProps: [
-          "color",
-          "background-color",
-          "font-size",
-          "text-align",
-          "margin",
-          "padding",
-          "border-radius"
-        ]
-      }]
+      sectors: [
+        {
+          name: "Text",
+          open: true,
+          buildProps: ["color", "font-size", "text-align"]
+        },
+        {
+          name: "Spacing",
+          open: false,
+          buildProps: ["margin", "padding"]
+        },
+        {
+          name: "Button/Card Style",
+          open: false,
+          buildProps: ["background-color", "border-radius"]
+        }
+      ]
+    },
+
+    panels: {
+      defaults: []
     }
   });
 
-  editor.BlockManager.add("text", {
-    label: "Text",
-    content: `<p>Edit this text</p>`
-  });
-
-  editor.BlockManager.add("heading", {
-    label: "Heading",
-    content: `<h2>Edit Heading</h2>`
-  });
-
-  editor.BlockManager.add("button", {
-    label: "Button",
-    content: `<a class="main-btn" href="#">Click Here</a>`
-  });
-
-  editor.BlockManager.add("section", {
-    label: "Section",
-    content: `<section class="content-section"><h2>New Section</h2><p>Edit this section.</p></section>`
-  });
-
-  editor.setComponents(starterHtml);
-  editor.setStyle(starterCss);
+  addEditorCommands();
+  addClientBlocks();
 
   const saved = await loadSavedPage();
 
   if(saved && saved.html){
     editor.setComponents(saved.html);
     editor.setStyle(saved.css || starterCss);
+  } else {
+    editor.setComponents(starterHtml);
+    editor.setStyle(starterCss);
   }
+
+  lockClientEditing();
+}
+
+function addEditorCommands(){
+  editor.Panels.addPanel({
+    id: "client-options",
+    el: ".editor-actions",
+    buttons: []
+  });
+}
+
+function addClientBlocks(){
+  editor.BlockManager.add("client-text", {
+    label: "Add Text",
+    category: "Add Content",
+    content: `<p class="editable-text">Add your text here</p>`
+  });
+
+  editor.BlockManager.add("client-heading", {
+    label: "Add Heading",
+    category: "Add Content",
+    content: `<h2 class="editable-text">Add Heading</h2>`
+  });
+
+  editor.BlockManager.add("client-button", {
+    label: "Add Button",
+    category: "Add Content",
+    content: `<a href="#" class="main-btn editable-text">Button Text</a>`
+  });
+
+  editor.BlockManager.add("client-section", {
+    label: "Add Section",
+    category: "Add Layout",
+    content: `
+      <section class="content-section client-added-section">
+        <h2 class="editable-text">New Section</h2>
+        <p class="editable-text">Add your message here.</p>
+      </section>
+    `
+  });
+
+  editor.BlockManager.add("client-card", {
+    label: "Add Card",
+    category: "Add Layout",
+    content: `
+      <div class="package-card editable-card">
+        <h3 class="editable-text">Card Title</h3>
+        <p class="editable-text">Card description goes here.</p>
+      </div>
+    `
+  });
+}
+
+function lockClientEditing(){
+  editor.DomComponents.getWrapper().find("*").forEach(component => {
+    const classes = component.getClasses();
+
+    const isEditableText = classes.includes("editable-text");
+    const isEditableCard = classes.includes("editable-card");
+    const isClientAdded = classes.includes("client-added-section");
+
+    if(isEditableText){
+      component.set({
+        editable: true,
+        draggable: false,
+        droppable: false,
+        removable: false,
+        copyable: false,
+        stylable: [
+          "color",
+          "font-size",
+          "text-align",
+          "margin",
+          "padding",
+          "background-color",
+          "border-radius"
+        ]
+      });
+    } else if(isEditableCard || isClientAdded){
+      component.set({
+        editable: false,
+        draggable: true,
+        droppable: true,
+        removable: true,
+        copyable: true,
+        stylable: [
+          "background-color",
+          "border-radius",
+          "margin",
+          "padding"
+        ]
+      });
+    } else {
+      component.set({
+        editable: false,
+        draggable: false,
+        droppable: true,
+        removable: false,
+        copyable: false,
+        stylable: false
+      });
+    }
+  });
+
+  editor.on("component:add", component => {
+    component.set({
+      editable: true,
+      draggable: true,
+      droppable: true,
+      removable: true,
+      copyable: true
+    });
+  });
 }
 
 async function loadSavedPage(){
@@ -219,6 +353,7 @@ async function savePage(){
     return;
   }
 
+  await addLog("Saved draft");
   alert("Draft saved.");
 }
 
@@ -239,5 +374,15 @@ async function publishPage(){
     return;
   }
 
+  await addLog("Published website changes");
   alert("Published.");
+}
+
+async function addLog(summary){
+  await db
+    .from("change_logs")
+    .insert({
+      user_id: currentUser.id,
+      change_summary: summary
+    });
 }
