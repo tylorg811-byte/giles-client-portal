@@ -417,3 +417,55 @@ font-size:12px;
 background:#7B5CFF;
 color:white;
 }
+
+/* ===== WIX STYLE BLOCK CARDS ===== */
+
+.gjs-blocks-c{
+display:grid!important;
+grid-template-columns:repeat(2,1fr)!important;
+gap:14px!important;
+}
+
+.gjs-block{
+height:110px!important;
+border-radius:16px!important;
+background:white!important;
+border:1px solid #e6e6ef!important;
+display:flex!important;
+align-items:center!important;
+justify-content:center!important;
+flex-direction:column!important;
+font-weight:600!important;
+color:#333!important;
+box-shadow:0 6px 18px rgba(0,0,0,.06);
+transition:.2s ease;
+}
+
+.gjs-block:hover{
+transform:translateY(-4px);
+box-shadow:0 12px 26px rgba(0,0,0,.12);
+border-color:#7B5CFF!important;
+}
+
+.gjs-block-label{
+font-size:13px!important;
+margin-top:6px!important;
+}
+
+.builder-panel{
+padding:26px!important;
+}
+
+.builder-panel h2{
+font-size:20px;
+margin-bottom:10px;
+}
+
+.builder-panel p{
+margin-bottom:20px;
+line-height:1.5;
+}
+
+.gjs-block-category{
+margin-bottom:20px!important;
+}
