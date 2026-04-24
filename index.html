@@ -110,10 +110,22 @@ async function loadSite(){
     };
   }
 
-  document.title =
-    data.site_settings?.businessName
-      ? data.site_settings.businessName
-      : "Live Website";
+  const seo = data.site_settings || {};
+
+document.title =
+  data.seo_title ||
+  seo.businessName ||
+  "Website";
+
+const metaDesc = document.createElement("meta");
+metaDesc.name = "description";
+metaDesc.content = data.seo_description || "";
+document.head.appendChild(metaDesc);
+
+const metaKeywords = document.createElement("meta");
+metaKeywords.name = "keywords";
+metaKeywords.content = data.seo_keywords || "";
+document.head.appendChild(metaKeywords);
 
   const style = document.createElement("style");
   style.innerHTML = page.css || data.css || "";
