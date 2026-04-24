@@ -79,58 +79,31 @@ async function initEditor(){
     }
   }
 
-  const { data: clientRecord } = await db
-    .from("client_sites")
-    .select("*")
-    .eq("client_user_id", editingUserId)
-    .single();
+  const { data: clientRecord, error: clientError } = await db
+  .from("client_sites")
+  .select("*")
+  .eq("client_user_id", editingUserId)
+  .maybeSingle();
 
-  clientSiteRecord = clientRecord || null;
+console.log("EDITOR USER:", currentUser.id);
+console.log("EDITING USER:", editingUserId);
+console.log("CLIENT RECORD:", clientRecord);
+console.log("CLIENT RECORD ERROR:", clientError);
+
+clientSiteRecord = clientRecord || null;
 
 const lockValue = String(clientSiteRecord?.editor_locked).toLowerCase();
 
 if(!isAdminEditing && lockValue === "true"){
   document.body.innerHTML = `
-    <div style="
-      min-height:100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:#07111f;
-      color:white;
-      font-family:Arial,sans-serif;
-      padding:24px;
-      text-align:center;
-    ">
-      <div style="
-        max-width:560px;
-        background:#0d1a2b;
-        border:1px solid #22324a;
-        border-radius:24px;
-        padding:34px;
-        box-shadow:0 20px 50px rgba(0,0,0,.35);
-      ">
+    <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#07111f;color:white;font-family:Arial,sans-serif;padding:24px;text-align:center;">
+      <div style="max-width:560px;background:#0d1a2b;border:1px solid #22324a;border-radius:24px;padding:34px;box-shadow:0 20px 50px rgba(0,0,0,.35);">
         <h1 style="margin-bottom:12px;">Editor Access Locked</h1>
-
         <p style="color:#cbd5e1;line-height:1.6;">
           Your editor access is currently locked.
-          ${
-            clientSiteRecord.editor_locked_reason
-              ? `<br><br><strong>Reason:</strong> ${clientSiteRecord.editor_locked_reason}`
-              : ""
-          }
+          ${clientSiteRecord.editor_locked_reason ? `<br><br><strong>Reason:</strong> ${clientSiteRecord.editor_locked_reason}` : ""}
         </p>
-
-        <a href="dashboard.html" style="
-          display:inline-block;
-          margin-top:22px;
-          background:linear-gradient(135deg,#7B5CFF,#9F7BFF);
-          color:white;
-          text-decoration:none;
-          font-weight:900;
-          padding:13px 20px;
-          border-radius:14px;
-        ">Back to Dashboard</a>
+        <a href="dashboard.html" style="display:inline-block;margin-top:22px;background:linear-gradient(135deg,#7B5CFF,#9F7BFF);color:white;text-decoration:none;font-weight:900;padding:13px 20px;border-radius:14px;">Back to Dashboard</a>
       </div>
     </div>
   `;
