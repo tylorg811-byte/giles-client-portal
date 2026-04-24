@@ -956,6 +956,27 @@ function formatDate(d){
   return new Date(d + "T00:00:00").toLocaleDateString();
 }
 
+function getTopReferrer(events){
+  const cleaned = events.map(e=>cleanReferrer(e.referrer));
+  const counts = {};
+
+  cleaned.forEach(source=>{
+    counts[source] = (counts[source] || 0) + 1;
+  });
+
+  return Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0] || "direct";
+}
+
+function cleanReferrer(ref){
+  if(!ref || ref === "direct") return "direct";
+
+  try{
+    return new URL(ref).hostname;
+  }catch(e){
+    return ref;
+  }
+}
+
 function escapeHtml(str){
   return String(str || "")
     .replaceAll("&","&amp;")
