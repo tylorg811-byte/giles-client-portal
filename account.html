@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Account Settings | Giles Client Portal</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body{
+font-family:Inter,Arial,sans-serif;
+background:#f6f7fb;
+color:#1f1f2e;
+min-height:100vh;
+}
+
+.wrapper{
+max-width:1050px;
+margin:auto;
+padding:34px 22px;
+}
+
+.top{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:26px;
+}
+
+.top h1{font-size:32px;}
+.top p{color:#777;margin-top:6px;}
+
+.back{
+padding:12px 18px;
+border-radius:14px;
+background:#fff;
+border:1px solid #e6e6ef;
+text-decoration:none;
+color:#333;
+font-weight:800;
+}
+
+.grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:22px;
+}
+
+.card{
+background:white;
+border:1px solid #e6e6ef;
+border-radius:24px;
+padding:28px;
+box-shadow:0 14px 40px rgba(20,20,40,.07);
+}
+
+.card h2{
+font-size:22px;
+margin-bottom:8px;
+}
+
+.card p{
+font-size:14px;
+color:#777;
+line-height:1.5;
+margin-bottom:20px;
+}
+
+.label{
+font-size:13px;
+font-weight:800;
+color:#666;
+margin-bottom:8px;
+display:block;
+}
+
+.info-box{
+padding:15px;
+border-radius:14px;
+background:#f6f7fb;
+border:1px solid #e6e6ef;
+margin-bottom:18px;
+font-weight:700;
+}
+
+input{
+width:100%;
+padding:14px;
+border-radius:14px;
+border:1px solid #e6e6ef;
+margin-bottom:14px;
+font-size:15px;
+}
+
+button{
+width:100%;
+padding:14px;
+border:none;
+border-radius:14px;
+background:linear-gradient(135deg,#7B5CFF,#9F7BFF);
+color:white;
+font-weight:900;
+font-size:15px;
+cursor:pointer;
+}
+
+.secondary{
+background:#f0efff;
+color:#5a4cff;
+box-shadow:none;
+margin-top:10px;
+}
+
+#message,
+#resetMessage{
+margin-top:14px;
+font-size:13px;
+color:#666;
+}
+
+@media(max-width:800px){
+.grid{grid-template-columns:1fr;}
+.top{display:block;}
+.back{display:inline-block;margin-top:16px;}
+}
+</style>
+</head>
+
+<body>
+
+<div class="wrapper">
+
+  <div class="top">
+    <div>
+      <h1>Account Settings</h1>
+      <p>Manage your login, password, and portal access.</p>
+    </div>
+
+    <a class="back" href="dashboard.html">Back to Dashboard</a>
+  </div>
+
+  <div class="grid">
+
+    <div class="card">
+      <h2>Account Info</h2>
+      <p>This is the email connected to your client portal account.</p>
+
+      <span class="label">Logged in as</span>
+      <div class="info-box" id="accountEmail">Loading...</div>
+
+      <button class="secondary" onclick="logout()">Logout</button>
+    </div>
+
+    <div class="card">
+      <h2>Change Password</h2>
+      <p>Update your password here. Use something secure that you’ll remember.</p>
+
+      <input id="newPassword" type="password" placeholder="New password">
+      <input id="confirmPassword" type="password" placeholder="Confirm password">
+
+      <button onclick="updatePassword()">Update Password</button>
+
+      <div id="message"></div>
+    </div>
+
+    <div class="card">
+      <h2>Password Reset Email</h2>
+      <p>Send yourself a password reset link if you’d rather reset through email.</p>
+
+      <input id="resetEmail" type="email" placeholder="Email address">
+
+      <button onclick="sendPasswordReset()">Send Reset Email</button>
+
+      <div id="resetMessage"></div>
+    </div>
+
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
+<script>
+loadAccount();
+</script>
+
+</body>
+</html>
