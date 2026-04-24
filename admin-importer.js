@@ -281,3 +281,5 @@ function slugifyImport(text){
     .replace(/[^a-z0-9]+/g,"-")
     .replace(/^-|-$/g,"") || "home";
 }
+
+window.populateImportClientSelect = populateImportClientSelect;
