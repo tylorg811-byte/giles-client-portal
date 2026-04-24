@@ -1,6 +1,7 @@
 let adminUser = null;
 let clientSites = [];
 let changeRequests = [];
+let analyticsEvents = [];
 let activeBillingFilter = "all";
 
 const BASE_URL = "https://tylorg811-byte.github.io/giles-client-portal";
@@ -27,6 +28,7 @@ async function loadAdminDashboard(){
 
   await loadClientSites();
   await loadChangeRequests();
+  await loadAnalytics();
 }
 
 async function checkAdminAccess(){
@@ -73,6 +75,29 @@ async function loadChangeRequests(){
   renderChangeRequests();
 }
 
+async function loadAnalytics(){
+  const since = new Date();
+  since.setDate(since.getDate() - 30);
+
+  const { data, error } = await db
+    .from("site_analytics_events")
+    .select("*")
+    .gte("created_at", since.toISOString())
+    .order("created_at", { ascending:false });
+
+  if(error){
+    console.error(error);
+    analyticsEvents = [];
+    renderAnalyticsOverview();
+    applyBillingFilter();
+    return;
+  }
+
+  analyticsEvents = data || [];
+  renderAnalyticsOverview();
+  applyBillingFilter();
+}
+
 function renderStats(){
   document.getElementById("totalClients").textContent = clientSites.length;
 
@@ -87,6 +112,66 @@ function renderStats(){
     requestCounter.textContent =
       changeRequests.filter(req => req.status === "new").length;
   }
+}
+
+function renderAnalyticsOverview(){
+  let analyticsCard = document.getElementById("adminAnalyticsCard");
+
+  if(!analyticsCard){
+    const firstCard = document.querySelector(".card");
+    analyticsCard = document.createElement("section");
+    analyticsCard.className = "card";
+    analyticsCard.id = "adminAnalyticsCard";
+    analyticsCard.innerHTML = `<h2>Analytics Overview</h2><div id="adminAnalyticsContent"></div>`;
+    firstCard.parentNode.insertBefore(analyticsCard, firstCard);
+  }
+
+  const todayCount = analyticsEvents.filter(event=>isToday(event.created_at)).length;
+  const weekCount = analyticsEvents.filter(event=>isWithinDays(event.created_at,7)).length;
+  const monthCount = analyticsEvents.length;
+  const topPage = getTopValue(analyticsEvents,"page") || "—";
+  const topDevice = getTopValue(analyticsEvents,"device") || "—";
+
+  const content = document.getElementById("adminAnalyticsContent");
+
+  content.innerHTML = `
+    <div class="grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:18px;">
+      <div class="stat">
+        <span>Views Today</span>
+        <strong>${todayCount}</strong>
+      </div>
+
+      <div class="stat">
+        <span>7 Days</span>
+        <strong>${weekCount}</strong>
+      </div>
+
+      <div class="stat">
+        <span>30 Days</span>
+        <strong>${monthCount}</strong>
+      </div>
+
+      <div class="stat">
+        <span>Top Device</span>
+        <strong style="font-size:20px;">${escapeHtml(topDevice)}</strong>
+      </div>
+    </div>
+
+    <p><strong>Top Page:</strong> ${escapeHtml(topPage)}</p>
+  `;
+}
+
+function getClientAnalytics(clientUserId){
+  const events = analyticsEvents.filter(event => event.client_user_id === clientUserId);
+
+  return {
+    today: events.filter(event=>isToday(event.created_at)).length,
+    week: events.filter(event=>isWithinDays(event.created_at,7)).length,
+    month: events.length,
+    topPage: getTopValue(events,"page") || "—",
+    topDevice: getTopValue(events,"device") || "—",
+    recent: events.slice(0,3)
+  };
 }
 
 function getClientLiveUrl(site){
@@ -131,11 +216,7 @@ function getBillingStatus(site){
 
   const next = site.next_payment_date ? new Date(site.next_payment_date + "T00:00:00") : null;
 
-  if(!next){
-    return { text:"Active", class:"full" };
-  }
-
-  if(next < today){
+  if(next && next < today){
     return { text:"Past Due", class:"danger" };
   }
 
@@ -192,6 +273,7 @@ function renderClientSites(sites = clientSites){
     const accessClass = site.editor_access === "full" ? "full" : "safe";
 
     const billing = getBillingStatus(site);
+    const analytics = site.client_user_id ? getClientAnalytics(site.client_user_id) : null;
 
     const releaseStatus = site.domain_release_status || "connected";
     const releaseClass = releaseStatus === "released" ? "danger" : releaseStatus === "release requested" ? "safe" : "";
@@ -212,6 +294,14 @@ function renderClientSites(sites = clientSites){
       <div>
         <p><strong>Package</strong></p>
         <span class="badge">${escapeHtml(site.package_name || "None")}</span>
+
+        <div style="margin-top:12px;">
+          <p><strong>Analytics</strong></p>
+          <p>Today: ${analytics ? analytics.today : 0}</p>
+          <p>7 Days: ${analytics ? analytics.week : 0}</p>
+          <p>30 Days: ${analytics ? analytics.month : 0}</p>
+          <p>Top Page: ${analytics ? escapeHtml(analytics.topPage) : "—"}</p>
+        </div>
       </div>
 
       <div>
@@ -545,6 +635,34 @@ function copyText(text){
 function cleanValue(id){
   const el = document.getElementById(id);
   return el ? el.value.trim() : "";
+}
+
+function getTopValue(items,key){
+  const counts = {};
+
+  items.forEach(item=>{
+    const value = item[key] || "unknown";
+    counts[value] = (counts[value] || 0) + 1;
+  });
+
+  return Object.entries(counts)
+    .sort((a,b)=>b[1]-a[1])[0]?.[0] || null;
+}
+
+function isToday(dateString){
+  const date = new Date(dateString);
+  const today = new Date();
+
+  return date.getFullYear() === today.getFullYear() &&
+    date.getMonth() === today.getMonth() &&
+    date.getDate() === today.getDate();
+}
+
+function isWithinDays(dateString,days){
+  const date = new Date(dateString);
+  const now = new Date();
+  const diff = now - date;
+  return diff <= days * 24 * 60 * 60 * 1000;
 }
 
 function timeAgo(dateString){
