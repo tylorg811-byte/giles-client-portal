@@ -341,6 +341,7 @@ function renderClientSites(sites){
         <button onclick="quickPause('${site.id}')">Pause</button>
 
         <button onclick="quickMarkPaid('${site.id}')">Mark Paid</button>
+        <button onclick="createCheckoutForClient('${site.id}')">Stripe Link</button>
         <button onclick="toggleSafeMode('${site.id}')">Safe/Full</button>
 
         <button onclick="toggleEditorLock('${site.id}')">${site.editor_locked ? "Unlock" : "Lock"}</button>
