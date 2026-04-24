@@ -246,10 +246,19 @@ async function initEditor(){
    ELEMENT BLOCKS
 =========================*/
 function addBlocks(){
-  editor.BlockManager.add("button-primary",{
-    label:"Button",
-    category:"Buttons",
-    content:`<a href="#" class="main-btn">Button Text</a>`
+
+  editor.BlockManager.add("hero-section",{
+    label:"Hero Section",
+    category:"Sections",
+    content:`
+<section class="content-section" style="min-height:80vh;display:flex;align-items:center;text-align:center;background:linear-gradient(135deg,#07111f,#141b5f);color:white;">
+  <div style="max-width:800px;margin:auto;">
+    <p style="letter-spacing:3px;color:#cbd5e1;">YOUR TAGLINE HERE</p>
+    <h1>Build Something Beautiful</h1>
+    <p style="color:#dbeafe;">Add your business message here.</p>
+    <a href="#contact" class="main-btn">Get Started</a>
+  </div>
+</section>`
   });
 
   editor.BlockManager.add("heading",{
@@ -264,29 +273,10 @@ function addBlocks(){
     content:`<p>Add your text here.</p>`
   });
 
-  editor.BlockManager.add("card",{
-    label:"Card",
-    category:"Cards",
-    content:`<div class="card"><h2>Card Title</h2><p>Card text goes here.</p></div>`
-  });
-
-  editor.BlockManager.add("section",{
-    label:"Section",
-    category:"Sections",
-    content:`<section class="content-section"><h2>New Section</h2><p>Add your content here.</p></section>`
-  });
-
-  editor.BlockManager.add("two-column",{
-    label:"2 Columns",
-    category:"Sections",
-    content:`
-<section class="content-section">
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:28px;align-items:center;max-width:1100px;margin:auto;">
-    <div><h2>Section Title</h2><p>Add content here.</p></div>
-    <div class="card"><p>Feature content here.</p></div>
-  </div>
-</section>
-`
+  editor.BlockManager.add("button-primary",{
+    label:"Button",
+    category:"Buttons",
+    content:`<a href="#" class="main-btn">Button Text</a>`
   });
 
   editor.BlockManager.add("image",{
@@ -295,11 +285,173 @@ function addBlocks(){
     content:`<img class="site-image" src="https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=900&q=80">`
   });
 
+  editor.BlockManager.add("two-column",{
+    label:"Two Columns",
+    category:"Sections",
+    content:`
+<section class="content-section">
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:32px;align-items:center;max-width:1100px;margin:auto;">
+    <div>
+      <h2>Section Title</h2>
+      <p>Add content here.</p>
+      <a href="#" class="main-btn">Learn More</a>
+    </div>
+    <img class="site-image" src="https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=900&q=80">
+  </div>
+</section>`
+  });
+
+  editor.BlockManager.add("services-grid",{
+    label:"Services Grid",
+    category:"Sections",
+    content:`
+<section class="content-section">
+  <div style="max-width:1000px;margin:auto;text-align:center;">
+    <h2>Our Services</h2>
+    <p>Highlight what your business offers.</p>
+    <div class="grid-3" style="margin-top:35px;">
+      <div class="card"><h3>Service One</h3><p>Describe this service.</p></div>
+      <div class="card"><h3>Service Two</h3><p>Describe this service.</p></div>
+      <div class="card"><h3>Service Three</h3><p>Describe this service.</p></div>
+    </div>
+  </div>
+</section>`
+  });
+
+  editor.BlockManager.add("pricing-section",{
+    label:"Pricing",
+    category:"Sections",
+    content:`
+<section class="content-section" style="background:#07111f;color:white;text-align:center;">
+  <h2>Pricing Packages</h2>
+  <div class="grid-3" style="margin-top:35px;">
+    <div class="card"><h3>Starter</h3><h2>$100</h2><p>Simple site to get started.</p></div>
+    <div class="card"><h3>Popular</h3><h2>$250</h2><p>Best for growing businesses.</p></div>
+    <div class="card"><h3>Premium</h3><h2>$500</h2><p>Full professional setup.</p></div>
+  </div>
+</section>`
+  });
+
+  editor.BlockManager.add("testimonial",{
+    label:"Testimonial",
+    category:"Sections",
+    content:`
+<section class="content-section" style="text-align:center;background:#f8fafc;">
+  <div style="max-width:760px;margin:auto;">
+    <h2>What Clients Say</h2>
+    <div class="card">
+      <p>“Add a customer testimonial here. Make it sound real, specific, and trustworthy.”</p>
+      <strong>— Customer Name</strong>
+    </div>
+  </div>
+</section>`
+  });
+
+  editor.BlockManager.add("gallery-grid",{
+    label:"Gallery",
+    category:"Images",
+    content:`
+<section class="content-section">
+  <div class="grid-3">
+    <img class="site-image" src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=80">
+    <img class="site-image" src="https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=900&q=80">
+    <img class="site-image" src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=900&q=80">
+  </div>
+</section>`
+  });
+
+  editor.BlockManager.add("contact-form",{
+    label:"Contact Form",
+    category:"Forms",
+    content:`
+<section class="content-section" id="contact" style="background:#f8fafc;">
+  <div style="max-width:680px;margin:auto;">
+    <h2 style="text-align:center;">Contact Us</h2>
+    <p style="text-align:center;">Fill out the form below and we’ll be in touch.</p>
+
+    <form action="https://formspree.io/f/YOUR_FORM_ID" method="POST" style="background:white;padding:28px;border-radius:24px;box-shadow:0 15px 45px rgba(0,0,0,.1);">
+      <input name="name" placeholder="Your Name" required style="width:100%;padding:14px;margin-bottom:12px;border:1px solid #e6e6ef;border-radius:12px;">
+      <input name="email" type="email" placeholder="Your Email" required style="width:100%;padding:14px;margin-bottom:12px;border:1px solid #e6e6ef;border-radius:12px;">
+      <input name="phone" placeholder="Phone Number" style="width:100%;padding:14px;margin-bottom:12px;border:1px solid #e6e6ef;border-radius:12px;">
+      <textarea name="message" placeholder="How can we help?" required style="width:100%;padding:14px;margin-bottom:12px;border:1px solid #e6e6ef;border-radius:12px;min-height:130px;"></textarea>
+      <button type="submit" class="main-btn" style="border:none;cursor:pointer;">Send Message</button>
+    </form>
+  </div>
+</section>`
+  });
+
+  editor.BlockManager.add("booking-form",{
+    label:"Booking Form",
+    category:"Forms",
+    content:`
+<section class="content-section" style="background:#fff;">
+  <div style="max-width:760px;margin:auto;">
+    <h2 style="text-align:center;">Book an Appointment</h2>
+    <form action="https://formspree.io/f/YOUR_FORM_ID" method="POST" style="background:#f8fafc;padding:28px;border-radius:24px;">
+      <input name="name" placeholder="Full Name" required style="width:100%;padding:14px;margin-bottom:12px;border:1px solid #e6e6ef;border-radius:12px;">
+      <input name="email" type="email" placeholder="Email" required style="width:100%;padding:14px;margin-bottom:12px;border:1px solid #e6e6ef;border-radius:12px;">
+      <input name="date" type="date" required style="width:100%;padding:14px;margin-bottom:12px;border:1px solid #e6e6ef;border-radius:12px;">
+      <input name="time" type="time" required style="width:100%;padding:14px;margin-bottom:12px;border:1px solid #e6e6ef;border-radius:12px;">
+      <textarea name="notes" placeholder="Notes" style="width:100%;padding:14px;margin-bottom:12px;border:1px solid #e6e6ef;border-radius:12px;"></textarea>
+      <button type="submit" class="main-btn" style="border:none;cursor:pointer;">Request Booking</button>
+    </form>
+  </div>
+</section>`
+  });
+
+  editor.BlockManager.add("faq-section",{
+    label:"FAQ",
+    category:"Sections",
+    content:`
+<section class="content-section">
+  <div style="max-width:800px;margin:auto;">
+    <h2 style="text-align:center;">Frequently Asked Questions</h2>
+    <div class="card"><h3>Question One?</h3><p>Answer goes here.</p></div>
+    <br>
+    <div class="card"><h3>Question Two?</h3><p>Answer goes here.</p></div>
+  </div>
+</section>`
+  });
+
+  editor.BlockManager.add("hours-section",{
+    label:"Business Hours",
+    category:"Business",
+    content:`
+<section class="content-section" style="background:#07111f;color:white;text-align:center;">
+  <h2>Business Hours</h2>
+  <p style="color:#dbeafe;">Monday - Friday: 9AM - 5PM</p>
+  <p style="color:#dbeafe;">Saturday: 10AM - 2PM</p>
+  <p style="color:#dbeafe;">Sunday: Closed</p>
+</section>`
+  });
+
+  editor.BlockManager.add("map-section",{
+    label:"Map / Location",
+    category:"Business",
+    content:`
+<section class="content-section">
+  <div style="max-width:1000px;margin:auto;text-align:center;">
+    <h2>Visit Us</h2>
+    <p>123 Business Street, City, State</p>
+    <div style="border-radius:24px;overflow:hidden;box-shadow:0 15px 45px rgba(0,0,0,.12);">
+      <iframe src="https://www.google.com/maps?q=Tampa%20FL&output=embed" width="100%" height="360" style="border:0;" loading="lazy"></iframe>
+    </div>
+  </div>
+</section>`
+  });
+
   editor.BlockManager.add("divider",{
     label:"Divider",
     category:"Graphics",
     content:`<div style="height:2px;width:80%;margin:40px auto;background:linear-gradient(90deg,transparent,#7B5CFF,transparent);"></div>`
   });
+
+  editor.BlockManager.add("spacer",{
+    label:"Spacer",
+    category:"Graphics",
+    content:`<div style="height:70px;"></div>`
+  });
+
 }
 
 /* =========================
