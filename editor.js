@@ -361,15 +361,19 @@ function addBlocks(){
   });
 
   editor.BlockManager.add("contact-form",{
-    label:"Contact Form",
-    category:"Forms",
-    content:`
+  label:"Contact Form",
+  category:"Forms",
+  content:`
 <section class="content-section" id="contact" style="background:#f8fafc;">
   <div style="max-width:680px;margin:auto;">
     <h2 style="text-align:center;">Contact Us</h2>
     <p style="text-align:center;">Fill out the form below and we’ll be in touch.</p>
 
-    <form action="https://formspree.io/f/YOUR_FORM_ID" method="POST" style="background:white;padding:28px;border-radius:24px;box-shadow:0 15px 45px rgba(0,0,0,.1);">
+    <form data-needs-formspree="true" action="FORM_ENDPOINT_HERE" method="POST" style="background:white;padding:28px;border-radius:24px;box-shadow:0 15px 45px rgba(0,0,0,.1);">
+      <p style="font-size:14px;color:#666;text-align:center;margin-bottom:18px;">
+        Form setup needed: add your Formspree endpoint so submissions go to your email.
+      </p>
+
       <input name="name" placeholder="Your Name" required style="width:100%;padding:14px;margin-bottom:12px;border:1px solid #e6e6ef;border-radius:12px;">
       <input name="email" type="email" placeholder="Your Email" required style="width:100%;padding:14px;margin-bottom:12px;border:1px solid #e6e6ef;border-radius:12px;">
       <input name="phone" placeholder="Phone Number" style="width:100%;padding:14px;margin-bottom:12px;border:1px solid #e6e6ef;border-radius:12px;">
@@ -378,16 +382,21 @@ function addBlocks(){
     </form>
   </div>
 </section>`
-  });
+});
 
   editor.BlockManager.add("booking-form",{
-    label:"Booking Form",
-    category:"Forms",
-    content:`
+  label:"Booking Form",
+  category:"Forms",
+  content:`
 <section class="content-section" style="background:#fff;">
   <div style="max-width:760px;margin:auto;">
     <h2 style="text-align:center;">Book an Appointment</h2>
-    <form action="https://formspree.io/f/YOUR_FORM_ID" method="POST" style="background:#f8fafc;padding:28px;border-radius:24px;">
+
+    <form data-needs-formspree="true" action="FORM_ENDPOINT_HERE" method="POST" style="background:#f8fafc;padding:28px;border-radius:24px;">
+      <p style="font-size:14px;color:#666;text-align:center;margin-bottom:18px;">
+        Form setup needed: add your Formspree endpoint so bookings go to your email.
+      </p>
+
       <input name="name" placeholder="Full Name" required style="width:100%;padding:14px;margin-bottom:12px;border:1px solid #e6e6ef;border-radius:12px;">
       <input name="email" type="email" placeholder="Email" required style="width:100%;padding:14px;margin-bottom:12px;border:1px solid #e6e6ef;border-radius:12px;">
       <input name="date" type="date" required style="width:100%;padding:14px;margin-bottom:12px;border:1px solid #e6e6ef;border-radius:12px;">
@@ -397,7 +406,7 @@ function addBlocks(){
     </form>
   </div>
 </section>`
-  });
+});
 
   editor.BlockManager.add("faq-section",{
     label:"FAQ",
