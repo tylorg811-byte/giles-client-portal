@@ -59,34 +59,6 @@ CLIENT FORM (UPDATED)
 
 
 <!-- =========================
-CLIENT CARD ACTIONS (UPDATED)
-========================= -->
-
-<!-- Replace your .actions section inside renderClientSites with this layout -->
-
-<div class="actions">
-
-  <button onclick="openClientDetail('${site.id}')">View</button>
-  <a href="${liveUrl}" target="_blank">View Site</a>
-
-  <button onclick="quickPublish('${site.id}')">Publish</button>
-  <button onclick="quickPause('${site.id}')">Pause</button>
-
-  <button onclick="quickMarkPaid('${site.id}')">Mark Paid</button>
-  <button onclick="toggleSafeMode('${site.id}')">Toggle Safe</button>
-
-  <button onclick="toggleEditorLock('${site.id}')">
-    ${site.editor_locked ? "Unlock Editor" : "Lock Editor"}
-  </button>
-
-  <button onclick="editClientSite('${site.id}')">Edit</button>
-
-  <button class="danger" onclick="deleteClientSite('${site.id}')">Delete</button>
-
-</div>
-
-
-<!-- =========================
 IMPORTER (NO CHANGE)
 ========================= -->
 
