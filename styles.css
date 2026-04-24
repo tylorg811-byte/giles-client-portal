@@ -296,3 +296,13 @@ grid-template-columns:70px 260px 1fr;
 display:none!important;
 }
 }
+
+.canvas-frame{
+flex:1;
+min-height:600px;
+}
+
+#gjs{
+height:100%!important;
+min-height:600px;
+}
