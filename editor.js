@@ -606,58 +606,69 @@ function slugify(text){return text.toLowerCase().trim().replace(/[^a-z0-9]+/g,"-
 function formatPageName(slug){return slug.replace(/-/g," ").replace(/\b\w/g,l=>l.toUpperCase());}
 
 function setupHeaderRules(){
-  let movingHeader = false;
+  let fixingHeader = false;
+
+  function enforceHeaderPosition(){
+    if(fixingHeader) return;
+    fixingHeader = true;
+
+    const wrapper = editor.DomComponents.getWrapper();
+    const headers = wrapper.find("header");
+
+    if(headers.length === 0){
+      fixingHeader = false;
+      return;
+    }
+
+    // Keep only the newest/header last added
+    const headerToKeep = headers[headers.length - 1];
+
+    headers.forEach(header => {
+      if(header !== headerToKeep){
+        header.remove();
+      }
+    });
+
+    // Rebuild header at very top only
+    const headerHtml = headerToKeep.toHTML();
+
+    if(headerToKeep.index() !== 0 || headerToKeep.parent() !== wrapper){
+      headerToKeep.remove();
+      wrapper.components().add(headerHtml, { at: 0 });
+    }
+
+    const finalHeader = wrapper.find("header")[0];
+
+    if(finalHeader){
+      finalHeader.set({
+        draggable: false,
+        droppable: true,
+        removable: true,
+        copyable: false,
+        selectable: true
+      });
+    }
+
+    editor.refresh();
+
+    fixingHeader = false;
+  }
 
   editor.on("component:add", component => {
-    if(movingHeader) return;
-
     setTimeout(() => {
-      const tag = component.get("tagName");
-
-      if(tag !== "header") return;
-
-      movingHeader = true;
-
-      const wrapper = editor.DomComponents.getWrapper();
-
-      const allHeaders = wrapper.find("header");
-
-      allHeaders.forEach(header => {
-        if(header !== component){
-          header.remove();
-        }
-      });
-
-      const parent = component.parent();
-
-      if(parent){
-        const index = component.index();
-
-        if(index !== 0 || parent !== wrapper){
-          const headerClone = component.clone();
-
-          component.remove();
-
-          wrapper.components().add(headerClone, { at: 0 });
-
-          const newHeader = wrapper.find("header")[0];
-
-          if(newHeader){
-            newHeader.set({
-              draggable:false,
-              copyable:false,
-              removable:true,
-              selectable:true,
-              droppable:true
-            });
-          }
-        }
+      if(component.get("tagName") === "header"){
+        enforceHeaderPosition();
       }
+    }, 150);
+  });
 
-      movingHeader = false;
+  editor.on("component:drag:end", () => {
+    setTimeout(enforceHeaderPosition, 150);
+  });
 
-      editor.refresh();
-
-    }, 100);
+  editor.on("component:update", component => {
+    if(component.get("tagName") === "header"){
+      setTimeout(enforceHeaderPosition, 150);
+    }
   });
 }
