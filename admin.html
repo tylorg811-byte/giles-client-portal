@@ -24,6 +24,9 @@ grid-template-columns:280px 1fr;
 background:#07111f;
 color:white;
 padding:28px;
+position:sticky;
+top:0;
+height:100vh;
 }
 
 .logo{
@@ -59,7 +62,10 @@ text-align:left;
 }
 
 .sidebar a:hover,
-.sidebar button:hover{background:#7B5CFF;}
+.sidebar button:hover,
+.sidebar .active-nav{
+background:#7B5CFF;
+}
 
 .main{padding:34px;}
 
@@ -165,12 +171,12 @@ gap:14px;
 .request-card{
 background:#fff;
 border:1px solid #e6e6ef;
-border-radius:20px;
-padding:18px;
+border-radius:22px;
+padding:22px;
 display:grid;
-grid-template-columns:1.4fr 1fr 1fr auto;
-gap:14px;
-align-items:center;
+grid-template-columns:1.3fr 1fr 1fr auto;
+gap:22px;
+align-items:start;
 box-shadow:0 8px 24px rgba(20,20,40,.05);
 }
 
@@ -180,16 +186,16 @@ grid-template-columns:1.2fr 1.6fr 1fr auto;
 
 .client-card h3,
 .request-card h3{
-font-size:18px;
-margin-bottom:5px;
+font-size:20px;
+margin-bottom:6px;
 }
 
 .client-card p,
 .request-card p{
 font-size:13px;
 color:#667085;
-line-height:1.45;
-margin-bottom:4px;
+line-height:1.5;
+margin-bottom:6px;
 }
 
 .badge{
@@ -201,6 +207,7 @@ font-weight:900;
 background:#f3f2ff;
 color:#5a4cff;
 text-transform:capitalize;
+margin:2px 4px 2px 0;
 }
 
 .badge.full{background:#ecfdf3;color:#027a48;}
@@ -209,10 +216,10 @@ text-transform:capitalize;
 .badge.dark{background:#111827;color:#fff;}
 
 .actions{
-display:flex;
-gap:8px;
-flex-wrap:wrap;
-justify-content:flex-end;
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+min-width:260px;
 }
 
 .actions button,
@@ -220,12 +227,13 @@ justify-content:flex-end;
 border:none;
 background:#f4f4fb;
 color:#303445;
-padding:9px 11px;
+padding:11px 12px;
 border-radius:12px;
 font-size:12px;
 font-weight:900;
 cursor:pointer;
 text-decoration:none;
+text-align:center;
 }
 
 .actions button:hover,
@@ -234,8 +242,17 @@ background:#7B5CFF;
 color:white;
 }
 
+.release-btn{
+grid-column:1 / -1;
+color:#b91c1c!important;
+background:#fff1f2!important;
+}
+
 .release-btn:hover,
-.danger:hover{background:#d11a2a!important;color:white!important;}
+.danger:hover{
+background:#d11a2a!important;
+color:white!important;
+}
 
 .filter-bar{
 display:flex;
@@ -268,18 +285,36 @@ line-height:1.5;
 margin-bottom:16px;
 }
 
-@media(max-width:1000px){
+.page-section{display:none;}
+.page-section.active{display:block;}
+
+.analytics-table{
+display:grid;
+grid-template-columns:1.2fr 1fr 1fr 1fr;
+gap:14px;
+}
+
+.analytics-client-card{
+background:white;
+border:1px solid #e6e6ef;
+border-radius:18px;
+padding:18px;
+}
+
+@media(max-width:1100px){
 .admin-shell{display:block;}
+.sidebar{position:relative;height:auto;}
 .grid{grid-template-columns:1fr 1fr;}
 .client-card,.request-card{grid-template-columns:1fr;}
-.actions{justify-content:flex-start;}
+.actions{grid-template-columns:1fr 1fr;min-width:0;}
 }
 
 @media(max-width:700px){
 .main{padding:20px;}
-.grid,.form-grid{grid-template-columns:1fr;}
+.grid,.form-grid,.analytics-table{grid-template-columns:1fr;}
 .top{display:block;}
 .primary{margin-top:16px;}
+.actions{grid-template-columns:1fr;}
 }
 </style>
 </head>
@@ -291,7 +326,12 @@ margin-bottom:16px;
   <aside class="sidebar">
     <div class="logo">G</div>
     <h2>Admin Panel</h2>
-    <p>Manage clients, websites, domains, billing, access, and change requests.</p>
+    <p>Manage clients, websites, domains, billing, analytics, and change requests.</p>
+
+    <button id="navClients" class="active-nav" onclick="showAdminPage('clients')">Clients</button>
+    <button id="navAnalytics" onclick="showAdminPage('analytics')">Analytics</button>
+    <button id="navRequests" onclick="showAdminPage('requests')">Change Requests</button>
+    <button id="navBilling" onclick="showAdminPage('billing')">Billing</button>
 
     <a href="dashboard.html">Client Dashboard</a>
     <a href="editor.html">Open Editor</a>
@@ -303,7 +343,7 @@ margin-bottom:16px;
 
     <div class="top">
       <div>
-        <h1>Client Websites</h1>
+        <h1 id="pageTitle">Client Websites</h1>
         <p id="adminEmail">Loading...</p>
       </div>
 
@@ -332,176 +372,203 @@ margin-bottom:16px;
       </div>
     </section>
 
-    <section class="card">
-      <h2>Change Requests</h2>
-      <div id="changeRequestList" class="request-list">
-        Loading requests...
-      </div>
-    </section>
+    <section id="clientsPage" class="page-section active">
 
-    <section class="card" id="clientFormCard">
-      <h2>Add / Update Client</h2>
+      <section class="card" id="clientFormCard">
+        <h2>Add / Update Client</h2>
 
-      <div class="notice">
-        Billing Override keeps a site active even if Stripe/subscriptions are not active. Use Manual Payment, Free/Comped, Trial, Past Due, or Paused to keep your records clean.
-      </div>
-
-      <div class="form-grid">
-        <input type="hidden" id="clientRecordId">
-
-        <div>
-          <label>Business Name</label>
-          <input id="businessName" placeholder="Greenscape Landscaping">
+        <div class="notice">
+          Billing Override keeps a site active even if Stripe/subscriptions are not active. Use Manual Payment, Free/Comped, Trial, Past Due, or Paused to keep your records clean.
         </div>
 
-        <div>
-          <label>Client Email</label>
-          <input id="clientEmail" placeholder="client@email.com">
+        <div class="form-grid">
+          <input type="hidden" id="clientRecordId">
+
+          <div>
+            <label>Business Name</label>
+            <input id="businessName" placeholder="Greenscape Landscaping">
+          </div>
+
+          <div>
+            <label>Client Email</label>
+            <input id="clientEmail" placeholder="client@email.com">
+          </div>
+
+          <div>
+            <label>Client Supabase User ID</label>
+            <input id="clientUserId" placeholder="Paste client UUID here">
+          </div>
+
+          <div>
+            <label>Package</label>
+            <select id="packageName">
+              <option value="Starter">Starter</option>
+              <option value="Standard">Standard</option>
+              <option value="Premium">Premium</option>
+              <option value="Maintenance">Maintenance</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Domain</label>
+            <input id="domain" placeholder="clientdomain.com">
+          </div>
+
+          <div>
+            <label>Domain Status</label>
+            <select id="domainStatus">
+              <option value="not connected">Not Connected</option>
+              <option value="pending">Pending</option>
+              <option value="live">Live</option>
+              <option value="released">Released</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Domain Release Status</label>
+            <select id="domainReleaseStatus">
+              <option value="connected">Connected / Managed</option>
+              <option value="release requested">Release Requested</option>
+              <option value="released">Released</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Site Status</label>
+            <select id="siteStatus">
+              <option value="draft">Draft</option>
+              <option value="published">Published</option>
+              <option value="needs review">Needs Review</option>
+              <option value="paused">Paused</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Editor Access</label>
+            <select id="editorAccess">
+              <option value="safe">Safe Mode</option>
+              <option value="full">Full Editor Access</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Billing Status</label>
+            <select id="billingStatus">
+              <option value="active">Active / Paid</option>
+              <option value="manual paid">Manual Payment Received</option>
+              <option value="free">Free / Family / Comped</option>
+              <option value="trial">Trial</option>
+              <option value="past due">Past Due</option>
+              <option value="paused">Paused</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Billing Override</label>
+            <select id="billingOverride">
+              <option value="false">No Override</option>
+              <option value="true">Override Enabled</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Billing Cycle</label>
+            <select id="billingCycle">
+              <option value="monthly">Monthly</option>
+              <option value="yearly">Yearly</option>
+              <option value="one-time">One Time</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Next Payment Date</label>
+            <input type="date" id="nextPaymentDate">
+          </div>
+
+          <div>
+            <label>Last Payment Date</label>
+            <input type="date" id="lastPaymentDate">
+          </div>
+
+          <div class="full">
+            <label>Override Reason</label>
+            <input id="billingOverrideReason" placeholder="Example: Mom's business, paid cash, comped client, etc.">
+          </div>
+
+          <div class="full">
+            <label>Billing Notes</label>
+            <textarea id="billingNotes" placeholder="Payment notes, renewal notes, outside payment details, etc."></textarea>
+          </div>
+
+          <div class="full">
+            <label>Domain Release Notes</label>
+            <textarea id="domainReleaseNotes" placeholder="Example: Client is moving to another provider, release requested, DNS removed manually, etc."></textarea>
+          </div>
+
+          <div class="full">
+            <label>General Notes</label>
+            <textarea id="notes" placeholder="Domain info, client requests, package notes, etc."></textarea>
+          </div>
         </div>
 
-        <div>
-          <label>Client Supabase User ID</label>
-          <input id="clientUserId" placeholder="Paste client UUID here">
-        </div>
+        <button class="primary" style="margin-top:16px;" onclick="saveClientSite()">Save Client Site</button>
+        <button style="margin-top:16px;border:none;background:#f4f4fb;padding:13px 16px;border-radius:14px;font-weight:900;cursor:pointer;" onclick="clearClientForm()">Clear</button>
 
-        <div>
-          <label>Package</label>
-          <select id="packageName">
-            <option value="Starter">Starter</option>
-            <option value="Standard">Standard</option>
-            <option value="Premium">Premium</option>
-            <option value="Maintenance">Maintenance</option>
-          </select>
-        </div>
+        <div id="message"></div>
+      </section>
 
-        <div>
-          <label>Domain</label>
-          <input id="domain" placeholder="clientdomain.com">
-        </div>
+      <section class="card">
+        <h2>All Client Sites</h2>
 
-        <div>
-          <label>Domain Status</label>
-          <select id="domainStatus">
-            <option value="not connected">Not Connected</option>
-            <option value="pending">Pending</option>
-            <option value="live">Live</option>
-            <option value="released">Released</option>
-          </select>
-        </div>
-
-        <div>
-          <label>Domain Release Status</label>
-          <select id="domainReleaseStatus">
-            <option value="connected">Connected / Managed</option>
-            <option value="release requested">Release Requested</option>
-            <option value="released">Released</option>
-          </select>
-        </div>
-
-        <div>
-          <label>Site Status</label>
-          <select id="siteStatus">
-            <option value="draft">Draft</option>
-            <option value="published">Published</option>
-            <option value="needs review">Needs Review</option>
-            <option value="paused">Paused</option>
-          </select>
-        </div>
-
-        <div>
-          <label>Editor Access</label>
-          <select id="editorAccess">
-            <option value="safe">Safe Mode</option>
-            <option value="full">Full Editor Access</option>
-          </select>
-        </div>
-
-        <div>
-          <label>Billing Status</label>
-          <select id="billingStatus">
-            <option value="active">Active / Paid</option>
-            <option value="manual paid">Manual Payment Received</option>
-            <option value="free">Free / Family / Comped</option>
+        <div class="filter-bar">
+          <label style="margin:0;">Billing Filter</label>
+          <select id="billingFilter" onchange="applyBillingFilter()">
+            <option value="all">All Clients</option>
+            <option value="active">Active</option>
+            <option value="past">Past Due</option>
+            <option value="covered">Covered / Override</option>
+            <option value="free">Free / Comped</option>
             <option value="trial">Trial</option>
-            <option value="past due">Past Due</option>
             <option value="paused">Paused</option>
+            <option value="manual paid">Manual Paid</option>
           </select>
         </div>
 
-        <div>
-          <label>Billing Override</label>
-          <select id="billingOverride">
-            <option value="false">No Override</option>
-            <option value="true">Override Enabled</option>
-          </select>
+        <div id="clientList" class="client-list">
+          Loading clients...
         </div>
+      </section>
 
-        <div>
-          <label>Billing Cycle</label>
-          <select id="billingCycle">
-            <option value="monthly">Monthly</option>
-            <option value="yearly">Yearly</option>
-            <option value="one-time">One Time</option>
-          </select>
-        </div>
-
-        <div>
-          <label>Next Payment Date</label>
-          <input type="date" id="nextPaymentDate">
-        </div>
-
-        <div>
-          <label>Last Payment Date</label>
-          <input type="date" id="lastPaymentDate">
-        </div>
-
-        <div class="full">
-          <label>Override Reason</label>
-          <input id="billingOverrideReason" placeholder="Example: Mom's business, paid cash, comped client, etc.">
-        </div>
-
-        <div class="full">
-          <label>Billing Notes</label>
-          <textarea id="billingNotes" placeholder="Payment notes, renewal notes, outside payment details, etc."></textarea>
-        </div>
-
-        <div class="full">
-          <label>Domain Release Notes</label>
-          <textarea id="domainReleaseNotes" placeholder="Example: Client is moving to another provider, release requested, DNS removed manually, etc."></textarea>
-        </div>
-
-        <div class="full">
-          <label>General Notes</label>
-          <textarea id="notes" placeholder="Domain info, client requests, package notes, etc."></textarea>
-        </div>
-      </div>
-
-      <button class="primary" style="margin-top:16px;" onclick="saveClientSite()">Save Client Site</button>
-      <button style="margin-top:16px;border:none;background:#f4f4fb;padding:13px 16px;border-radius:14px;font-weight:900;cursor:pointer;" onclick="clearClientForm()">Clear</button>
-
-      <div id="message"></div>
     </section>
 
-    <section class="card">
-      <h2>All Client Sites</h2>
+    <section id="analyticsPage" class="page-section">
+      <section class="card">
+        <h2>Analytics Dashboard</h2>
+        <div id="analyticsOverview"></div>
 
-      <div class="filter-bar">
-        <label style="margin:0;">Billing Filter</label>
-        <select id="billingFilter" onchange="applyBillingFilter()">
-          <option value="all">All Clients</option>
-          <option value="active">Active</option>
-          <option value="past">Past Due</option>
-          <option value="covered">Covered / Override</option>
-          <option value="free">Free / Comped</option>
-          <option value="trial">Trial</option>
-          <option value="paused">Paused</option>
-          <option value="manual paid">Manual Paid</option>
-        </select>
-      </div>
+        <div style="margin-top:22px;">
+          <label>Select Client</label>
+          <select id="analyticsClientSelect" onchange="loadClientAnalyticsView()"></select>
+        </div>
 
-      <div id="clientList" class="client-list">
-        Loading clients...
-      </div>
+        <div id="analyticsClientView" style="margin-top:22px;"></div>
+      </section>
+    </section>
+
+    <section id="requestsPage" class="page-section">
+      <section class="card">
+        <h2>Change Requests</h2>
+        <div id="changeRequestList" class="request-list">
+          Loading requests...
+        </div>
+      </section>
+    </section>
+
+    <section id="billingPage" class="page-section">
+      <section class="card">
+        <h2>Billing Overview</h2>
+        <div id="billingOverview"></div>
+      </section>
     </section>
 
   </main>
