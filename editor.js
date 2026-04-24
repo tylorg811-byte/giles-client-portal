@@ -604,3 +604,43 @@ function styleObjToString(obj){
 }
 function slugify(text){return text.toLowerCase().trim().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");}
 function formatPageName(slug){return slug.replace(/-/g," ").replace(/\b\w/g,l=>l.toUpperCase());}
+
+function setupHeaderRules(){
+  editor.on("component:add", component => {
+    setTimeout(() => {
+      const tag = component.get("tagName");
+
+      if(tag !== "header") return;
+
+      const wrapper = editor.DomComponents.getWrapper();
+      const existingHeaders = wrapper.find("header");
+
+      existingHeaders.forEach(header => {
+        if(header !== component){
+          header.remove();
+        }
+      });
+
+      const headerHtml = component.toHTML();
+
+      component.remove();
+
+      wrapper.components().add(headerHtml, { at: 0 });
+
+      const newHeader = wrapper.find("header")[0];
+
+      if(newHeader){
+        newHeader.set({
+          draggable:false,
+          copyable:false,
+          removable:true,
+          selectable:true
+        });
+      }
+
+      editor.refresh();
+
+      alert("Header added to the top of the website.");
+    }, 100);
+  });
+}
