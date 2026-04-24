@@ -235,9 +235,10 @@ async function initEditor(){
   renderFontLibrary();
 
   setupSearches();
-  setupImageUploader();
-  addWixControls();
-  addSectionAddButtons();
+setupImageUploader();
+setupFormspreeEndpoint();
+addWixControls();
+addSectionAddButtons();
 
   setTimeout(()=>editor.refresh(),300);
 }
@@ -1153,4 +1154,39 @@ function hexToRgba(hex, alpha){
   const g = (bigint >> 8) & 255;
   const b = bigint & 255;
   return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function setupFormspreeEndpoint(){
+  editor.on("component:add", component => {
+    setTimeout(() => {
+      const forms = editor.DomComponents.getWrapper().find("form");
+
+      forms.forEach(form => {
+        const attrs = form.getAttributes();
+
+        if(attrs["data-needs-formspree"] === "true" && attrs.action === "FORM_ENDPOINT_HERE"){
+          const endpoint = prompt(
+            "This form needs a Formspree endpoint so submissions go to email.\n\nPaste the Formspree form link here, or press Cancel to leave it for later."
+          );
+
+          if(endpoint){
+            form.addAttributes({
+              action:endpoint,
+              "data-needs-formspree":"false"
+            });
+
+            const notice = form.components().models.find(child => {
+              return child.get("tagName") === "p";
+            });
+
+            if(notice){
+              notice.components("Form connected. Submissions will be sent to your email.");
+            }
+
+            alert("Form endpoint added successfully.");
+          }
+        }
+      });
+    }, 300);
+  });
 }
