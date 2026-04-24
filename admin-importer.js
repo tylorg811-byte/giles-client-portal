@@ -73,6 +73,10 @@ window.showAdminPage = function(page){
   if(page === "billing" && typeof renderBillingOverview === "function"){
     renderBillingOverview();
   }
+
+  if(window.innerWidth <= 900){
+    document.body.classList.remove("sidebar-open");
+  }
 };
 
 function analyzeImportHtml(){
@@ -107,7 +111,7 @@ function analyzeImportHtml(){
   let bodyHtml = doc.body ? doc.body.innerHTML : raw;
 
   bodyHtml = bodyHtml
-    .replaceAll("contenteditable=\"true\"","")
+    .replaceAll('contenteditable="true"',"")
     .replaceAll("contenteditable='true'","");
 
   const guessedSlug = guessSlug(title);
@@ -153,8 +157,8 @@ function populateImportClientSelect(){
 
   select.innerHTML = "";
 
-  if(!window.clientSites || !clientSites.length){
-    select.innerHTML = `<option value="">No clients loaded</option>`;
+  if(typeof clientSites === "undefined" || !clientSites.length){
+    select.innerHTML = `<option value="">No clients loaded yet</option>`;
     return;
   }
 
@@ -166,6 +170,10 @@ function populateImportClientSelect(){
     option.textContent = site.business_name || site.client_email || site.client_user_id;
     select.appendChild(option);
   });
+
+  if(!select.innerHTML){
+    select.innerHTML = `<option value="">No clients with user IDs found</option>`;
+  }
 }
 
 async function importPageToClient(){
