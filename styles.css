@@ -1353,3 +1353,44 @@ background:#7B5CFF;
 color:white;
 border-color:#7B5CFF;
 }
+
+.panel-primary-btn,
+.panel-secondary-btn{
+width:100%;
+border:none;
+border-radius:14px;
+padding:13px 14px;
+font-weight:900;
+cursor:pointer;
+margin-top:10px;
+}
+
+.panel-primary-btn{
+background:#7B5CFF;
+color:white;
+}
+
+.panel-secondary-btn{
+background:#f3f2ff;
+color:#5a4cff;
+}
+
+.smart-textarea{
+width:100%;
+min-height:90px;
+padding:14px;
+border-radius:14px;
+border:1px solid #dfe3ee;
+background:#f9fafc;
+font-size:14px;
+outline:none;
+margin-bottom:12px;
+}
+
+.builder-panel label{
+display:block;
+font-size:13px;
+font-weight:900;
+color:#111827;
+margin:12px 0 7px;
+}
