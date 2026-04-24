@@ -1370,3 +1370,19 @@ ${result.url}`;
     alert("Checkout creation failed.");
   }
 }
+
+function generateSEO(site){
+  const name = site.business_name || "Business";
+  const type = site.business_type || "Business";
+  const location = site.location || "";
+
+  const title = `${name} | ${type} Website ${location ? "in " + location : ""}`;
+
+  const description = `Professional ${type.toLowerCase()} website for ${name}. ${
+    location ? "Serving " + location + "." : ""
+  } Contact today.`;
+
+  const keywords = `${name}, ${type}, ${location}, affordable ${type} website`;
+
+  return { title, description, keywords };
+}
