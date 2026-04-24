@@ -5,6 +5,18 @@ let analyticsEvents = [];
 let activeBillingFilter = "all";
 
 const LIVE_BASE_URL = "https://giles-sites.netlify.app";
+
+function getClientLiveUrl(site){
+  if(site.domain && site.domain_status === "live"){
+    return `https://${site.domain}`;
+  }
+
+  if(site.client_user_id){
+    return `${LIVE_BASE_URL}/?client=${site.client_user_id}`;
+  }
+
+  return LIVE_BASE_URL;
+}
 document.addEventListener("DOMContentLoaded", loadAdminDashboard);
 
 async function loadAdminDashboard(){
