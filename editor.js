@@ -758,28 +758,21 @@ function applyBackground(bg){
   const selected = editor.getSelected();
 
   if(!selected){
-    editor.addComponents(`<section class="content-section" style="${styleObjToString(bg.css)}"><h2>${bg.name}</h2><p>Add your content here.</p></section>`);
+    editor.addComponents(`
+      <section class="content-section" style="${styleObjToString(bg.css)};text-align:center;">
+        <div style="max-width:850px;margin:auto;">
+          <h2>New Background Section</h2>
+          <p>Add your content here.</p>
+          <a href="#" class="main-btn">Call To Action</a>
+        </div>
+      </section>
+    `);
+
+    editor.refresh();
     return;
   }
 
   selected.addStyle(bg.css);
-  editor.refresh();
-}
-
-function applyFont(font){
-  const selected = editor.getSelected();
-
-  if(!selected){
-    editor.addComponents(`<h2 style="${styleObjToString(font.css)}">${font.name}</h2>`);
-    return;
-  }
-
-  selected.addStyle(font.css);
-  editor.refresh();
-}
-
-function addImageToPage(src){
-  editor.addComponents(`<img class="site-image" src="${src}">`);
   editor.refresh();
 }
 
