@@ -4,8 +4,7 @@ let changeRequests = [];
 let analyticsEvents = [];
 let activeBillingFilter = "all";
 
-const BASE_URL = "https://tylorg811-byte.github.io/giles-client-portal";
-
+const LIVE_BASE_URL = "https://giles-sites.netlify.app";
 document.addEventListener("DOMContentLoaded", loadAdminDashboard);
 
 async function loadAdminDashboard(){
