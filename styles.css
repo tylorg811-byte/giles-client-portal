@@ -240,12 +240,22 @@ margin-bottom:16px;
 
 /* ================= GRAPES CLEAN ================= */
 
-.gjs-one-bg,
-.gjs-two-color,
-.gjs-four-color,
-.gjs-toolbar,
-.gjs-pn-panel{
+.gjs-pn-panel,
+.gjs-toolbar{
 display:none!important;
+}
+
+.gjs-one-bg{
+background:#ffffff!important;
+}
+
+.gjs-two-color{
+color:#1f1f2e!important;
+}
+
+.gjs-four-color,
+.gjs-four-color-h:hover{
+color:#7B5CFF!important;
 }
 
 .gjs-cv-canvas{
