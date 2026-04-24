@@ -31,6 +31,35 @@ async function loadAdminDashboard(){
   await loadAnalytics();
 }
 
+function showAdminPage(page){
+  document.querySelectorAll(".page-section").forEach(section=>section.classList.remove("active"));
+  document.querySelectorAll(".sidebar button").forEach(btn=>btn.classList.remove("active-nav"));
+
+  document.getElementById(`${page}Page`)?.classList.add("active");
+
+  const titleMap = {
+    clients:"Client Websites",
+    analytics:"Analytics",
+    requests:"Change Requests",
+    billing:"Billing"
+  };
+
+  document.getElementById("pageTitle").textContent = titleMap[page] || "Admin";
+
+  if(page === "clients") document.getElementById("navClients").classList.add("active-nav");
+  if(page === "analytics"){
+    document.getElementById("navAnalytics").classList.add("active-nav");
+    renderAnalyticsOverviewFull();
+    populateAnalyticsClientDropdown();
+    loadClientAnalyticsView();
+  }
+  if(page === "requests") document.getElementById("navRequests").classList.add("active-nav");
+  if(page === "billing"){
+    document.getElementById("navBilling").classList.add("active-nav");
+    renderBillingOverview();
+  }
+}
+
 async function checkAdminAccess(){
   const { data, error } = await db
     .from("admin_users")
@@ -88,13 +117,13 @@ async function loadAnalytics(){
   if(error){
     console.error(error);
     analyticsEvents = [];
-    renderAnalyticsOverview();
-    applyBillingFilter();
-    return;
+  } else {
+    analyticsEvents = data || [];
   }
 
-  analyticsEvents = data || [];
-  renderAnalyticsOverview();
+  renderAnalyticsOverviewFull();
+  populateAnalyticsClientDropdown();
+  loadClientAnalyticsView();
   applyBillingFilter();
 }
 
@@ -114,50 +143,125 @@ function renderStats(){
   }
 }
 
-function renderAnalyticsOverview(){
-  let analyticsCard = document.getElementById("adminAnalyticsCard");
+function renderAnalyticsOverviewFull(){
+  const container = document.getElementById("analyticsOverview");
+  if(!container) return;
 
-  if(!analyticsCard){
-    const firstCard = document.querySelector(".card");
-    analyticsCard = document.createElement("section");
-    analyticsCard.className = "card";
-    analyticsCard.id = "adminAnalyticsCard";
-    analyticsCard.innerHTML = `<h2>Analytics Overview</h2><div id="adminAnalyticsContent"></div>`;
-    firstCard.parentNode.insertBefore(analyticsCard, firstCard);
-  }
-
-  const todayCount = analyticsEvents.filter(event=>isToday(event.created_at)).length;
-  const weekCount = analyticsEvents.filter(event=>isWithinDays(event.created_at,7)).length;
-  const monthCount = analyticsEvents.length;
+  const total = analyticsEvents.length;
+  const today = analyticsEvents.filter(e=>isToday(e.created_at)).length;
+  const week = analyticsEvents.filter(e=>isWithinDays(e.created_at,7)).length;
   const topPage = getTopValue(analyticsEvents,"page") || "—";
   const topDevice = getTopValue(analyticsEvents,"device") || "—";
 
-  const content = document.getElementById("adminAnalyticsContent");
+  container.innerHTML = `
+    <div class="grid">
+      <div class="stat"><span>Total Views</span><strong>${total}</strong></div>
+      <div class="stat"><span>Today</span><strong>${today}</strong></div>
+      <div class="stat"><span>7 Days</span><strong>${week}</strong></div>
+      <div class="stat"><span>Top Device</span><strong style="font-size:20px;">${escapeHtml(topDevice)}</strong></div>
+    </div>
 
-  content.innerHTML = `
-    <div class="grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:18px;">
-      <div class="stat">
-        <span>Views Today</span>
-        <strong>${todayCount}</strong>
+    <div class="analytics-client-card">
+      <p><strong>Top Page Overall:</strong> ${escapeHtml(topPage)}</p>
+    </div>
+  `;
+}
+
+function populateAnalyticsClientDropdown(){
+  const select = document.getElementById("analyticsClientSelect");
+  if(!select) return;
+
+  select.innerHTML = "";
+
+  clientSites.forEach(site=>{
+    if(!site.client_user_id) return;
+
+    const opt = document.createElement("option");
+    opt.value = site.client_user_id;
+    opt.textContent = site.business_name || site.client_email || site.client_user_id;
+    select.appendChild(opt);
+  });
+}
+
+function loadClientAnalyticsView(){
+  const select = document.getElementById("analyticsClientSelect");
+  const container = document.getElementById("analyticsClientView");
+  if(!select || !container) return;
+
+  const id = select.value;
+  const site = clientSites.find(s=>s.client_user_id === id);
+  const events = analyticsEvents.filter(e=>e.client_user_id === id);
+
+  const today = events.filter(e=>isToday(e.created_at)).length;
+  const week = events.filter(e=>isWithinDays(e.created_at,7)).length;
+  const month = events.length;
+  const topPage = getTopValue(events,"page") || "—";
+  const topDevice = getTopValue(events,"device") || "—";
+  const topBrowser = getTopValue(events,"browser") || "—";
+
+  const recent = events.slice(0,12).map(e=>`
+    <div class="analytics-client-card">
+      <p><strong>${escapeHtml(e.page || "home")}</strong></p>
+      <p>${escapeHtml(e.device || "unknown")} • ${escapeHtml(e.browser || "unknown")} • ${timeAgo(e.created_at)}</p>
+      <p>Referrer: ${escapeHtml(cleanReferrer(e.referrer))}</p>
+    </div>
+  `).join("");
+
+  container.innerHTML = `
+    <h2>${escapeHtml(site?.business_name || "Client Analytics")}</h2>
+
+    <div class="grid">
+      <div class="stat"><span>Today</span><strong>${today}</strong></div>
+      <div class="stat"><span>7 Days</span><strong>${week}</strong></div>
+      <div class="stat"><span>30 Days</span><strong>${month}</strong></div>
+      <div class="stat"><span>Top Page</span><strong style="font-size:18px;">${escapeHtml(topPage)}</strong></div>
+    </div>
+
+    <div class="analytics-table">
+      <div class="analytics-client-card">
+        <p><strong>Top Device</strong></p>
+        <p>${escapeHtml(topDevice)}</p>
       </div>
 
-      <div class="stat">
-        <span>7 Days</span>
-        <strong>${weekCount}</strong>
+      <div class="analytics-client-card">
+        <p><strong>Top Browser</strong></p>
+        <p>${escapeHtml(topBrowser)}</p>
       </div>
 
-      <div class="stat">
-        <span>30 Days</span>
-        <strong>${monthCount}</strong>
+      <div class="analytics-client-card">
+        <p><strong>Domain</strong></p>
+        <p>${escapeHtml(site?.domain || "No domain")}</p>
       </div>
 
-      <div class="stat">
-        <span>Top Device</span>
-        <strong style="font-size:20px;">${escapeHtml(topDevice)}</strong>
+      <div class="analytics-client-card">
+        <p><strong>Live URL</strong></p>
+        <p style="word-break:break-word;">${escapeHtml(site ? getClientLiveUrl(site) : "—")}</p>
       </div>
     </div>
 
-    <p><strong>Top Page:</strong> ${escapeHtml(topPage)}</p>
+    <h3 style="margin:22px 0 12px;">Recent Visits</h3>
+    <div class="request-list">
+      ${recent || "<p>No analytics yet.</p>"}
+    </div>
+  `;
+}
+
+function renderBillingOverview(){
+  const box = document.getElementById("billingOverview");
+  if(!box) return;
+
+  const active = clientSites.filter(s=>getBillingStatus(s).text === "Active").length;
+  const covered = clientSites.filter(s=>getBillingStatus(s).text === "Covered by Giles").length;
+  const past = clientSites.filter(s=>getBillingStatus(s).text === "Past Due").length;
+  const manual = clientSites.filter(s=>s.billing_status === "manual paid").length;
+
+  box.innerHTML = `
+    <div class="grid">
+      <div class="stat"><span>Active</span><strong>${active}</strong></div>
+      <div class="stat"><span>Covered</span><strong>${covered}</strong></div>
+      <div class="stat"><span>Manual Paid</span><strong>${manual}</strong></div>
+      <div class="stat"><span>Past Due</span><strong>${past}</strong></div>
+    </div>
   `;
 }
 
@@ -281,42 +385,47 @@ function renderClientSites(sites = clientSites){
     card.innerHTML = `
       <div>
         <h3>${escapeHtml(site.business_name || "Unnamed Business")}</h3>
-        <p>${escapeHtml(site.client_email || "No email")}</p>
-        <p><strong>User ID:</strong> ${escapeHtml(site.client_user_id || "Not assigned")}</p>
-        <p><strong>Editor:</strong> <span class="badge ${accessClass}">${accessText}</span></p>
-        <p><strong>Billing:</strong> <span class="badge ${billing.class}">${billing.text}</span></p>
-        <p><strong>Cycle:</strong> ${escapeHtml(site.billing_cycle || "monthly")}</p>
-        ${site.last_payment_date ? `<p><strong>Last Paid:</strong> ${formatDate(site.last_payment_date)}</p>` : ""}
-        ${site.next_payment_date ? `<p><strong>Next Due:</strong> ${formatDate(site.next_payment_date)}</p>` : ""}
-        ${site.billing_override ? `<p><strong>Override:</strong> <span class="badge full">Enabled</span></p>` : ""}
+        <p>${escapeHtml(site.client_email || "")}</p>
+        <p style="font-size:12px;color:#888;">ID: ${escapeHtml(site.client_user_id || "")}</p>
+
+        <div style="margin-top:10px;">
+          <span class="badge">${escapeHtml(site.package_name || "Package")}</span>
+          <span class="badge ${accessClass}">${accessText}</span>
+          <span class="badge ${billing.class}">${billing.text}</span>
+        </div>
       </div>
 
       <div>
-        <p><strong>Package</strong></p>
-        <span class="badge">${escapeHtml(site.package_name || "None")}</span>
-
-        <div style="margin-top:12px;">
-          <p><strong>Analytics</strong></p>
-          <p>Today: ${analytics ? analytics.today : 0}</p>
-          <p>7 Days: ${analytics ? analytics.week : 0}</p>
-          <p>30 Days: ${analytics ? analytics.month : 0}</p>
-          <p>Top Page: ${analytics ? escapeHtml(analytics.topPage) : "—"}</p>
-        </div>
+        <p><strong>Billing</strong></p>
+        <p><strong>Cycle:</strong> ${escapeHtml(site.billing_cycle || "monthly")}</p>
+        ${site.last_payment_date ? `<p><strong>Last:</strong> ${formatDate(site.last_payment_date)}</p>` : ""}
+        ${site.next_payment_date ? `<p><strong>Next:</strong> ${formatDate(site.next_payment_date)}</p>` : ""}
+        ${site.billing_override ? `<p><strong>Override:</strong> <span class="badge full">Enabled</span></p>` : ""}
       </div>
 
       <div>
         <p><strong>Domain</strong></p>
         <p>${escapeHtml(domainText)}</p>
-        <span class="badge">${escapeHtml(site.domain_status || "not connected")}</span>
-        <p style="margin-top:8px;"><strong>Release:</strong></p>
+        <span class="badge">${escapeHtml(site.domain_status || "status")}</span>
+
+        <p style="margin-top:8px;"><strong>Release</strong></p>
         <span class="badge ${releaseClass}">${escapeHtml(releaseStatus)}</span>
-        ${site.domain_released_at ? `<p>Released ${timeAgo(site.domain_released_at)}</p>` : ""}
+
+        <div style="margin-top:12px;">
+          <p><strong>Analytics</strong></p>
+          <p style="font-size:13px;">
+            Today: ${analytics ? analytics.today : 0} •
+            7d: ${analytics ? analytics.week : 0} •
+            30d: ${analytics ? analytics.month : 0}
+          </p>
+          <p style="font-size:12px;">Top: ${analytics ? escapeHtml(analytics.topPage) : "—"}</p>
+        </div>
       </div>
 
       <div class="actions">
         <button onclick="editClientSite('${site.id}')">Edit</button>
-        <a href="${editorUrl}" target="_blank">Open Editor</a>
-        <a href="${liveUrl}" target="_blank">View Site</a>
+        <a href="${editorUrl}" target="_blank">Editor</a>
+        <a href="${liveUrl}" target="_blank">View</a>
         <button onclick="copyText('${liveUrl}')">Copy Live</button>
         <button onclick="copyClientEditorLink('${editorUrl}')">Copy Editor</button>
         <button onclick="copyLoginLink()">Copy Login</button>
@@ -550,6 +659,8 @@ function editClientSite(id){
   const site = clientSites.find(item => item.id === id);
   if(!site) return;
 
+  showAdminPage("clients");
+
   document.getElementById("clientRecordId").value = site.id;
   document.getElementById("businessName").value = site.business_name || "";
   document.getElementById("clientEmail").value = site.client_email || "";
@@ -663,6 +774,16 @@ function isWithinDays(dateString,days){
   const now = new Date();
   const diff = now - date;
   return diff <= days * 24 * 60 * 60 * 1000;
+}
+
+function cleanReferrer(ref){
+  if(!ref || ref === "direct") return "direct";
+
+  try{
+    return new URL(ref).hostname;
+  }catch(e){
+    return ref;
+  }
 }
 
 function timeAgo(dateString){
