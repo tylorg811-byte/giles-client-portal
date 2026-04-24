@@ -1394,3 +1394,41 @@ font-weight:900;
 color:#111827;
 margin:12px 0 7px;
 }
+
+/* ================= CLIENT SAFETY MODE ================= */
+
+body.client-safe-mode .rail-btn{
+display:none!important;
+}
+
+body.client-safe-mode .rail-btn[data-safe="true"]{
+display:flex!important;
+}
+
+body.client-safe-mode #addPanel,
+body.client-safe-mode #headerPanel,
+body.client-safe-mode #pagesPanel,
+body.client-safe-mode #designPanel,
+body.client-safe-mode #backgroundPanel,
+body.client-safe-mode #fontsPanel,
+body.client-safe-mode #stylePanel{
+display:none!important;
+}
+
+.safe-mode-banner{
+background:#fff7ed;
+border:1px solid #fed7aa;
+color:#9a3412;
+padding:12px 16px;
+border-radius:14px;
+font-size:13px;
+font-weight:900;
+margin-bottom:14px;
+line-height:1.4;
+}
+
+body.client-safe-mode .gjs-toolbar,
+body.client-safe-mode .gjs-badge,
+body.client-safe-mode .gjs-placeholder{
+display:none!important;
+}
