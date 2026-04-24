@@ -151,17 +151,40 @@ function analyzeImportHtml(){
   `;
 }
 
-function populateImportClientSelect(){
+async function populateImportClientSelect(){
   const select = document.getElementById("importClientSelect");
   if(!select) return;
 
-  select.innerHTML = "";
+  select.innerHTML = `<option value="">Loading clients...</option>`;
 
-  if(typeof clientSites === "undefined" || !clientSites.length){
-    select.innerHTML = `<option value="">No clients loaded yet</option>`;
+  const { data, error } = await db
+    .from("client_sites")
+    .select("*")
+    .order("created_at", { ascending:false });
+
+  if(error){
+    console.error(error);
+    select.innerHTML = `<option value="">Could not load clients</option>`;
     return;
   }
 
+  const sites = data || [];
+
+  select.innerHTML = "";
+
+  sites.forEach(site=>{
+    if(!site.client_user_id) return;
+
+    const option = document.createElement("option");
+    option.value = site.client_user_id;
+    option.textContent = site.business_name || site.client_email || site.client_user_id;
+    select.appendChild(option);
+  });
+
+  if(!select.innerHTML){
+    select.innerHTML = `<option value="">No clients with user IDs found</option>`;
+  }
+}
   clientSites.forEach(site=>{
     if(!site.client_user_id) return;
 
