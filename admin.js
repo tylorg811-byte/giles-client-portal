@@ -80,7 +80,13 @@ function renderClientSites(){
     card.className = "client-card";
 
     const domainText = site.domain || "No domain yet";
-    const liveUrl = site.domain ? `https://${site.domain}` : "https://tylorg811-byte.github.io/giles-client-portal/";
+    const liveUrl = site.domain
+      ? `https://${site.domain}`
+      : "https://tylorg811-byte.github.io/giles-client-portal/";
+
+    const editorUrl = site.client_user_id
+      ? `editor.html?client=${site.client_user_id}`
+      : "editor.html";
 
     card.innerHTML = `
       <div>
@@ -102,8 +108,9 @@ function renderClientSites(){
 
       <div class="actions">
         <button onclick="editClientSite('${site.id}')">Edit</button>
-        <a href="${liveUrl}" target="_blank">View</a>
-        <a href="editor.html" target="_blank">Editor</a>
+        <a href="${editorUrl}" target="_blank">Open Editor</a>
+        <a href="${liveUrl}" target="_blank">View Site</a>
+        <button onclick="copyClientEditorLink('${editorUrl}')">Copy Editor</button>
         <button onclick="copyLoginLink()">Copy Login</button>
         <button class="danger" onclick="deleteClientSite('${site.id}')">Delete</button>
       </div>
@@ -210,6 +217,12 @@ function copyLoginLink(){
   const link = "https://tylorg811-byte.github.io/giles-client-portal/login.html";
   navigator.clipboard.writeText(link);
   alert("Login link copied.");
+}
+
+function copyClientEditorLink(editorUrl){
+  const fullLink = `https://tylorg811-byte.github.io/giles-client-portal/${editorUrl}`;
+  navigator.clipboard.writeText(fullLink);
+  alert("Client editor link copied.");
 }
 
 function cleanValue(id){
