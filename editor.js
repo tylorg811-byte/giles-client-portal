@@ -194,6 +194,8 @@ async function publishPage(){
 =========================*/
 function addWixControls(){
 
+addSectionAddButtons();
+   
   editor.on("component:selected", component => {
 
     document.querySelectorAll(".wix-control-bar").forEach(e=>e.remove());
