@@ -62,13 +62,8 @@ function showAdminPage(page){
     loadClientAnalyticsView();
   }
 
-  if(page === "requests"){
-    renderChangeRequests();
-  }
-
-  if(page === "billing"){
-    renderBillingOverview();
-  }
+  if(page === "requests") renderChangeRequests();
+  if(page === "billing") renderBillingOverview();
 
   if(window.innerWidth <= 1100){
     document.body.classList.remove("sidebar-open");
@@ -127,13 +122,7 @@ async function loadAnalytics(){
     .gte("created_at", since.toISOString())
     .order("created_at", { ascending:false });
 
-  if(error){
-    console.error(error);
-    analyticsEvents = [];
-    return;
-  }
-
-  analyticsEvents = data || [];
+  analyticsEvents = error ? [] : data || [];
 }
 
 function renderStats(){
@@ -231,6 +220,9 @@ function renderClientSites(sites){
         <a href="${liveUrl}" target="_blank">View Site</a>
         <a href="editor.html?client=${site.client_user_id}" target="_blank">Editor</a>
         <button onclick="editClientSite('${site.id}')">Edit</button>
+        <button onclick="copyText('${liveUrl}')">Copy Live</button>
+        ${site.domain ? `<button class="release-btn" onclick="releaseDomain('${site.id}')">Release Domain</button>` : ""}
+        <button class="danger" onclick="deleteClientSite('${site.id}')">Delete</button>
       </div>
     `;
 
@@ -238,6 +230,188 @@ function renderClientSites(sites){
   });
 }
 
+/* CLIENT FORM ACTIONS */
+async function saveClientSite(){
+  const id = cleanValue("clientRecordId");
+
+  const payload = {
+    admin_user_id: adminUser.id,
+    client_user_id: cleanValue("clientUserId") || null,
+    client_email: cleanValue("clientEmail"),
+    business_name: cleanValue("businessName"),
+    package_name: cleanValue("packageName"),
+    domain: cleanValue("domain").replace(/^https?:\/\//,"").replace(/\/$/,""),
+    domain_status: cleanValue("domainStatus"),
+    domain_release_status: cleanValue("domainReleaseStatus") || "connected",
+    domain_release_notes: cleanValue("domainReleaseNotes"),
+    site_status: cleanValue("siteStatus"),
+    editor_access: cleanValue("editorAccess") || "safe",
+    billing_status: cleanValue("billingStatus") || "active",
+    billing_override: cleanValue("billingOverride") === "true",
+    billing_override_reason: cleanValue("billingOverrideReason"),
+    billing_notes: cleanValue("billingNotes"),
+    billing_cycle: cleanValue("billingCycle") || "monthly",
+    next_payment_date: cleanValue("nextPaymentDate") || null,
+    last_payment_date: cleanValue("lastPaymentDate") || null,
+    notes: cleanValue("notes"),
+    updated_at: new Date().toISOString()
+  };
+
+  if(payload.domain_release_status === "released"){
+    payload.domain_status = "released";
+    payload.domain_released_at = new Date().toISOString();
+  }
+
+  let response;
+
+  if(id){
+    response = await db
+      .from("client_sites")
+      .update(payload)
+      .eq("id", id);
+  } else {
+    response = await db
+      .from("client_sites")
+      .insert(payload);
+  }
+
+  if(response.error){
+    console.error(response.error);
+    document.getElementById("message").textContent = "Save failed.";
+    return;
+  }
+
+  if(payload.client_user_id){
+    const billing = getBillingStatus(payload);
+
+    await db.from("notifications").insert({
+      user_id: payload.client_user_id,
+      title: "Website account updated",
+      message: `Your website status is "${payload.site_status}". Billing: "${billing.text}".`,
+      type: "site"
+    });
+  }
+
+  document.getElementById("message").textContent = "Client site saved.";
+  clearClientForm();
+
+  await loadClientSites();
+  renderStats();
+}
+
+function editClientSite(id){
+  const site = clientSites.find(item => item.id === id);
+  if(!site) return;
+
+  showAdminPage("clients");
+
+  document.getElementById("clientRecordId").value = site.id || "";
+  document.getElementById("businessName").value = site.business_name || "";
+  document.getElementById("clientEmail").value = site.client_email || "";
+  document.getElementById("clientUserId").value = site.client_user_id || "";
+  document.getElementById("packageName").value = site.package_name || "Starter";
+  document.getElementById("domain").value = site.domain || "";
+  document.getElementById("domainStatus").value = site.domain_status || "not connected";
+  document.getElementById("domainReleaseStatus").value = site.domain_release_status || "connected";
+  document.getElementById("domainReleaseNotes").value = site.domain_release_notes || "";
+  document.getElementById("siteStatus").value = site.site_status || "draft";
+  document.getElementById("editorAccess").value = site.editor_access || "safe";
+  document.getElementById("billingStatus").value = site.billing_status || "active";
+  document.getElementById("billingOverride").value = site.billing_override ? "true" : "false";
+  document.getElementById("billingOverrideReason").value = site.billing_override_reason || "";
+  document.getElementById("billingNotes").value = site.billing_notes || "";
+  document.getElementById("billingCycle").value = site.billing_cycle || "monthly";
+  document.getElementById("nextPaymentDate").value = site.next_payment_date || "";
+  document.getElementById("lastPaymentDate").value = site.last_payment_date || "";
+  document.getElementById("notes").value = site.notes || "";
+
+  scrollToForm();
+}
+
+function clearClientForm(){
+  document.getElementById("clientRecordId").value = "";
+  document.getElementById("businessName").value = "";
+  document.getElementById("clientEmail").value = "";
+  document.getElementById("clientUserId").value = "";
+  document.getElementById("packageName").value = "Starter";
+  document.getElementById("domain").value = "";
+  document.getElementById("domainStatus").value = "not connected";
+  document.getElementById("domainReleaseStatus").value = "connected";
+  document.getElementById("domainReleaseNotes").value = "";
+  document.getElementById("siteStatus").value = "draft";
+  document.getElementById("editorAccess").value = "safe";
+  document.getElementById("billingStatus").value = "active";
+  document.getElementById("billingOverride").value = "false";
+  document.getElementById("billingOverrideReason").value = "";
+  document.getElementById("billingNotes").value = "";
+  document.getElementById("billingCycle").value = "monthly";
+  document.getElementById("nextPaymentDate").value = "";
+  document.getElementById("lastPaymentDate").value = "";
+  document.getElementById("notes").value = "";
+  document.getElementById("message").textContent = "";
+}
+
+async function deleteClientSite(id){
+  if(!confirm("Delete this client site record?")) return;
+
+  const { error } = await db
+    .from("client_sites")
+    .delete()
+    .eq("id", id);
+
+  if(error){
+    console.error(error);
+    alert("Delete failed.");
+    return;
+  }
+
+  await loadClientSites();
+  renderStats();
+}
+
+async function releaseDomain(id){
+  const site = clientSites.find(item => item.id === id);
+  if(!site) return;
+
+  const reason = prompt(
+    `Release domain for ${site.business_name || site.client_email}?\n\nThis marks the domain as released in your portal.\n\nReason:`,
+    "Client requested domain release"
+  );
+
+  if(reason === null) return;
+  if(!confirm(`Confirm release for ${site.domain}?`)) return;
+
+  const { error } = await db
+    .from("client_sites")
+    .update({
+      domain_status:"released",
+      domain_release_status:"released",
+      domain_release_notes:reason,
+      domain_released_at:new Date().toISOString(),
+      updated_at:new Date().toISOString()
+    })
+    .eq("id", id);
+
+  if(error){
+    console.error(error);
+    alert("Domain release failed.");
+    return;
+  }
+
+  if(site.client_user_id){
+    await db.from("notifications").insert({
+      user_id:site.client_user_id,
+      title:"Domain released",
+      message:`Your domain ${site.domain} has been marked as released from Giles Web Design management.`,
+      type:"domain"
+    });
+  }
+
+  await loadClientSites();
+  renderStats();
+}
+
+/* CHANGE REQUESTS */
 function renderChangeRequests(){
   const list = document.getElementById("changeRequestList");
   if(!list) return;
@@ -266,7 +440,7 @@ function renderChangeRequests(){
         <h3>${escapeHtml(req.business_name || req.client_email || "Client Request")}</h3>
         <p>${escapeHtml(req.client_email || "")}</p>
         <span class="badge">${escapeHtml(req.status || "new")}</span>
-        <p style="margin-top:8px;">${timeAgo(req.created_at)}</p>
+        <p>${timeAgo(req.created_at)}</p>
       </div>
 
       <div>
@@ -299,6 +473,59 @@ function renderChangeRequests(){
   });
 }
 
+async function updateChangeRequest(id, clientUserId){
+  const status = document.getElementById(`status-${id}`).value;
+  const notes = document.getElementById(`notes-${id}`).value.trim();
+
+  const { error } = await db
+    .from("change_requests")
+    .update({
+      status,
+      admin_notes:notes,
+      updated_at:new Date().toISOString()
+    })
+    .eq("id", id);
+
+  if(error){
+    alert("Request update failed.");
+    console.error(error);
+    return;
+  }
+
+  if(clientUserId){
+    await db.from("notifications").insert({
+      user_id:clientUserId,
+      title:"Request status updated",
+      message:`Your request is now marked as "${status}".${notes ? " Note: " + notes : ""}`,
+      type:"request"
+    });
+  }
+
+  await loadChangeRequests();
+  renderChangeRequests();
+  renderStats();
+}
+
+async function deleteChangeRequest(id){
+  if(!confirm("Delete this change request?")) return;
+
+  const { error } = await db
+    .from("change_requests")
+    .delete()
+    .eq("id", id);
+
+  if(error){
+    alert("Delete failed.");
+    console.error(error);
+    return;
+  }
+
+  await loadChangeRequests();
+  renderChangeRequests();
+  renderStats();
+}
+
+/* ANALYTICS */
 function renderAnalyticsOverviewFull(){
   const container = document.getElementById("analyticsOverview");
   if(!container) return;
@@ -362,16 +589,6 @@ function loadClientAnalyticsView(){
   const week = events.filter(e=>isWithinDays(e.created_at,7)).length;
   const month = events.length;
   const topPage = getTopValue(events,"page") || "—";
-  const topDevice = getTopValue(events,"device") || "—";
-  const topBrowser = getTopValue(events,"browser") || "—";
-
-  const recent = events.slice(0,10).map(e=>`
-    <div class="analytics-client-card">
-      <p><strong>${escapeHtml(e.page || "home")}</strong></p>
-      <p>${escapeHtml(e.device || "unknown")} • ${escapeHtml(e.browser || "unknown")} • ${timeAgo(e.created_at)}</p>
-      <p>Referrer: ${escapeHtml(cleanReferrer(e.referrer))}</p>
-    </div>
-  `).join("");
 
   container.innerHTML = `
     <h2>${escapeHtml(site?.business_name || "Client Analytics")}</h2>
@@ -382,40 +599,10 @@ function loadClientAnalyticsView(){
       <div class="stat"><span>30 Days</span><strong>${month}</strong></div>
       <div class="stat"><span>Top Page</span><strong style="font-size:18px;">${escapeHtml(topPage)}</strong></div>
     </div>
-
-    <div class="analytics-table">
-      <div class="analytics-client-card"><p><strong>Top Device</strong></p><p>${escapeHtml(topDevice)}</p></div>
-      <div class="analytics-client-card"><p><strong>Top Browser</strong></p><p>${escapeHtml(topBrowser)}</p></div>
-      <div class="analytics-client-card"><p><strong>Domain</strong></p><p>${escapeHtml(site?.domain || "No domain")}</p></div>
-      <div class="analytics-client-card"><p><strong>Live URL</strong></p><p style="word-break:break-word;">${escapeHtml(site ? getClientLiveUrl(site) : "—")}</p></div>
-    </div>
-
-    <h3 style="margin:22px 0 12px;">Recent Visits</h3>
-    <div class="request-list">
-      ${recent || "<p>No analytics yet.</p>"}
-    </div>
   `;
 }
 
-function renderBillingOverview(){
-  const box = document.getElementById("billingOverview");
-  if(!box) return;
-
-  const active = clientSites.filter(s=>getBillingStatus(s).text === "Active").length;
-  const covered = clientSites.filter(s=>getBillingStatus(s).text === "Covered by Giles").length;
-  const past = clientSites.filter(s=>getBillingStatus(s).text === "Past Due").length;
-  const manual = clientSites.filter(s=>s.billing_status === "manual paid").length;
-
-  box.innerHTML = `
-    <div class="grid">
-      <div class="stat"><span>Active</span><strong>${active}</strong></div>
-      <div class="stat"><span>Covered</span><strong>${covered}</strong></div>
-      <div class="stat"><span>Manual Paid</span><strong>${manual}</strong></div>
-      <div class="stat"><span>Past Due</span><strong>${past}</strong></div>
-    </div>
-  `;
-}
-
+/* DETAIL */
 function openClientDetail(id){
   const site = clientSites.find(s=>s.id === id);
   if(!site) return;
@@ -463,59 +650,26 @@ function openClientDetail(id){
   `;
 }
 
-async function updateChangeRequest(id, clientUserId){
-  const status = document.getElementById(`status-${id}`).value;
-  const notes = document.getElementById(`notes-${id}`).value.trim();
+function renderBillingOverview(){
+  const box = document.getElementById("billingOverview");
+  if(!box) return;
 
-  const { error } = await db
-    .from("change_requests")
-    .update({
-      status,
-      admin_notes:notes,
-      updated_at:new Date().toISOString()
-    })
-    .eq("id", id);
+  const active = clientSites.filter(s=>getBillingStatus(s).text === "Active").length;
+  const covered = clientSites.filter(s=>getBillingStatus(s).text === "Covered by Giles").length;
+  const past = clientSites.filter(s=>getBillingStatus(s).text === "Past Due").length;
+  const manual = clientSites.filter(s=>s.billing_status === "manual paid").length;
 
-  if(error){
-    alert("Request update failed.");
-    console.error(error);
-    return;
-  }
-
-  if(clientUserId){
-    await db.from("notifications").insert({
-      user_id:clientUserId,
-      title:"Request status updated",
-      message:`Your request is now marked as "${status}".${notes ? " Note: " + notes : ""}`,
-      type:"request"
-    });
-  }
-
-  await loadChangeRequests();
-  renderChangeRequests();
-  renderStats();
+  box.innerHTML = `
+    <div class="grid">
+      <div class="stat"><span>Active</span><strong>${active}</strong></div>
+      <div class="stat"><span>Covered</span><strong>${covered}</strong></div>
+      <div class="stat"><span>Manual Paid</span><strong>${manual}</strong></div>
+      <div class="stat"><span>Past Due</span><strong>${past}</strong></div>
+    </div>
+  `;
 }
 
-async function deleteChangeRequest(id){
-  if(!confirm("Delete this change request?")) return;
-
-  const { error } = await db
-    .from("change_requests")
-    .delete()
-    .eq("id", id);
-
-  if(error){
-    alert("Delete failed.");
-    console.error(error);
-    return;
-  }
-
-  await loadChangeRequests();
-  renderChangeRequests();
-  renderStats();
-}
-
-/* keep existing form functions from your previous admin.js if they are below this line */
+/* HELPERS */
 function getClientAnalytics(clientUserId){
   const events = analyticsEvents.filter(e=>e.client_user_id === clientUserId);
 
@@ -558,7 +712,6 @@ function getBillingStatus(site){
 function toggleClientForm(){
   const wrap = document.getElementById("clientFormWrap");
   if(!wrap) return;
-
   wrap.style.display = wrap.style.display === "block" ? "none" : "block";
 }
 
@@ -578,21 +731,28 @@ function toggleSidebar(){
   document.body.classList.toggle("sidebar-open");
 }
 
+function copyText(text){
+  navigator.clipboard.writeText(text);
+  alert("Copied.");
+}
+
+function cleanValue(id){
+  const el = document.getElementById(id);
+  return el ? el.value.trim() : "";
+}
+
 function getTopValue(items,key){
   const counts = {};
-
   items.forEach(item=>{
     const value = item[key] || "unknown";
     counts[value] = (counts[value] || 0) + 1;
   });
-
   return Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0] || null;
 }
 
 function isToday(dateString){
   const date = new Date(dateString);
   const today = new Date();
-
   return date.getFullYear() === today.getFullYear() &&
     date.getMonth() === today.getMonth() &&
     date.getDate() === today.getDate();
@@ -604,16 +764,6 @@ function isWithinDays(dateString,days){
   return now - date <= days * 24 * 60 * 60 * 1000;
 }
 
-function cleanReferrer(ref){
-  if(!ref || ref === "direct") return "direct";
-
-  try{
-    return new URL(ref).hostname;
-  }catch(e){
-    return ref;
-  }
-}
-
 function timeAgo(dateString){
   if(!dateString) return "—";
 
@@ -621,13 +771,10 @@ function timeAgo(dateString){
   const seconds = Math.floor((new Date() - date) / 1000);
 
   if(seconds < 60) return "just now";
-
   const minutes = Math.floor(seconds / 60);
   if(minutes < 60) return `${minutes} min ago`;
-
   const hours = Math.floor(minutes / 60);
   if(hours < 24) return `${hours} hr ago`;
-
   const days = Math.floor(hours / 24);
   if(days < 7) return `${days} day${days === 1 ? "" : "s"} ago`;
 
