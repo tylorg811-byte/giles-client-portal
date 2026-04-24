@@ -1,5 +1,6 @@
 let adminUser = null;
 let clientSites = [];
+let changeRequests = [];
 
 document.addEventListener("DOMContentLoaded", loadAdminDashboard);
 
@@ -16,13 +17,13 @@ async function loadAdminDashboard(){
       <div class="card">
         <h1>Admin access required</h1>
         <p>This page is only available to approved admin users.</p>
-        <p>Make sure your Supabase user ID is added to the admin_users table.</p>
       </div>
     `;
     return;
   }
 
   await loadClientSites();
+  await loadChangeRequests();
 }
 
 async function checkAdminAccess(){
@@ -48,9 +49,25 @@ async function loadClientSites(){
   }
 
   clientSites = data || [];
-
   renderStats();
   renderClientSites();
+}
+
+async function loadChangeRequests(){
+  const { data, error } = await db
+    .from("change_requests")
+    .select("*")
+    .order("created_at", { ascending:false });
+
+  if(error){
+    document.getElementById("changeRequestList").innerHTML = "Could not load requests.";
+    console.error(error);
+    return;
+  }
+
+  changeRequests = data || [];
+  renderStats();
+  renderChangeRequests();
 }
 
 function renderStats(){
@@ -62,8 +79,11 @@ function renderStats(){
   document.getElementById("liveDomains").textContent =
     clientSites.filter(site => site.domain_status === "live").length;
 
-  document.getElementById("pendingDomains").textContent =
-    clientSites.filter(site => site.domain_status === "pending").length;
+  const requestCounter = document.getElementById("newRequests");
+  if(requestCounter){
+    requestCounter.textContent =
+      changeRequests.filter(req => req.status === "new").length;
+  }
 }
 
 function renderClientSites(){
@@ -118,6 +138,94 @@ function renderClientSites(){
 
     list.appendChild(card);
   });
+}
+
+function renderChangeRequests(){
+  const list = document.getElementById("changeRequestList");
+  list.innerHTML = "";
+
+  if(!changeRequests.length){
+    list.innerHTML = "<p>No change requests yet.</p>";
+    return;
+  }
+
+  changeRequests.forEach(req=>{
+    const card = document.createElement("div");
+    card.className = "request-card";
+
+    card.innerHTML = `
+      <div>
+        <h3>${escapeHtml(req.business_name || req.client_email || "Client Request")}</h3>
+        <p>${escapeHtml(req.client_email || "")}</p>
+        <span class="badge">${escapeHtml(req.status || "new")}</span>
+      </div>
+
+      <div>
+        <p><strong>${escapeHtml(req.request_type || "Request")}</strong></p>
+        <p>${escapeHtml(req.message || "")}</p>
+        ${req.admin_notes ? `<p><strong>Note:</strong> ${escapeHtml(req.admin_notes)}</p>` : ""}
+      </div>
+
+      <div>
+        <label>Status</label>
+        <select id="status-${req.id}">
+          <option value="new" ${req.status === "new" ? "selected" : ""}>New</option>
+          <option value="in progress" ${req.status === "in progress" ? "selected" : ""}>In Progress</option>
+          <option value="done" ${req.status === "done" ? "selected" : ""}>Done</option>
+        </select>
+
+        <label style="margin-top:8px;">Admin Notes</label>
+        <textarea id="notes-${req.id}" placeholder="Optional note...">${escapeHtml(req.admin_notes || "")}</textarea>
+      </div>
+
+      <div class="actions">
+        <button onclick="updateChangeRequest('${req.id}')">Update</button>
+        ${req.client_user_id ? `<a href="editor.html?client=${req.client_user_id}" target="_blank">Open Editor</a>` : ""}
+        <button class="danger" onclick="deleteChangeRequest('${req.id}')">Delete</button>
+      </div>
+    `;
+
+    list.appendChild(card);
+  });
+}
+
+async function updateChangeRequest(id){
+  const status = document.getElementById(`status-${id}`).value;
+  const notes = document.getElementById(`notes-${id}`).value.trim();
+
+  const { error } = await db
+    .from("change_requests")
+    .update({
+      status: status,
+      admin_notes: notes,
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", id);
+
+  if(error){
+    alert("Request update failed.");
+    console.error(error);
+    return;
+  }
+
+  await loadChangeRequests();
+}
+
+async function deleteChangeRequest(id){
+  if(!confirm("Delete this change request?")) return;
+
+  const { error } = await db
+    .from("change_requests")
+    .delete()
+    .eq("id", id);
+
+  if(error){
+    alert("Delete failed.");
+    console.error(error);
+    return;
+  }
+
+  await loadChangeRequests();
 }
 
 async function saveClientSite(){
