@@ -3,111 +3,86 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Client Portal | Giles Web Design</title>
-
-<link rel="stylesheet" href="styles.css">
+<title>Live Website</title>
 
 <style>
 body{
+margin:0;
+font-family:Arial,sans-serif;
+background:#fff;
+}
+
+#loading{
 display:flex;
 align-items:center;
 justify-content:center;
-min-height:100vh;
-background:#0B0B0F;
-color:white;
-font-family:Arial,sans-serif;
+height:100vh;
+font-size:18px;
+color:#666;
 }
 
-.portal-bg{
-position:fixed;
-inset:0;
-background:linear-gradient(120deg,#0B0B0F,#1a1a40,#2a1a55,#0B0B0F);
-background-size:300% 300%;
-animation:bgMove 12s ease infinite;
-z-index:-1;
-}
-
-@keyframes bgMove{
-0%{background-position:0% 50%;}
-50%{background-position:100% 50%;}
-100%{background-position:0% 50%;}
-}
-
-.login-card{
-width:90%;
-max-width:420px;
-padding:35px;
-border-radius:22px;
-background:rgba(255,255,255,.06);
-border:1px solid rgba(255,255,255,.1);
-backdrop-filter:blur(16px);
-box-shadow:0 20px 60px rgba(0,0,0,.35);
-text-align:center;
-}
-
-.login-card h1{
-font-size:30px;
-margin-bottom:10px;
-}
-
-.login-card p{
-color:#aaa;
-margin-bottom:25px;
-}
-
-input{
-width:100%;
-padding:14px;
-margin:10px 0;
-border:none;
-border-radius:12px;
-background:#111;
-color:white;
-outline:none;
-}
-
-button{
-width:100%;
-padding:14px;
-margin-top:12px;
-border:none;
-border-radius:30px;
-background:linear-gradient(45deg,#7B5CFF,#9F7BFF);
-color:white;
-font-weight:bold;
-cursor:pointer;
-}
-
-button:hover{
-opacity:.9;
-}
-
-#message{
-margin-top:15px;
-color:#ccc;
-font-size:14px;
+#site{
+display:none;
 }
 </style>
+
 </head>
 
-<body class="login-page">
+<body>
 
-<div class="portal-bg"></div>
-
-<div class="login-card">
-  <h1>Giles Client Portal</h1>
-  <p>Log in to edit your website</p>
-
-  <input id="email" type="email" placeholder="Email">
-  <input id="password" type="password" placeholder="Password">
-
-  <button onclick="login()">Login</button>
-
-  <div id="message"></div>
-</div>
+<div id="loading">Loading website...</div>
+<div id="site"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="app.js"></script>
+
+<script>
+// =========================
+// 🔑 YOUR SUPABASE INFO
+// =========================
+const SUPABASE_URL = "https://ujxuirmeikbzakqaerec.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_gLnNGeQUUbjLoQlN5g2t9g_XXQpy9P3";
+
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// =========================
+// 🔥 IMPORTANT: SET USER ID
+// =========================
+
+// 👉 CHANGE THIS PER CLIENT
+const userId = "REPLACE_THIS_WITH_CLIENT_ID";
+
+// =========================
+// LOAD SITE
+// =========================
+async function loadSite(){
+
+  const { data, error } = await db
+    .from("visual_pages")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("status", "published")
+    .single();
+
+  if(error || !data){
+    document.getElementById("loading").innerText = "No website published yet.";
+    return;
+  }
+
+  // Inject HTML
+  document.getElementById("site").innerHTML = data.html;
+
+  // Inject CSS
+  const style = document.createElement("style");
+  style.innerHTML = data.css || "";
+  document.head.appendChild(style);
+
+  // Show site
+  document.getElementById("loading").style.display = "none";
+  document.getElementById("site").style.display = "block";
+}
+
+loadSite();
+</script>
 
 </body>
 </html>
