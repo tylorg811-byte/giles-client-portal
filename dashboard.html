@@ -4,7 +4,204 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard | Giles Client Portal</title>
-<link rel="stylesheet" href="styles.css">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body{
+font-family:Inter,Arial,sans-serif;
+background:#f6f7fb;
+color:#1f1f2e;
+}
+
+.dashboard{
+min-height:100vh;
+display:grid;
+grid-template-columns:260px 1fr;
+}
+
+.sidebar{
+background:#fff;
+border-right:1px solid #e6e6ef;
+padding:28px;
+}
+
+.logo{
+width:44px;
+height:44px;
+border-radius:14px;
+background:linear-gradient(135deg,#7B5CFF,#9F7BFF);
+color:#fff;
+display:flex;
+align-items:center;
+justify-content:center;
+font-weight:900;
+font-size:20px;
+margin-bottom:20px;
+}
+
+.sidebar h2{
+font-size:20px;
+margin-bottom:8px;
+}
+
+.sidebar p{
+font-size:13px;
+color:#777;
+margin-bottom:26px;
+}
+
+.nav a,
+.nav button{
+display:block;
+width:100%;
+text-align:left;
+padding:14px;
+margin-bottom:10px;
+border-radius:14px;
+border:none;
+background:#f4f4fb;
+color:#333;
+text-decoration:none;
+font-weight:700;
+cursor:pointer;
+}
+
+.nav a:hover,
+.nav button:hover{
+background:#ecebff;
+color:#5a4cff;
+}
+
+.main{
+padding:34px;
+}
+
+.topbar{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:28px;
+}
+
+.topbar h1{
+font-size:30px;
+}
+
+.topbar p{
+color:#777;
+font-size:14px;
+}
+
+.primary-btn{
+display:inline-block;
+padding:13px 22px;
+border-radius:14px;
+background:linear-gradient(135deg,#7B5CFF,#9F7BFF);
+color:white;
+font-weight:800;
+text-decoration:none;
+box-shadow:0 10px 24px rgba(123,92,255,.22);
+}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:20px;
+margin-bottom:22px;
+}
+
+.card{
+background:#fff;
+border:1px solid #e6e6ef;
+border-radius:22px;
+padding:24px;
+box-shadow:0 12px 35px rgba(20,20,40,.06);
+}
+
+.card h3{
+font-size:15px;
+color:#777;
+margin-bottom:12px;
+}
+
+.stat{
+font-size:34px;
+font-weight:900;
+}
+
+.status{
+text-transform:capitalize;
+font-size:28px;
+font-weight:900;
+color:#5a4cff;
+}
+
+.wide{
+margin-bottom:22px;
+}
+
+.actions{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:16px;
+}
+
+.action-card{
+display:block;
+padding:22px;
+border-radius:20px;
+background:#fff;
+border:1px solid #e6e6ef;
+text-decoration:none;
+color:#1f1f2e;
+font-weight:800;
+box-shadow:0 12px 35px rgba(20,20,40,.06);
+}
+
+.action-card span{
+display:block;
+font-size:13px;
+font-weight:500;
+color:#777;
+margin-top:8px;
+line-height:1.4;
+}
+
+ul{
+padding-left:18px;
+color:#555;
+line-height:1.8;
+}
+
+@media(max-width:900px){
+.dashboard{
+display:block;
+}
+
+.sidebar{
+border-right:none;
+border-bottom:1px solid #e6e6ef;
+}
+
+.grid,
+.actions{
+grid-template-columns:1fr;
+}
+
+.main{
+padding:22px;
+}
+
+.topbar{
+display:block;
+}
+
+.primary-btn{
+margin-top:16px;
+}
+}
+</style>
 </head>
 
 <body>
@@ -12,128 +209,74 @@
 <div class="dashboard">
 
   <aside class="sidebar">
+    <div class="logo">G</div>
     <h2>Giles Portal</h2>
+    <p id="userEmail">Loading...</p>
 
-    <button class="nav-btn active" onclick="showTab('overview', this)">Dashboard</button>
-    <button class="nav-btn" onclick="showTab('content', this)">Website Content</button>
-    <button class="nav-btn" onclick="showTab('services', this)">Services</button>
-    <button class="nav-btn" onclick="showTab('gallery', this)">Gallery</button>
-    <button class="nav-btn" onclick="showTab('analytics', this)">Analytics</button>
-    <button class="nav-btn" onclick="showTab('logs', this)">Change Logs</button>
-
-    <button class="logout-btn" onclick="logout()">Logout</button>
+    <div class="nav">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="editor.html">Edit Website</a>
+      <a href="https://tylorg811-byte.github.io/giles-client-portal/" target="_blank">View Live Site</a>
+      <a href="reset.html">Account Settings</a>
+      <button onclick="logout()">Logout</button>
+    </div>
   </aside>
 
   <main class="main">
 
     <div class="topbar">
-      <h1>Website Dashboard</h1>
-      <p id="userEmail"></p>
+      <div>
+        <h1>Welcome back</h1>
+        <p id="welcomeName">Loading...</p>
+      </div>
+
+      <a href="editor.html" class="primary-btn">Edit Website</a>
     </div>
 
-    <section id="overview" class="tab-section active-tab">
-      <div class="grid">
-        <div class="card">
-          <h3>Your Website</h3>
-          <p id="siteName">Loading...</p>
-          <a id="siteLink" href="#" target="_blank">View Live Site</a>
-        </div>
-
-        <div class="card">
-          <h3>Visitors</h3>
-          <p class="stat">Coming Soon</p>
-        </div>
-
-        <div class="card">
-          <h3>Page Views</h3>
-          <p class="stat">Coming Soon</p>
-        </div>
+    <section class="grid">
+      <div class="card">
+        <h3>Website Status</h3>
+        <div class="status" id="siteStatus">Loading</div>
       </div>
 
-      <div class="card wide">
-        <h3>Quick Preview</h3>
-        <p>Use the tabs on the left to update allowed website sections.</p>
+      <div class="card">
+        <h3>Page Views</h3>
+        <div class="stat" id="viewsCount">0</div>
+      </div>
+
+      <div class="card">
+        <h3>Button Clicks</h3>
+        <div class="stat" id="clicksCount">0</div>
       </div>
     </section>
 
-    <section id="content" class="tab-section">
-      <div class="card wide">
-        <h3>Edit Homepage Content</h3>
-
-        <label>Hero Headline</label>
-        <input id="heroTitle" placeholder="Example: Look Professional. Get More Customers.">
-
-        <label>Hero Subtitle</label>
-        <textarea id="heroSubtitle" placeholder="Example: Affordable websites built for small businesses."></textarea>
-
-        <label>Phone Number</label>
-        <input id="phone" placeholder="Example: (555) 555-5555">
-
-        <label>Announcement Banner</label>
-        <input id="announcement" placeholder="Example: Now booking websites for May">
-
-        <button onclick="saveContent()">Save Content</button>
-        <div id="saveMessage"></div>
-      </div>
+    <section class="card wide">
+      <h3>Last Updated</h3>
+      <p id="lastUpdated">Loading...</p>
     </section>
 
-    <section id="services" class="tab-section">
-      <div class="card wide">
-        <h3>Edit Services</h3>
-
-        <label>Service 1</label>
-        <input id="service1" placeholder="Website Design">
-
-        <label>Service 2</label>
-        <input id="service2" placeholder="SEO Setup">
-
-        <label>Service 3</label>
-        <input id="service3" placeholder="Booking Forms">
-
-        <button onclick="saveServices()">Save Services</button>
-        <div id="servicesMessage"></div>
-      </div>
+    <section class="card wide">
+      <h3>Recent Changes</h3>
+      <ul id="recentChanges">
+        <li>Loading...</li>
+      </ul>
     </section>
 
-    <section id="gallery" class="tab-section">
-      <div class="card wide">
-        <h3>Upload Gallery Image</h3>
+    <section class="actions">
+      <a class="action-card" href="editor.html">
+        Website Builder
+        <span>Edit your live website visually with drag-and-drop tools.</span>
+      </a>
 
-        <input id="imageUpload" type="file" accept="image/*">
-        <button onclick="uploadImage()">Upload Image</button>
+      <a class="action-card" href="https://tylorg811-byte.github.io/giles-client-portal/" target="_blank">
+        View Live Site
+        <span>Open the published version visitors can see.</span>
+      </a>
 
-        <div id="uploadMessage"></div>
-
-        <div id="galleryPreview" class="gallery-preview"></div>
-      </div>
-    </section>
-
-    <section id="analytics" class="tab-section">
-      <div class="grid">
-        <div class="card">
-          <h3>Visitors</h3>
-          <p class="stat">Coming Soon</p>
-        </div>
-
-        <div class="card">
-          <h3>Page Views</h3>
-          <p class="stat">Coming Soon</p>
-        </div>
-
-        <div class="card">
-          <h3>Contact Clicks</h3>
-          <p class="stat">Coming Soon</p>
-        </div>
-      </div>
-    </section>
-
-    <section id="logs" class="tab-section">
-      <div class="card wide">
-        <h3>Change Log</h3>
-        <ul id="changeLog">
-          <li>No changes yet.</li>
-        </ul>
-      </div>
+      <a class="action-card" href="reset.html">
+        Account Settings
+        <span>Update your password and manage your login.</span>
+      </a>
     </section>
 
   </main>
@@ -143,7 +286,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="app.js"></script>
 <script>
-checkUser();
 loadDashboard();
 </script>
 
