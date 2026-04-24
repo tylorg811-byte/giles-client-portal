@@ -86,7 +86,9 @@ async function initEditor(){
 
   clientSiteRecord = clientRecord || null;
 
-if(!isAdminEditing && clientSiteRecord?.editor_locked){
+const lockValue = String(clientSiteRecord?.editor_locked).toLowerCase();
+
+if(!isAdminEditing && lockValue === "true"){
   document.body.innerHTML = `
     <div style="
       min-height:100vh;
