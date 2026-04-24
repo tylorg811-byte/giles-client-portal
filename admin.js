@@ -2,6 +2,8 @@ let adminUser = null;
 let clientSites = [];
 let changeRequests = [];
 
+const BASE_URL = "https://tylorg811-byte.github.io/giles-client-portal";
+
 document.addEventListener("DOMContentLoaded", loadAdminDashboard);
 
 async function loadAdminDashboard(){
@@ -86,6 +88,18 @@ function renderStats(){
   }
 }
 
+function getClientLiveUrl(site){
+  if(site.domain && site.domain_status === "live"){
+    return `https://${site.domain}`;
+  }
+
+  if(site.client_user_id){
+    return `${BASE_URL}/index.html?client=${site.client_user_id}`;
+  }
+
+  return `${BASE_URL}/index.html`;
+}
+
 function renderClientSites(){
   const list = document.getElementById("clientList");
   list.innerHTML = "";
@@ -100,9 +114,8 @@ function renderClientSites(){
     card.className = "client-card";
 
     const domainText = site.domain || "No domain yet";
-    const liveUrl = site.domain
-      ? `https://${site.domain}`
-      : "https://tylorg811-byte.github.io/giles-client-portal/";
+
+    const liveUrl = getClientLiveUrl(site);
 
     const editorUrl = site.client_user_id
       ? `editor.html?client=${site.client_user_id}`
@@ -130,6 +143,7 @@ function renderClientSites(){
         <button onclick="editClientSite('${site.id}')">Edit</button>
         <a href="${editorUrl}" target="_blank">Open Editor</a>
         <a href="${liveUrl}" target="_blank">View Site</a>
+        <button onclick="copyText('${liveUrl}')">Copy Live</button>
         <button onclick="copyClientEditorLink('${editorUrl}')">Copy Editor</button>
         <button onclick="copyLoginLink()">Copy Login</button>
         <button class="danger" onclick="deleteClientSite('${site.id}')">Delete</button>
@@ -152,6 +166,14 @@ function renderChangeRequests(){
   changeRequests.forEach(req=>{
     const card = document.createElement("div");
     card.className = "request-card";
+
+    const editorUrl = req.client_user_id
+      ? `editor.html?client=${req.client_user_id}`
+      : "editor.html";
+
+    const liveUrl = req.client_user_id
+      ? `${BASE_URL}/index.html?client=${req.client_user_id}`
+      : `${BASE_URL}/index.html`;
 
     card.innerHTML = `
       <div>
@@ -180,7 +202,8 @@ function renderChangeRequests(){
 
       <div class="actions">
         <button onclick="updateChangeRequest('${req.id}')">Update</button>
-        ${req.client_user_id ? `<a href="editor.html?client=${req.client_user_id}" target="_blank">Open Editor</a>` : ""}
+        <a href="${editorUrl}" target="_blank">Open Editor</a>
+        <a href="${liveUrl}" target="_blank">View Site</a>
         <button class="danger" onclick="deleteChangeRequest('${req.id}')">Delete</button>
       </div>
     `;
@@ -237,7 +260,7 @@ async function saveClientSite(){
     client_email: cleanValue("clientEmail"),
     business_name: cleanValue("businessName"),
     package_name: cleanValue("packageName"),
-    domain: cleanValue("domain"),
+    domain: cleanValue("domain").replace(/^https?:\/\//,"").replace(/\/$/,""),
     domain_status: cleanValue("domainStatus"),
     site_status: cleanValue("siteStatus"),
     notes: cleanValue("notes"),
@@ -322,15 +345,18 @@ function scrollToForm(){
 }
 
 function copyLoginLink(){
-  const link = "https://tylorg811-byte.github.io/giles-client-portal/login.html";
-  navigator.clipboard.writeText(link);
-  alert("Login link copied.");
+  const link = `${BASE_URL}/login.html`;
+  copyText(link);
 }
 
 function copyClientEditorLink(editorUrl){
-  const fullLink = `https://tylorg811-byte.github.io/giles-client-portal/${editorUrl}`;
-  navigator.clipboard.writeText(fullLink);
-  alert("Client editor link copied.");
+  const fullLink = `${BASE_URL}/${editorUrl}`;
+  copyText(fullLink);
+}
+
+function copyText(text){
+  navigator.clipboard.writeText(text);
+  alert("Copied.");
 }
 
 function cleanValue(id){
