@@ -53,6 +53,9 @@ const SUPABASE_URL = "https://ujxuirmeikbzakqaerec.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_gLnNGeQUUbjLoQlN5g2t9g_XXQpy9P3";
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+let loadedClientId = null;
+let loadedPageName = "home";
+
 async function loadSite(){
   const params = new URLSearchParams(window.location.search);
 
@@ -60,21 +63,26 @@ async function loadSite(){
   const pageName = params.get("page") || "home";
   const host = window.location.hostname;
 
+  loadedPageName = pageName;
+
   let query = db
     .from("visual_pages")
     .select("*")
     .eq("status", "published");
 
   if(clientId){
+    loadedClientId = clientId;
     query = query.eq("user_id", clientId);
   } else {
     const { data: siteRecord } = await db
       .from("client_sites")
       .select("*")
       .eq("domain", host)
+      .neq("domain_release_status", "released")
       .single();
 
     if(siteRecord && siteRecord.client_user_id){
+      loadedClientId = siteRecord.client_user_id;
       query = query.eq("user_id", siteRecord.client_user_id);
     } else {
       showError("No client website selected.", "Use a live link with ?client=CLIENT_ID or connect a custom domain.");
@@ -113,10 +121,12 @@ async function loadSite(){
 
   document.getElementById("site").innerHTML = page.html;
 
-  fixInternalLinks(clientId);
+  fixInternalLinks(loadedClientId);
 
   document.getElementById("loading").style.display = "none";
   document.getElementById("site").style.display = "block";
+
+  trackPageView();
 }
 
 function fixInternalLinks(clientId){
@@ -132,6 +142,43 @@ function fixInternalLinks(clientId){
       link.href = `?page=${page}`;
     }
   });
+}
+
+async function trackPageView(){
+  if(!loadedClientId) return;
+
+  const device = getDeviceType();
+  const browser = getBrowser();
+
+  await db.from("site_analytics_events").insert({
+    client_user_id: loadedClientId,
+    page: loadedPageName,
+    path: window.location.pathname + window.location.search,
+    referrer: document.referrer || "direct",
+    device: device,
+    browser: browser
+  });
+}
+
+function getDeviceType(){
+  const width = window.innerWidth;
+  const ua = navigator.userAgent.toLowerCase();
+
+  if(/iphone|android.*mobile|windows phone/.test(ua)) return "mobile";
+  if(/ipad|tablet|android(?!.*mobile)/.test(ua)) return "tablet";
+  if(width <= 700) return "mobile";
+  if(width <= 1100) return "tablet";
+  return "desktop";
+}
+
+function getBrowser(){
+  const ua = navigator.userAgent;
+
+  if(ua.includes("Edg")) return "Edge";
+  if(ua.includes("Chrome")) return "Chrome";
+  if(ua.includes("Safari") && !ua.includes("Chrome")) return "Safari";
+  if(ua.includes("Firefox")) return "Firefox";
+  return "Other";
 }
 
 function showError(title,message){
