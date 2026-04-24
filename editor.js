@@ -153,6 +153,7 @@ async function initEditor(){
   }
 
   setTimeout(()=>editor.refresh(),300);
+  setupImageUpload();
 }
 
 /* ADD ELEMENTS */
