@@ -120,12 +120,15 @@ function renderClientSites(){
       ? `editor.html?client=${site.client_user_id}`
       : "editor.html";
 
+    const accessText = site.editor_access === "full" ? "Full Editor Access" : "Safe Mode";
+    const accessClass = site.editor_access === "full" ? "full" : "safe";
+
     card.innerHTML = `
       <div>
         <h3>${escapeHtml(site.business_name || "Unnamed Business")}</h3>
         <p>${escapeHtml(site.client_email || "No email")}</p>
         <p><strong>User ID:</strong> ${escapeHtml(site.client_user_id || "Not assigned")}</p>
-        <p><strong>Editor:</strong> ${site.editor_access === "full" ? "Full Access" : "Safe Mode"}</p>
+        <p><strong>Editor:</strong> <span class="badge ${accessClass}">${accessText}</span></p>
       </div>
 
       <div>
@@ -217,8 +220,6 @@ async function updateChangeRequest(id, clientUserId){
   const status = document.getElementById(`status-${id}`).value;
   const notes = document.getElementById(`notes-${id}`).value.trim();
 
-  const request = changeRequests.find(req => req.id === id);
-
   const { error } = await db
     .from("change_requests")
     .update({
@@ -304,7 +305,7 @@ async function saveClientSite(){
     await db.from("notifications").insert({
       user_id: payload.client_user_id,
       title: "Website access updated",
-      message: `Your website access is now set to "${payload.editor_access === "full" ? "Full Editor Access" : "Safe Mode"}".`,
+      message: `Your editor access is now set to "${payload.editor_access === "full" ? "Full Editor Access" : "Safe Mode"}".`,
       type: "site"
     });
   }
