@@ -4,12 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Visual Editor | Giles Client Portal</title>
-
 <link rel="stylesheet" href="https://unpkg.com/grapesjs/dist/css/grapes.min.css">
 <link rel="stylesheet" href="styles.css">
 </head>
 
-<body class="builder-body desktop-preview">
+<body class="builder-body">
 
 <header class="builder-topbar">
   <div class="brand-area">
@@ -27,118 +26,98 @@
   </div>
 
   <div class="builder-actions">
-  <button class="ghost-btn" onclick="editor.runCommand('core:undo')">Undo</button>
-  <button class="ghost-btn" onclick="editor.runCommand('core:redo')">Redo</button>
-  <button class="ghost-btn" onclick="logout()">Logout</button>
-  <button class="soft-btn" onclick="savePage()">Save Draft</button>
-  <button class="publish-btn" onclick="publishPage()">Publish</button>
-</div>
+    <button class="ghost-btn" onclick="editor.runCommand('core:undo')">Undo</button>
+    <button class="ghost-btn" onclick="editor.runCommand('core:redo')">Redo</button>
+    <button class="ghost-btn" onclick="logout()">Logout</button>
+    <button class="soft-btn" onclick="savePage()">Save Draft</button>
+    <button class="publish-btn" onclick="publishPage()">Publish</button>
+  </div>
 </header>
 
 <div class="builder-app">
 
   <nav class="builder-rail">
     <button class="rail-btn active" onclick="openBuilderPanel('addPanel', this)">＋<span>Add</span></button>
+    <button class="rail-btn" onclick="openBuilderPanel('settingsPanel', this)">⚙<span>Site</span></button>
+    <button class="rail-btn" onclick="openBuilderPanel('headerPanel', this)">▤<span>Header</span></button>
+    <button class="rail-btn" onclick="openBuilderPanel('pagesPanel', this)">☰<span>Pages</span></button>
     <button class="rail-btn" onclick="openBuilderPanel('designPanel', this)">✦<span>Design</span></button>
     <button class="rail-btn" onclick="openBuilderPanel('imagesPanel', this)">▧<span>Images</span></button>
     <button class="rail-btn" onclick="openBuilderPanel('backgroundPanel', this)">◐<span>BG</span></button>
     <button class="rail-btn" onclick="openBuilderPanel('fontsPanel', this)">Aa<span>Fonts</span></button>
-    <button class="rail-btn" onclick="openBuilderPanel('pagesPanel', this)">☰<span>Pages</span></button>
-    <button class="rail-btn" onclick="openBuilderPanel('stylePanel', this)">⚙<span>Style</span></button>
+    <button class="rail-btn" onclick="openBuilderPanel('stylePanel', this)">🎚<span>Style</span></button>
   </nav>
 
   <aside class="builder-panel active-panel" id="addPanel">
     <h2>Add Elements</h2>
-    <p>Drag elements onto the page. These create new content instead of changing existing content.</p>
+    <p>Drag elements onto the page.</p>
+    <div id="blocks"></div>
+  </aside>
+
+  <aside class="builder-panel" id="settingsPanel">
+    <h2>Site Settings</h2>
+    <p>These details can auto-fill headers, contact sections, and live site info.</p>
+
+    <label>Business Name</label>
+    <input id="settingBusinessName" class="smart-search" placeholder="Business Name">
+
+    <label>Logo Image URL</label>
+    <input id="settingLogoUrl" class="smart-search" placeholder="https://...">
+
+    <label>Email</label>
+    <input id="settingEmail" class="smart-search" placeholder="email@example.com">
+
+    <label>Phone</label>
+    <input id="settingPhone" class="smart-search" placeholder="(555) 555-5555">
+
+    <label>Address</label>
+    <input id="settingAddress" class="smart-search" placeholder="Business address">
+
+    <label>Formspree Endpoint</label>
+    <input id="settingFormspree" class="smart-search" placeholder="https://formspree.io/f/xxxxxxx">
+
+    <button class="panel-primary-btn" onclick="saveSiteSettings()">Save Site Settings</button>
+    <button class="panel-secondary-btn" onclick="applySettingsToPage()">Apply To Current Page</button>
+  </aside>
+
+  <aside class="builder-panel" id="headerPanel">
+    <h2>Header Customizer</h2>
+    <p>Choose a header layout, then customize color, logo, blur, and navigation.</p>
+
     <div class="header-tools">
-  <h3>Headers</h3>
-  <button onclick="insertHeader('logoText')">Logo + Text Header</button>
-  <button onclick="insertHeader('logoOnly')">Logo Only Header</button>
-  <button onclick="insertHeader('textOnly')">Text Only Header</button>
-  <button onclick="insertHeader('menu')">Menu Header</button>
-  <button onclick="insertHeader('dark')">Dark Header</button>
-  <button onclick="insertHeader('glass')">Glass Header</button>
-  <button onclick="insertHeader('gradient')">Gradient Header</button>
-</div>
-
-<div id="blocks"></div>
-  </aside>
-
-  <aside class="builder-panel" id="designPanel">
-    <h2>Design Styles</h2>
-    <p>Select an element on the page, then apply button, card, text, or image styles.</p>
-
-    <input id="styleSearch" class="smart-search" placeholder="Search: blue, luxury, rounded, glow, bold...">
-
-    <div class="filter-row">
-      <button class="active" onclick="setPresetCategory('all', this)">All</button>
-      <button onclick="setPresetCategory('buttons', this)">Buttons</button>
-      <button onclick="setPresetCategory('text', this)">Text</button>
-      <button onclick="setPresetCategory('cards', this)">Cards</button>
-      <button onclick="setPresetCategory('images', this)">Images</button>
-      <button onclick="setPresetCategory('gradients', this)">Gradients</button>
+      <button onclick="insertHeader('logoText')">Logo + Text Header</button>
+      <button onclick="insertHeader('logoOnly')">Logo Only Header</button>
+      <button onclick="insertHeader('textOnly')">Text Only Header</button>
+      <button onclick="insertHeader('menu')">Menu Button Header</button>
     </div>
 
-    <div id="presetCount" class="small-note">Loading presets...</div>
-    <div id="presetLibrary" class="preset-grid"></div>
-  </aside>
+    <label>Header Style</label>
+    <select id="headerStyle" class="smart-search" onchange="customizeHeader()">
+      <option value="white">White</option>
+      <option value="dark">Dark</option>
+      <option value="glass">Glass Blur</option>
+      <option value="gradient">Purple Gradient</option>
+      <option value="custom">Custom Color</option>
+    </select>
 
-  <aside class="builder-panel" id="imagesPanel">
-    <h2>Stock Images</h2>
-    <p>Search by type, industry, color, or mood. Click an image to add it to the page.</p>
+    <label>Custom Header Color</label>
+    <input id="headerColor" class="smart-search" type="color" value="#ffffff" onchange="customizeHeader()">
 
-    <input id="imageSearch" class="smart-search" placeholder="Search: floral, bar, landscaping, dark, luxury...">
+    <label>Text Color</label>
+    <input id="headerTextColor" class="smart-search" type="color" value="#111827" onchange="customizeHeader()">
 
-    <div class="filter-row">
-      <button class="active" onclick="setImageCategory('all', this)">All</button>
-      <button onclick="setImageCategory('business', this)">Business</button>
-      <button onclick="setImageCategory('floral', this)">Floral</button>
-      <button onclick="setImageCategory('bar', this)">Bar</button>
-      <button onclick="setImageCategory('landscaping', this)">Landscape</button>
-      <button onclick="setImageCategory('beauty', this)">Beauty</button>
-    </div>
+    <label>Logo Size</label>
+    <input id="headerLogoSize" class="smart-search" type="range" min="36" max="90" value="52" onchange="customizeHeader()">
 
-    <div id="imageCount" class="small-note">Loading images...</div>
-    <div id="stockImages" class="image-grid"></div>
+    <label>Nav Links</label>
+    <textarea id="headerLinks" class="smart-textarea" placeholder="Home, About, Services, Contact" onchange="customizeHeader()">Home, About, Services, Contact</textarea>
 
-    <div class="upload-box">
-      <h3>Upload Your Own</h3>
-      <input id="customImageUpload" type="file" accept="image/*">
-      <button id="uploadImageBtn">Upload Image</button>
-      <p id="uploadStatus"></p>
-    </div>
-  </aside>
-
-  <aside class="builder-panel" id="backgroundPanel">
-    <h2>Backgrounds</h2>
-    <p>Select a section first to change its background. If nothing is selected, clicking a background will automatically create a new section using that background.</p>
-
-    <input id="backgroundSearch" class="smart-search" placeholder="Search: black, blue, gold, floral, luxury...">
-
-    <div class="filter-row">
-      <button class="active" onclick="setBackgroundCategory('all', this)">All</button>
-      <button onclick="setBackgroundCategory('colors', this)">Colors</button>
-      <button onclick="setBackgroundCategory('gradients', this)">Gradients</button>
-      <button onclick="setBackgroundCategory('images', this)">Images</button>
-    </div>
-
-    <div id="backgroundCount" class="small-note">Loading backgrounds...</div>
-    <div id="backgroundLibrary" class="preset-grid"></div>
-  </aside>
-
-  <aside class="builder-panel" id="fontsPanel">
-    <h2>Fonts</h2>
-    <p>Search by style and apply font combinations to selected text.</p>
-
-    <input id="fontSearch" class="smart-search" placeholder="Search: luxury, bold, clean, serif, modern...">
-
-    <div id="fontCount" class="small-note">Loading fonts...</div>
-    <div id="fontLibrary" class="preset-grid"></div>
+    <button class="panel-primary-btn" onclick="customizeHeader()">Update Header</button>
   </aside>
 
   <aside class="builder-panel" id="pagesPanel">
     <h2>Pages</h2>
-    <p>Create pages like About, Services, Contact, Gallery, and more.</p>
+    <p>Add and manage real website pages.</p>
 
     <div class="page-actions">
       <button onclick="createPresetPage('about')">+ About Page</button>
@@ -151,10 +130,62 @@
     <div id="pageList" class="page-list"></div>
   </aside>
 
+  <aside class="builder-panel" id="designPanel">
+    <h2>Design Styles</h2>
+    <p>Select an element, then apply a design style.</p>
+    <input id="styleSearch" class="smart-search" placeholder="Search: blue, luxury, rounded...">
+    <div class="filter-row">
+      <button class="active" onclick="setPresetCategory('all', this)">All</button>
+      <button onclick="setPresetCategory('buttons', this)">Buttons</button>
+      <button onclick="setPresetCategory('text', this)">Text</button>
+      <button onclick="setPresetCategory('cards', this)">Cards</button>
+      <button onclick="setPresetCategory('gradients', this)">Gradients</button>
+    </div>
+    <div id="presetCount" class="small-note">Loading presets...</div>
+    <div id="presetLibrary" class="preset-grid"></div>
+  </aside>
+
+  <aside class="builder-panel" id="imagesPanel">
+    <h2>Stock Images</h2>
+    <p>Search images by business type or mood.</p>
+    <input id="imageSearch" class="smart-search" placeholder="Search: floral, bar, landscaping...">
+    <div class="filter-row">
+      <button class="active" onclick="setImageCategory('all', this)">All</button>
+      <button onclick="setImageCategory('business', this)">Business</button>
+      <button onclick="setImageCategory('floral', this)">Floral</button>
+      <button onclick="setImageCategory('bar', this)">Bar</button>
+      <button onclick="setImageCategory('landscaping', this)">Landscape</button>
+      <button onclick="setImageCategory('beauty', this)">Beauty</button>
+    </div>
+    <div id="imageCount" class="small-note">Loading images...</div>
+    <div id="stockImages" class="image-grid"></div>
+  </aside>
+
+  <aside class="builder-panel" id="backgroundPanel">
+    <h2>Backgrounds</h2>
+    <p>Select a section first, or click a background to create a new section.</p>
+    <input id="backgroundSearch" class="smart-search" placeholder="Search: dark, gold, blue...">
+    <div class="filter-row">
+      <button class="active" onclick="setBackgroundCategory('all', this)">All</button>
+      <button onclick="setBackgroundCategory('colors', this)">Colors</button>
+      <button onclick="setBackgroundCategory('gradients', this)">Gradients</button>
+      <button onclick="setBackgroundCategory('images', this)">Images</button>
+    </div>
+    <div id="backgroundCount" class="small-note">Loading backgrounds...</div>
+    <div id="backgroundLibrary" class="preset-grid"></div>
+  </aside>
+
+  <aside class="builder-panel" id="fontsPanel">
+    <h2>Fonts</h2>
+    <p>Apply font styles to selected text.</p>
+    <input id="fontSearch" class="smart-search" placeholder="Search: luxury, modern, bold...">
+    <div id="fontCount" class="small-note">Loading fonts...</div>
+    <div id="fontLibrary" class="preset-grid"></div>
+  </aside>
+
   <main class="builder-canvas-wrap">
     <div class="canvas-toolbar">
       <span id="currentPageLabel">Home Page</span>
-
       <div class="preview-controls">
         <button class="view-btn active" onclick="setPreviewMode('desktop', this)">Desktop</button>
         <button class="view-btn" onclick="setPreviewMode('mobile', this)">Mobile</button>
@@ -182,37 +213,21 @@
 
 <script>
 function openBuilderPanel(id, btn){
-  document.querySelectorAll('.builder-panel, .builder-style-panel').forEach(panel=>{
-    panel.classList.remove('active-panel');
-  });
-
-  document.querySelectorAll('.rail-btn').forEach(button=>{
-    button.classList.remove('active');
-  });
-
-  document.querySelectorAll('.add-section-btn').forEach(button=>{
-    button.remove();
-  });
-
+  document.querySelectorAll('.builder-panel, .builder-style-panel').forEach(panel=>panel.classList.remove('active-panel'));
+  document.querySelectorAll('.rail-btn').forEach(button=>button.classList.remove('active'));
   document.getElementById(id).classList.add('active-panel');
   btn.classList.add('active');
 }
 
 function setPreviewMode(mode, btn){
   const frame = document.getElementById('canvasFrame');
-
   frame.classList.remove('desktop-frame','mobile-frame');
   frame.classList.add(mode === 'mobile' ? 'mobile-frame' : 'desktop-frame');
 
-  document.querySelectorAll('.view-btn').forEach(button=>{
-    button.classList.remove('active');
-  });
-
+  document.querySelectorAll('.view-btn').forEach(button=>button.classList.remove('active'));
   btn.classList.add('active');
 
-  if(window.editor){
-    setTimeout(()=>editor.refresh(), 200);
-  }
+  setTimeout(()=>editor.refresh(), 200);
 }
 </script>
 
