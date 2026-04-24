@@ -306,3 +306,15 @@ min-height:600px;
 height:100%!important;
 min-height:600px;
 }
+
+#gjs,
+.gjs-editor,
+.gjs-cv-canvas,
+.gjs-cv-canvas iframe{
+height:100%!important;
+min-height:650px!important;
+}
+
+.canvas-frame{
+min-height:650px!important;
+}
