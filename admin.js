@@ -1258,3 +1258,58 @@ function escapeHtml(value){
 function capitalize(text){
   return String(text || "").charAt(0).toUpperCase() + String(text || "").slice(1);
 }
+
+async function createClientAccount(){
+  const email = prompt("Client Email:");
+  if(!email) return;
+
+  const businessName = prompt("Business Name:");
+  if(!businessName) return;
+
+  const passwordInput = prompt("Set a password, or leave blank to auto-generate:");
+  const password = passwordInput || generateClientPassword();
+
+  try{
+    const res = await fetch("https://giles-sites.netlify.app/.netlify/functions/create-client", {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        email,
+        password,
+        businessName
+      })
+    });
+
+    const data = await res.json();
+
+    if(data.error){
+      alert("Error: " + data.error);
+      return;
+    }
+
+    alert(
+`CLIENT CREATED ✅
+
+Email: ${data.email}
+Password: ${data.password}
+User ID: ${data.userId}
+
+Copy this info before closing.`
+    );
+
+    await loadClientSites();
+    renderStats();
+    renderSmartAlerts();
+    populateAnalyticsClientDropdown();
+
+  }catch(error){
+    console.error(error);
+    alert("Client creation failed. Check console.");
+  }
+}
+
+function generateClientPassword(){
+  return "Site" + Math.random().toString(36).slice(2,10) + "!";
+}
