@@ -85,6 +85,9 @@ async function loadClientSites(){
   clientSites = data || [];
   renderStats();
   applyBillingFilter();
+
+  if(typeof populateImportClientSelect === "function"){
+  populateImportClientSelect();
 }
 
 async function loadChangeRequests(){
