@@ -81,7 +81,9 @@ h1{font-size:38px;}
 h2{font-size:30px;}
 }
 `;
-
+.open-menu{
+display:block!important;
+}
 const pageTemplates = {
   home: `
 <section class="content-section" style="min-height:85vh;display:flex;align-items:center;background:linear-gradient(135deg,#07111f,#141b5f);color:white;text-align:center;">
@@ -461,6 +463,64 @@ function addBlocks(){
     category:"Graphics",
     content:`<div style="height:70px;"></div>`
   });
+
+   editor.BlockManager.add("header-direct-nav",{
+  label:"Header Nav",
+  category:"Headers",
+  content:`
+<header style="position:sticky;top:0;z-index:999;background:white;border-bottom:1px solid #e6e6ef;padding:18px 24px;">
+  <div style="max-width:1200px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:20px;">
+    <strong style="font-size:22px;">Business Name</strong>
+
+    <nav style="display:flex;gap:22px;align-items:center;">
+      <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Home</a>
+      <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">About</a>
+      <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Services</a>
+      <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Contact</a>
+    </nav>
+  </div>
+</header>`
+});
+
+editor.BlockManager.add("header-menu-button",{
+  label:"Header Menu",
+  category:"Headers",
+  content:`
+<header style="position:sticky;top:0;z-index:999;background:white;border-bottom:1px solid #e6e6ef;padding:18px 24px;">
+  <div style="max-width:1200px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:20px;">
+    <strong style="font-size:22px;">Business Name</strong>
+
+    <button onclick="this.nextElementSibling.classList.toggle('open-menu')" style="border:none;background:#7B5CFF;color:white;border-radius:12px;padding:12px 15px;font-weight:900;cursor:pointer;">
+      ☰ Menu
+    </button>
+
+    <nav class="mobile-menu" style="display:none;position:absolute;right:24px;top:70px;background:white;border:1px solid #e6e6ef;border-radius:18px;box-shadow:0 20px 50px rgba(0,0,0,.14);padding:16px;min-width:210px;">
+      <a href="#" style="display:block;color:#111827;text-decoration:none;font-weight:800;padding:10px;">Home</a>
+      <a href="#" style="display:block;color:#111827;text-decoration:none;font-weight:800;padding:10px;">About</a>
+      <a href="#" style="display:block;color:#111827;text-decoration:none;font-weight:800;padding:10px;">Services</a>
+      <a href="#" style="display:block;color:#111827;text-decoration:none;font-weight:800;padding:10px;">Contact</a>
+    </nav>
+  </div>
+</header>`
+});
+
+editor.BlockManager.add("header-dark-luxe",{
+  label:"Dark Luxe Header",
+  category:"Headers",
+  content:`
+<header style="position:sticky;top:0;z-index:999;background:rgba(7,17,31,.92);backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,.12);padding:18px 24px;">
+  <div style="max-width:1200px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:20px;">
+    <strong style="font-size:22px;color:white;">Business Name</strong>
+
+    <nav style="display:flex;gap:22px;align-items:center;">
+      <a href="#" style="color:white;text-decoration:none;font-weight:800;">Home</a>
+      <a href="#" style="color:white;text-decoration:none;font-weight:800;">About</a>
+      <a href="#" style="color:white;text-decoration:none;font-weight:800;">Services</a>
+      <a href="#" style="color:white;text-decoration:none;font-weight:800;">Contact</a>
+    </nav>
+  </div>
+</header>`
+});
 
 }
 
