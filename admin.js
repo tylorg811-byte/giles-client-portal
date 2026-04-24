@@ -726,6 +726,17 @@ function loadClientAnalyticsView(){
   const week = events.filter(e=>isWithinDays(e.created_at,7)).length;
   const month = events.length;
   const topPage = getTopValue(events,"page") || "—";
+  const topDevice = getTopValue(events,"device") || "—";
+  const topBrowser = getTopValue(events,"browser") || "—";
+  const topSource = getTopReferrer(events);
+
+  const recent = events.slice(0,10).map(e=>`
+    <div class="analytics-client-card">
+      <p><strong>${escapeHtml(e.page || "home")}</strong></p>
+      <p>${escapeHtml(e.device || "unknown")} • ${escapeHtml(e.browser || "unknown")} • ${timeAgo(e.created_at)}</p>
+      <p><strong>Source:</strong> ${escapeHtml(cleanReferrer(e.referrer))}</p>
+    </div>
+  `).join("");
 
   container.innerHTML = `
     <h2>${escapeHtml(site?.business_name || "Client Analytics")}</h2>
@@ -734,7 +745,19 @@ function loadClientAnalyticsView(){
       <div class="stat"><span>Today</span><strong>${today}</strong></div>
       <div class="stat"><span>7 Days</span><strong>${week}</strong></div>
       <div class="stat"><span>30 Days</span><strong>${month}</strong></div>
-      <div class="stat"><span>Top Page</span><strong style="font-size:18px;">${escapeHtml(topPage)}</strong></div>
+      <div class="stat"><span>Top Page</span><strong style="font-size:20px;">${escapeHtml(topPage)}</strong></div>
+    </div>
+
+    <div class="grid">
+      <div class="stat"><span>Top Source</span><strong style="font-size:20px;">${escapeHtml(topSource)}</strong></div>
+      <div class="stat"><span>Top Device</span><strong style="font-size:20px;">${escapeHtml(topDevice)}</strong></div>
+      <div class="stat"><span>Top Browser</span><strong style="font-size:20px;">${escapeHtml(topBrowser)}</strong></div>
+      <div class="stat"><span>Total Events</span><strong>${events.length}</strong></div>
+    </div>
+
+    <h3 style="margin:22px 0 12px;">Recent Visits</h3>
+    <div class="request-list">
+      ${recent || "<div class='empty-state'>No analytics yet.</div>"}
     </div>
   `;
 }
