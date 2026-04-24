@@ -29,12 +29,14 @@ async function loadAdminDashboard(){
   await loadAnalytics();
 
   renderStats();
+  renderSmartAlerts();
   renderChangeRequests();
   renderAnalyticsOverviewFull();
   populateAnalyticsClientDropdown();
   loadClientAnalyticsView();
 }
 
+/* NAV */
 function showAdminPage(page){
   document.querySelectorAll(".page-section").forEach(s=>s.classList.remove("active"));
   document.querySelectorAll(".sidebar button").forEach(b=>b.classList.remove("active-nav"));
@@ -70,6 +72,7 @@ function showAdminPage(page){
   }
 }
 
+/* AUTH */
 async function checkAdminAccess(){
   const { data } = await db
     .from("admin_users")
@@ -80,6 +83,7 @@ async function checkAdminAccess(){
   return !!data;
 }
 
+/* LOAD DATA */
 async function loadClientSites(){
   const { data, error } = await db
     .from("client_sites")
@@ -125,6 +129,7 @@ async function loadAnalytics(){
   analyticsEvents = error ? [] : data || [];
 }
 
+/* STATS / ALERTS */
 function renderStats(){
   document.getElementById("totalClients").textContent = clientSites.length;
 
@@ -138,6 +143,36 @@ function renderStats(){
     changeRequests.filter(r=>r.status === "new").length;
 }
 
+function renderSmartAlerts(){
+  const box = document.getElementById("smartAlerts");
+  if(!box) return;
+
+  const pastDue = clientSites.filter(s=>getBillingStatus(s).text === "Past Due").length;
+  const pendingDomains = clientSites.filter(s=>s.domain_status === "pending").length;
+  const newRequests = changeRequests.filter(r=>r.status === "new").length;
+  const lockedEditors = clientSites.filter(s=>s.editor_locked).length;
+
+  const alerts = [];
+
+  if(pastDue) alerts.push(`⚠️ ${pastDue} client${pastDue === 1 ? "" : "s"} past due`);
+  if(pendingDomains) alerts.push(`🌐 ${pendingDomains} domain${pendingDomains === 1 ? "" : "s"} pending`);
+  if(newRequests) alerts.push(`💬 ${newRequests} new request${newRequests === 1 ? "" : "s"}`);
+  if(lockedEditors) alerts.push(`🔒 ${lockedEditors} editor lock${lockedEditors === 1 ? "" : "s"} active`);
+
+  if(!alerts.length){
+    box.innerHTML = `<strong>✅ Everything looks good.</strong>`;
+    return;
+  }
+
+  box.innerHTML = `
+    <strong>Command Center</strong>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">
+      ${alerts.map(a=>`<span class="badge safe">${a}</span>`).join("")}
+    </div>
+  `;
+}
+
+/* FILTERS */
 function applyClientFilters(){
   const search = document.getElementById("clientSearch")?.value.toLowerCase() || "";
   const billing = document.getElementById("billingFilter")?.value || "all";
@@ -151,7 +186,8 @@ function applyClientFilters(){
     const matchSearch =
       (site.business_name || "").toLowerCase().includes(search) ||
       (site.client_email || "").toLowerCase().includes(search) ||
-      (site.domain || "").toLowerCase().includes(search);
+      (site.domain || "").toLowerCase().includes(search) ||
+      (site.client_tags || "").toLowerCase().includes(search);
 
     const billingText = getBillingStatus(site).text.toLowerCase();
 
@@ -172,6 +208,7 @@ function applyClientFilters(){
   renderClientSites(filtered);
 }
 
+/* CLIENT LIST */
 function renderClientSites(sites){
   const list = document.getElementById("clientList");
   if(!list) return;
@@ -200,7 +237,10 @@ function renderClientSites(sites){
         <div style="margin-top:10px;">
           <span class="badge">${escapeHtml(site.package_name || "Package")}</span>
           <span class="badge ${billing.class}">${billing.text}</span>
+          ${site.editor_locked ? `<span class="badge danger">Editor Locked</span>` : ""}
         </div>
+
+        ${site.client_tags ? `<p style="margin-top:8px;"><strong>Tags:</strong> ${escapeHtml(site.client_tags)}</p>` : ""}
       </div>
 
       <div>
@@ -220,7 +260,14 @@ function renderClientSites(sites){
         <a href="${liveUrl}" target="_blank">View Site</a>
         <a href="editor.html?client=${site.client_user_id}" target="_blank">Editor</a>
         <button onclick="editClientSite('${site.id}')">Edit</button>
+
+        <button onclick="quickPublish('${site.id}')">Publish</button>
+        <button onclick="quickPause('${site.id}')">Pause</button>
+        <button onclick="quickMarkPaid('${site.id}')">Mark Paid</button>
+        <button onclick="toggleSafeMode('${site.id}')">Toggle Safe</button>
+        <button onclick="toggleEditorLock('${site.id}')">${site.editor_locked ? "Unlock" : "Lock"}</button>
         <button onclick="copyText('${liveUrl}')">Copy Live</button>
+
         ${site.domain ? `<button class="release-btn" onclick="releaseDomain('${site.id}')">Release Domain</button>` : ""}
         <button class="danger" onclick="deleteClientSite('${site.id}')">Delete</button>
       </div>
@@ -230,7 +277,88 @@ function renderClientSites(sites){
   });
 }
 
-/* CLIENT FORM ACTIONS */
+/* QUICK ACTIONS */
+async function quickPublish(id){
+  await updateClientQuick(id, { site_status:"published" }, "Client marked as published.");
+}
+
+async function quickPause(id){
+  await updateClientQuick(id, { site_status:"paused" }, "Client site paused.");
+}
+
+async function quickMarkPaid(id){
+  const today = new Date();
+  const next = new Date();
+  next.setMonth(next.getMonth() + 1);
+
+  await updateClientQuick(id, {
+    billing_status:"active",
+    last_payment_date:toDateInput(today),
+    next_payment_date:toDateInput(next),
+    billing_override:false
+  }, "Payment marked as received.");
+}
+
+async function toggleSafeMode(id){
+  const site = clientSites.find(s=>s.id === id);
+  if(!site) return;
+
+  const nextAccess = site.editor_access === "full" ? "safe" : "full";
+
+  await updateClientQuick(id, {
+    editor_access:nextAccess
+  }, `Editor access changed to ${nextAccess === "full" ? "Full Access" : "Safe Mode"}.`);
+}
+
+async function toggleEditorLock(id){
+  const site = clientSites.find(s=>s.id === id);
+  if(!site) return;
+
+  let reason = site.editor_locked_reason || "";
+
+  if(!site.editor_locked){
+    reason = prompt("Why are you locking this client out of the editor?", "Safety or account issue") || "";
+  }
+
+  await updateClientQuick(id, {
+    editor_locked:!site.editor_locked,
+    editor_locked_reason:!site.editor_locked ? reason : ""
+  }, site.editor_locked ? "Editor unlocked." : "Editor locked.");
+}
+
+async function updateClientQuick(id, updates, successMessage){
+  const { error } = await db
+    .from("client_sites")
+    .update({
+      ...updates,
+      updated_at:new Date().toISOString()
+    })
+    .eq("id", id);
+
+  if(error){
+    console.error(error);
+    alert("Update failed.");
+    return;
+  }
+
+  const site = clientSites.find(s=>s.id === id);
+
+  if(site?.client_user_id){
+    await db.from("notifications").insert({
+      user_id:site.client_user_id,
+      title:"Website account updated",
+      message:successMessage,
+      type:"site"
+    });
+  }
+
+  await loadClientSites();
+  renderStats();
+  renderSmartAlerts();
+  applyClientFilters();
+}
+
+/* CLIENT FORM */
 async function saveClientSite(){
   const id = cleanValue("clientRecordId");
 
@@ -246,6 +374,9 @@ async function saveClientSite(){
     domain_release_notes: cleanValue("domainReleaseNotes"),
     site_status: cleanValue("siteStatus"),
     editor_access: cleanValue("editorAccess") || "safe",
+    editor_locked: cleanValue("editorLocked") === "true",
+    editor_locked_reason: cleanValue("editorLockedReason"),
+    client_tags: cleanValue("clientTags"),
     billing_status: cleanValue("billingStatus") || "active",
     billing_override: cleanValue("billingOverride") === "true",
     billing_override_reason: cleanValue("billingOverrideReason"),
@@ -265,14 +396,9 @@ async function saveClientSite(){
   let response;
 
   if(id){
-    response = await db
-      .from("client_sites")
-      .update(payload)
-      .eq("id", id);
+    response = await db.from("client_sites").update(payload).eq("id", id);
   } else {
-    response = await db
-      .from("client_sites")
-      .insert(payload);
+    response = await db.from("client_sites").insert(payload);
   }
 
   if(response.error){
@@ -285,10 +411,10 @@ async function saveClientSite(){
     const billing = getBillingStatus(payload);
 
     await db.from("notifications").insert({
-      user_id: payload.client_user_id,
-      title: "Website account updated",
-      message: `Your website status is "${payload.site_status}". Billing: "${billing.text}".`,
-      type: "site"
+      user_id:payload.client_user_id,
+      title:"Website account updated",
+      message:`Your website status is "${payload.site_status}". Billing: "${billing.text}".`,
+      type:"site"
     });
   }
 
@@ -297,67 +423,82 @@ async function saveClientSite(){
 
   await loadClientSites();
   renderStats();
+  renderSmartAlerts();
 }
 
 function editClientSite(id){
-  const site = clientSites.find(item => item.id === id);
+  const site = clientSites.find(item=>item.id === id);
   if(!site) return;
 
   showAdminPage("clients");
 
-  document.getElementById("clientRecordId").value = site.id || "";
-  document.getElementById("businessName").value = site.business_name || "";
-  document.getElementById("clientEmail").value = site.client_email || "";
-  document.getElementById("clientUserId").value = site.client_user_id || "";
-  document.getElementById("packageName").value = site.package_name || "Starter";
-  document.getElementById("domain").value = site.domain || "";
-  document.getElementById("domainStatus").value = site.domain_status || "not connected";
-  document.getElementById("domainReleaseStatus").value = site.domain_release_status || "connected";
-  document.getElementById("domainReleaseNotes").value = site.domain_release_notes || "";
-  document.getElementById("siteStatus").value = site.site_status || "draft";
-  document.getElementById("editorAccess").value = site.editor_access || "safe";
-  document.getElementById("billingStatus").value = site.billing_status || "active";
-  document.getElementById("billingOverride").value = site.billing_override ? "true" : "false";
-  document.getElementById("billingOverrideReason").value = site.billing_override_reason || "";
-  document.getElementById("billingNotes").value = site.billing_notes || "";
-  document.getElementById("billingCycle").value = site.billing_cycle || "monthly";
-  document.getElementById("nextPaymentDate").value = site.next_payment_date || "";
-  document.getElementById("lastPaymentDate").value = site.last_payment_date || "";
-  document.getElementById("notes").value = site.notes || "";
+  setValue("clientRecordId", site.id);
+  setValue("businessName", site.business_name);
+  setValue("clientEmail", site.client_email);
+  setValue("clientUserId", site.client_user_id);
+  setValue("packageName", site.package_name || "Starter");
+  setValue("domain", site.domain);
+  setValue("domainStatus", site.domain_status || "not connected");
+  setValue("domainReleaseStatus", site.domain_release_status || "connected");
+  setValue("domainReleaseNotes", site.domain_release_notes);
+  setValue("siteStatus", site.site_status || "draft");
+  setValue("editorAccess", site.editor_access || "safe");
+  setValue("editorLocked", site.editor_locked ? "true" : "false");
+  setValue("editorLockedReason", site.editor_locked_reason);
+  setValue("clientTags", site.client_tags);
+  setValue("billingStatus", site.billing_status || "active");
+  setValue("billingOverride", site.billing_override ? "true" : "false");
+  setValue("billingOverrideReason", site.billing_override_reason);
+  setValue("billingNotes", site.billing_notes);
+  setValue("billingCycle", site.billing_cycle || "monthly");
+  setValue("nextPaymentDate", site.next_payment_date);
+  setValue("lastPaymentDate", site.last_payment_date);
+  setValue("notes", site.notes);
 
   scrollToForm();
 }
 
 function clearClientForm(){
-  document.getElementById("clientRecordId").value = "";
-  document.getElementById("businessName").value = "";
-  document.getElementById("clientEmail").value = "";
-  document.getElementById("clientUserId").value = "";
-  document.getElementById("packageName").value = "Starter";
-  document.getElementById("domain").value = "";
-  document.getElementById("domainStatus").value = "not connected";
-  document.getElementById("domainReleaseStatus").value = "connected";
-  document.getElementById("domainReleaseNotes").value = "";
-  document.getElementById("siteStatus").value = "draft";
-  document.getElementById("editorAccess").value = "safe";
-  document.getElementById("billingStatus").value = "active";
-  document.getElementById("billingOverride").value = "false";
-  document.getElementById("billingOverrideReason").value = "";
-  document.getElementById("billingNotes").value = "";
-  document.getElementById("billingCycle").value = "monthly";
-  document.getElementById("nextPaymentDate").value = "";
-  document.getElementById("lastPaymentDate").value = "";
-  document.getElementById("notes").value = "";
-  document.getElementById("message").textContent = "";
+  const defaults = {
+    clientRecordId:"",
+    businessName:"",
+    clientEmail:"",
+    clientUserId:"",
+    packageName:"Starter",
+    domain:"",
+    domainStatus:"not connected",
+    domainReleaseStatus:"connected",
+    domainReleaseNotes:"",
+    siteStatus:"draft",
+    editorAccess:"safe",
+    editorLocked:"false",
+    editorLockedReason:"",
+    clientTags:"",
+    billingStatus:"active",
+    billingOverride:"false",
+    billingOverrideReason:"",
+    billingNotes:"",
+    billingCycle:"monthly",
+    nextPaymentDate:"",
+    lastPaymentDate:"",
+    notes:""
+  };
+
+  Object.entries(defaults).forEach(([id,value])=>setValue(id,value));
+
+  const msg = document.getElementById("message");
+  if(msg) msg.textContent = "";
+}
+
+function closeClientForm(){
+  const wrap = document.getElementById("clientFormWrap");
+  if(wrap) wrap.style.display = "none";
 }
 
 async function deleteClientSite(id){
   if(!confirm("Delete this client site record?")) return;
 
-  const { error } = await db
-    .from("client_sites")
-    .delete()
-    .eq("id", id);
+  const { error } = await db.from("client_sites").delete().eq("id", id);
 
   if(error){
     console.error(error);
@@ -367,10 +508,11 @@ async function deleteClientSite(id){
 
   await loadClientSites();
   renderStats();
+  renderSmartAlerts();
 }
 
 async function releaseDomain(id){
-  const site = clientSites.find(item => item.id === id);
+  const site = clientSites.find(item=>item.id === id);
   if(!site) return;
 
   const reason = prompt(
@@ -409,9 +551,10 @@ async function releaseDomain(id){
 
   await loadClientSites();
   renderStats();
+  renderSmartAlerts();
 }
 
-/* CHANGE REQUESTS */
+/* REQUESTS */
 function renderChangeRequests(){
   const list = document.getElementById("changeRequestList");
   if(!list) return;
@@ -427,13 +570,8 @@ function renderChangeRequests(){
     const card = document.createElement("div");
     card.className = "request-card";
 
-    const editorUrl = req.client_user_id
-      ? `editor.html?client=${req.client_user_id}`
-      : "editor.html";
-
-    const liveUrl = req.client_user_id
-      ? `${LIVE_BASE_URL}/?client=${req.client_user_id}`
-      : LIVE_BASE_URL;
+    const editorUrl = req.client_user_id ? `editor.html?client=${req.client_user_id}` : "editor.html";
+    const liveUrl = req.client_user_id ? `${LIVE_BASE_URL}/?client=${req.client_user_id}` : LIVE_BASE_URL;
 
     card.innerHTML = `
       <div>
@@ -504,15 +642,13 @@ async function updateChangeRequest(id, clientUserId){
   await loadChangeRequests();
   renderChangeRequests();
   renderStats();
+  renderSmartAlerts();
 }
 
 async function deleteChangeRequest(id){
   if(!confirm("Delete this change request?")) return;
 
-  const { error } = await db
-    .from("change_requests")
-    .delete()
-    .eq("id", id);
+  const { error } = await db.from("change_requests").delete().eq("id", id);
 
   if(error){
     alert("Delete failed.");
@@ -523,6 +659,7 @@ async function deleteChangeRequest(id){
   await loadChangeRequests();
   renderChangeRequests();
   renderStats();
+  renderSmartAlerts();
 }
 
 /* ANALYTICS */
@@ -602,7 +739,7 @@ function loadClientAnalyticsView(){
   `;
 }
 
-/* DETAIL */
+/* DETAIL / BILLING */
 function openClientDetail(id){
   const site = clientSites.find(s=>s.id === id);
   if(!site) return;
@@ -622,6 +759,7 @@ function openClientDetail(id){
         <div class="detail-row"><span>Status</span><span>${escapeHtml(site.site_status || "draft")}</span></div>
         <div class="detail-row"><span>Domain</span><span>${escapeHtml(site.domain || "—")}</span></div>
         <div class="detail-row"><span>Editor Access</span><span>${escapeHtml(site.editor_access || "safe")}</span></div>
+        <div class="detail-row"><span>Editor Lock</span><span>${site.editor_locked ? "Locked" : "Unlocked"}</span></div>
         <div style="margin-top:14px;">
           <a class="primary" href="${getClientLiveUrl(site)}" target="_blank">Open Site</a>
         </div>
@@ -739,6 +877,15 @@ function copyText(text){
 function cleanValue(id){
   const el = document.getElementById(id);
   return el ? el.value.trim() : "";
+}
+
+function setValue(id,value){
+  const el = document.getElementById(id);
+  if(el) el.value = value || "";
+}
+
+function toDateInput(date){
+  return date.toISOString().split("T")[0];
 }
 
 function getTopValue(items,key){
