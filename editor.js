@@ -10,137 +10,24 @@ const starterHtml = `
     <a href="#contact" class="main-btn editable-text">Message Me</a>
   </div>
 </section>
-
-<section class="content-section locked-section">
-  <h2 class="editable-text">Website Packages</h2>
-
-  <div class="package-grid">
-    <div class="package-card editable-card">
-      <h3 class="editable-text">Starter</h3>
-      <p class="price editable-text">$100</p>
-      <p class="editable-text">Simple site to get online fast.</p>
-    </div>
-
-    <div class="package-card featured editable-card">
-      <h3 class="editable-text">Business Growth</h3>
-      <p class="price editable-text">$250</p>
-      <p class="editable-text">Best option to attract customers.</p>
-    </div>
-
-    <div class="package-card editable-card">
-      <h3 class="editable-text">Premium</h3>
-      <p class="price editable-text">$500</p>
-      <p class="editable-text">High-end business presence.</p>
-    </div>
-  </div>
-</section>
-
-<section class="content-section locked-section">
-  <h2 class="editable-text">Why Choose Me</h2>
-  <p class="about-text editable-text">I've been designing websites since 2015, helping small businesses look professional and convert visitors into customers.</p>
-</section>
-
-<section class="content-section locked-section" id="contact">
-  <h2 class="editable-text">Let’s Build Your Website</h2>
-  <p class="editable-text">Ready to get started?</p>
-  <a href="mailto:you@example.com" class="main-btn editable-text">Contact Me</a>
-</section>
 `;
 
 const starterCss = `
-body{
-margin:0;
-background:#0B0B0F;
-color:white;
-font-family:Arial,sans-serif;
-}
-
-.hero-section{
-min-height:90vh;
-display:flex;
-align-items:center;
-justify-content:center;
-text-align:center;
-padding:80px 20px;
-background:linear-gradient(120deg,#0B0B0F,#1a1a40,#2a1a55);
-}
-
-.hero-inner{
-max-width:680px;
-}
-
-.eyebrow{
-font-size:12px;
-letter-spacing:3px;
-color:#aaa;
-}
-
-h1{
-font-size:48px;
-line-height:1.1;
-margin:15px 0;
-}
-
-h2{
-font-size:34px;
-text-align:center;
-margin-bottom:30px;
-}
-
-p{
-color:#bbb;
-line-height:1.6;
-}
-
-.main-btn{
-display:inline-block;
-margin-top:22px;
-padding:14px 30px;
-border-radius:30px;
-background:linear-gradient(45deg,#7B5CFF,#9F7BFF);
-color:white;
-text-decoration:none;
-}
-
-.content-section{
-padding:70px 20px;
-}
-
-.package-grid{
-display:flex;
-flex-wrap:wrap;
-justify-content:center;
-gap:20px;
-}
-
-.package-card{
-width:260px;
-padding:28px;
-border-radius:18px;
-background:rgba(255,255,255,.06);
-border:1px solid rgba(255,255,255,.1);
-text-align:center;
-}
-
-.featured{
-box-shadow:0 0 35px rgba(123,92,255,.45);
-}
-
-.price{
-font-size:34px;
-color:#9F7BFF;
-}
-
-.about-text{
-max-width:700px;
-margin:auto;
-text-align:center;
-}
-
-@media(max-width:700px){
-h1{font-size:36px;}
-.package-card{width:100%;}
-}
+body{margin:0;background:#0B0B0F;color:white;font-family:Arial,sans-serif;}
+.hero-section{min-height:90vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:80px 20px;background:linear-gradient(120deg,#0B0B0F,#1a1a40,#2a1a55);}
+.hero-inner{max-width:680px;}
+.eyebrow{font-size:12px;letter-spacing:3px;color:#aaa;}
+h1{font-size:48px;line-height:1.1;margin:15px 0;}
+h2{font-size:34px;text-align:center;margin-bottom:30px;}
+p{color:#bbb;line-height:1.6;}
+.main-btn{display:inline-block;margin-top:22px;padding:14px 30px;border-radius:30px;background:linear-gradient(45deg,#7B5CFF,#9F7BFF);color:white;text-decoration:none;}
+.content-section{padding:70px 20px;}
+.package-card,.feature-card,.quote-card{padding:28px;border-radius:18px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);text-align:center;}
+.image-block{max-width:100%;border-radius:18px;}
+.divider{height:1px;background:linear-gradient(to right,transparent,#9F7BFF,transparent);margin:50px auto;width:80%;}
+.spacer{height:60px;}
+.gallery-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:18px;}
+.gallery-grid img{width:100%;height:180px;object-fit:cover;border-radius:16px;}
 `;
 
 initEditor();
@@ -155,20 +42,11 @@ async function initEditor(){
     fromElement: false,
     storageManager: false,
 
-    blockManager: {
-      appendTo: "#blocks"
-    },
+    blockManager: { appendTo: "#blocks" },
 
-    layerManager: {
-      appendTo: null
-    },
-
-    selectorManager: {
-      appendTo: null
-    },
-
-    traitManager: {
-      appendTo: null
+    assetManager: {
+      upload: false,
+      assets: []
     },
 
     styleManager: {
@@ -185,20 +63,18 @@ async function initEditor(){
           buildProps: ["margin", "padding"]
         },
         {
-          name: "Button/Card Style",
+          name: "Design",
           open: false,
-          buildProps: ["background-color", "border-radius"]
+          buildProps: ["background-color", "border-radius", "width", "height"]
         }
       ]
     },
 
-    panels: {
-      defaults: []
-    }
+    panels: { defaults: [] }
   });
 
-  addEditorCommands();
   addClientBlocks();
+  addImageUploader();
 
   const saved = await loadSavedPage();
 
@@ -213,103 +89,196 @@ async function initEditor(){
   lockClientEditing();
 }
 
-function addEditorCommands(){
-  editor.Panels.addPanel({
-    id: "client-options",
-    el: ".editor-actions",
-    buttons: []
-  });
-}
-
 function addClientBlocks(){
-  editor.BlockManager.add("client-text", {
-    label: "Add Text",
-    category: "Add Content",
-    content: `<p class="editable-text">Add your text here</p>`
-  });
-
-  editor.BlockManager.add("client-heading", {
-    label: "Add Heading",
-    category: "Add Content",
+  editor.BlockManager.add("heading", {
+    label: "Heading",
+    category: "Text",
     content: `<h2 class="editable-text">Add Heading</h2>`
   });
 
-  editor.BlockManager.add("client-button", {
-    label: "Add Button",
-    category: "Add Content",
+  editor.BlockManager.add("paragraph", {
+    label: "Paragraph",
+    category: "Text",
+    content: `<p class="editable-text">Add your text here.</p>`
+  });
+
+  editor.BlockManager.add("button", {
+    label: "Button",
+    category: "Text",
     content: `<a href="#" class="main-btn editable-text">Button Text</a>`
   });
 
-  editor.BlockManager.add("client-section", {
-    label: "Add Section",
-    category: "Add Layout",
+  editor.BlockManager.add("image", {
+    label: "Image",
+    category: "Media",
+    content: `<img class="image-block editable-image" src="https://via.placeholder.com/900x500?text=Upload+Image">`
+  });
+
+  editor.BlockManager.add("image-gallery", {
+    label: "Image Gallery",
+    category: "Media",
     content: `
       <section class="content-section client-added-section">
-        <h2 class="editable-text">New Section</h2>
-        <p class="editable-text">Add your message here.</p>
+        <div class="gallery-grid">
+          <img class="editable-image" src="https://via.placeholder.com/400x300?text=Image+1">
+          <img class="editable-image" src="https://via.placeholder.com/400x300?text=Image+2">
+          <img class="editable-image" src="https://via.placeholder.com/400x300?text=Image+3">
+        </div>
       </section>
     `
   });
 
-  editor.BlockManager.add("client-card", {
-    label: "Add Card",
-    category: "Add Layout",
+  editor.BlockManager.add("feature-card", {
+    label: "Feature Card",
+    category: "Cards",
     content: `
-      <div class="package-card editable-card">
-        <h3 class="editable-text">Card Title</h3>
-        <p class="editable-text">Card description goes here.</p>
+      <div class="feature-card editable-card">
+        <h3 class="editable-text">Feature Title</h3>
+        <p class="editable-text">Describe this feature or service.</p>
       </div>
     `
   });
+
+  editor.BlockManager.add("quote", {
+    label: "Quote/Testimonial",
+    category: "Cards",
+    content: `
+      <div class="quote-card editable-card">
+        <p class="editable-text">“Add a customer testimonial here.”</p>
+        <strong class="editable-text">— Customer Name</strong>
+      </div>
+    `
+  });
+
+  editor.BlockManager.add("cta", {
+    label: "Call To Action",
+    category: "Sections",
+    content: `
+      <section class="content-section client-added-section" style="text-align:center;">
+        <h2 class="editable-text">Ready to get started?</h2>
+        <p class="editable-text">Let’s build something professional for your business.</p>
+        <a href="#contact" class="main-btn editable-text">Contact Us</a>
+      </section>
+    `
+  });
+
+  editor.BlockManager.add("two-column", {
+    label: "Two Columns",
+    category: "Sections",
+    content: `
+      <section class="content-section client-added-section">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:25px;align-items:center;">
+          <div>
+            <h2 class="editable-text">Section Title</h2>
+            <p class="editable-text">Add your content here.</p>
+          </div>
+          <img class="image-block editable-image" src="https://via.placeholder.com/600x400?text=Image">
+        </div>
+      </section>
+    `
+  });
+
+  editor.BlockManager.add("divider", {
+    label: "Divider",
+    category: "Design",
+    content: `<div class="divider"></div>`
+  });
+
+  editor.BlockManager.add("spacer", {
+    label: "Spacer",
+    category: "Design",
+    content: `<div class="spacer"></div>`
+  });
+}
+
+function addImageUploader(){
+  const uploadBox = document.createElement("div");
+  uploadBox.innerHTML = `
+    <div style="margin-top:20px;padding-top:18px;border-top:1px solid rgba(255,255,255,.12);">
+      <h3 style="margin-bottom:12px;">Images</h3>
+      <input id="customImageUpload" type="file" accept="image/*" style="font-size:13px;">
+      <button id="uploadImageBtn" style="margin-top:10px;width:100%;padding:12px;border-radius:20px;border:none;background:#7B5CFF;color:white;font-weight:bold;cursor:pointer;">
+        Upload Image
+      </button>
+      <p id="uploadStatus" style="font-size:12px;color:#bbb;margin-top:8px;"></p>
+    </div>
+  `;
+
+  document.querySelector(".editor-sidebar").appendChild(uploadBox);
+
+  document.getElementById("uploadImageBtn").addEventListener("click", uploadImageToSupabase);
+}
+
+async function uploadImageToSupabase(){
+  const input = document.getElementById("customImageUpload");
+  const status = document.getElementById("uploadStatus");
+
+  if(!input.files.length){
+    status.textContent = "Choose an image first.";
+    return;
+  }
+
+  const file = input.files[0];
+  const filePath = `${currentUser.id}/${Date.now()}-${file.name}`;
+
+  status.textContent = "Uploading...";
+
+  const { error } = await db.storage
+    .from("site-images")
+    .upload(filePath, file);
+
+  if(error){
+    console.error(error);
+    status.textContent = "Upload failed. Check your storage bucket.";
+    return;
+  }
+
+  const { data } = db.storage
+    .from("site-images")
+    .getPublicUrl(filePath);
+
+  const imageUrl = data.publicUrl;
+
+  editor.AssetManager.add({
+    src: imageUrl,
+    name: file.name
+  });
+
+  editor.addComponents(`<img class="image-block editable-image" src="${imageUrl}">`);
+
+  status.textContent = "Image uploaded and added to page.";
+  input.value = "";
 }
 
 function lockClientEditing(){
   editor.DomComponents.getWrapper().find("*").forEach(component => {
     const classes = component.getClasses();
 
-    const isEditableText = classes.includes("editable-text");
-    const isEditableCard = classes.includes("editable-card");
-    const isClientAdded = classes.includes("client-added-section");
-
-    if(isEditableText){
+    if(classes.includes("editable-text")){
       component.set({
         editable: true,
         draggable: false,
         droppable: false,
         removable: false,
-        copyable: false,
-        stylable: [
-          "color",
-          "font-size",
-          "text-align",
-          "margin",
-          "padding",
-          "background-color",
-          "border-radius"
-        ]
+        copyable: false
       });
-    } else if(isEditableCard || isClientAdded){
+    }
+
+    if(classes.includes("editable-image")){
       component.set({
-        editable: false,
+        editable: true,
+        draggable: true,
+        removable: true,
+        copyable: true
+      });
+    }
+
+    if(classes.includes("editable-card") || classes.includes("client-added-section")){
+      component.set({
         draggable: true,
         droppable: true,
         removable: true,
-        copyable: true,
-        stylable: [
-          "background-color",
-          "border-radius",
-          "margin",
-          "padding"
-        ]
-      });
-    } else {
-      component.set({
-        editable: false,
-        draggable: false,
-        droppable: true,
-        removable: false,
-        copyable: false,
-        stylable: false
+        copyable: true
       });
     }
   });
@@ -353,7 +322,6 @@ async function savePage(){
     return;
   }
 
-  await addLog("Saved draft");
   alert("Draft saved.");
 }
 
@@ -374,15 +342,5 @@ async function publishPage(){
     return;
   }
 
-  await addLog("Published website changes");
   alert("Published.");
-}
-
-async function addLog(summary){
-  await db
-    .from("change_logs")
-    .insert({
-      user_id: currentUser.id,
-      change_summary: summary
-    });
 }
