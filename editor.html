@@ -30,15 +30,38 @@
 <div class="builder-app">
 
   <nav class="builder-rail">
-    <button class="rail-btn active" onclick="openBuilderPanel('blocksPanel')">＋<span>Add</span></button>
-    <button class="rail-btn" onclick="openBuilderPanel('uploadsPanel')">▧<span>Uploads</span></button>
-    <button class="rail-btn" onclick="openBuilderPanel('stylePanel')">✦<span>Style</span></button>
+    <button class="rail-btn active" onclick="openBuilderPanel('blocksPanel', this)">＋<span>Add</span></button>
+    <button class="rail-btn" onclick="openBuilderPanel('designPanel', this)">✦<span>Design</span></button>
+    <button class="rail-btn" onclick="openBuilderPanel('uploadsPanel', this)">▧<span>Uploads</span></button>
+    <button class="rail-btn" onclick="openBuilderPanel('stylePanel', this)">⚙<span>Style</span></button>
   </nav>
 
   <aside class="builder-panel active-panel" id="blocksPanel">
     <h2>Add Elements</h2>
     <p>Drag sections, text, buttons, and cards onto the page.</p>
     <div id="blocks"></div>
+  </aside>
+
+  <aside class="builder-panel" id="designPanel">
+    <h2>Design Library</h2>
+    <p>Search and apply hundreds of button, text, card, background, gradient, image, and font styles.</p>
+
+    <input id="designSearch" class="design-search" placeholder="Search styles...">
+
+    <div class="design-tabs">
+      <button class="active" onclick="setDesignCategory('all', this)">All</button>
+      <button onclick="setDesignCategory('buttons', this)">Buttons</button>
+      <button onclick="setDesignCategory('text', this)">Text</button>
+      <button onclick="setDesignCategory('cards', this)">Cards</button>
+      <button onclick="setDesignCategory('backgrounds', this)">Backgrounds</button>
+      <button onclick="setDesignCategory('gradients', this)">Gradients</button>
+      <button onclick="setDesignCategory('dividers', this)">Dividers</button>
+      <button onclick="setDesignCategory('images', this)">Images</button>
+      <button onclick="setDesignCategory('fonts', this)">Fonts</button>
+    </div>
+
+    <div id="designCount" class="design-count">Loading styles...</div>
+    <div id="designLibrary" class="design-library"></div>
   </aside>
 
   <aside class="builder-panel" id="uploadsPanel">
@@ -77,17 +100,17 @@
 <script src="editor.js"></script>
 
 <script>
-function openBuilderPanel(id){
+function openBuilderPanel(id, btn){
   document.querySelectorAll('.builder-panel, .builder-style-panel').forEach(panel=>{
     panel.classList.remove('active-panel');
   });
 
-  document.querySelectorAll('.rail-btn').forEach(btn=>{
-    btn.classList.remove('active');
+  document.querySelectorAll('.rail-btn').forEach(button=>{
+    button.classList.remove('active');
   });
 
   document.getElementById(id).classList.add('active-panel');
-  event.currentTarget.classList.add('active');
+  btn.classList.add('active');
 }
 </script>
 
