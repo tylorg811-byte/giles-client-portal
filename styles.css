@@ -6,8 +6,9 @@ box-sizing:border-box;
 
 body.builder-body{
 background:#f6f7fb;
-font-family:'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+font-family:'Inter', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
 color:#1f1f2e;
+overflow:hidden;
 }
 
 /* ================= TOP BAR ================= */
@@ -18,8 +19,9 @@ display:flex;
 align-items:center;
 justify-content:space-between;
 padding:0 28px;
-background:white;
+background:#ffffff;
 border-bottom:1px solid #e6e6ef;
+box-shadow:0 2px 14px rgba(0,0,0,.03);
 }
 
 .brand-area{
@@ -29,69 +31,78 @@ gap:12px;
 }
 
 .brand-mark{
-width:36px;
-height:36px;
-border-radius:10px;
-background:linear-gradient(135deg,#7B5CFF,#A070FF);
+width:42px;
+height:42px;
+border-radius:12px;
+background:linear-gradient(135deg,#7B5CFF,#9F7BFF);
 display:flex;
 align-items:center;
 justify-content:center;
 color:white;
-font-weight:bold;
+font-weight:800;
+font-size:18px;
+box-shadow:0 10px 26px rgba(123,92,255,.25);
 }
 
 .builder-topbar strong{
-font-size:16px;
+font-size:18px;
+font-weight:800;
+color:#111827;
 }
 
 .builder-topbar span{
 display:block;
-font-size:12px;
-color:#888;
+font-size:13px;
+color:#777b8a;
+margin-top:2px;
 }
-
-/* BUTTONS */
 
 .builder-actions{
 display:flex;
+align-items:center;
 gap:12px;
 }
 
 .ghost-btn{
-background:none;
+background:transparent;
 border:none;
-padding:10px 16px;
-border-radius:10px;
+padding:11px 16px;
+border-radius:12px;
 cursor:pointer;
-color:#555;
+color:#333;
+font-size:15px;
 }
 
 .soft-btn{
 background:#f0efff;
 border:none;
-padding:10px 18px;
-border-radius:10px;
+padding:12px 22px;
+border-radius:12px;
 cursor:pointer;
 color:#5a4cff;
-font-weight:600;
+font-weight:800;
+font-size:15px;
 }
 
 .publish-btn{
-background:linear-gradient(135deg,#7B5CFF,#A070FF);
+background:linear-gradient(135deg,#7B5CFF,#9F7BFF);
 border:none;
-padding:10px 20px;
-border-radius:10px;
+padding:12px 24px;
+border-radius:12px;
 color:white;
-font-weight:600;
+font-weight:800;
+font-size:15px;
 cursor:pointer;
+box-shadow:0 10px 24px rgba(123,92,255,.25);
 }
 
-/* ================= LAYOUT ================= */
+/* ================= APP LAYOUT ================= */
 
 .builder-app{
 display:grid;
-grid-template-columns:80px 320px 1fr 320px;
+grid-template-columns:88px 388px 1fr 330px;
 height:calc(100vh - 72px);
+background:#eef0f6;
 }
 
 /* ================= LEFT RAIL ================= */
@@ -102,41 +113,48 @@ border-right:1px solid #e6e6ef;
 display:flex;
 flex-direction:column;
 align-items:center;
-padding-top:20px;
-gap:18px;
+padding-top:24px;
+gap:20px;
 }
 
 .rail-btn{
-width:56px;
-height:56px;
-border-radius:14px;
+width:68px;
+height:68px;
+border-radius:18px;
 border:none;
-background:#f5f5fb;
+background:#f4f4fb;
 cursor:pointer;
 display:flex;
 flex-direction:column;
 align-items:center;
 justify-content:center;
-font-size:14px;
-color:#555;
-gap:4px;
+font-size:18px;
+color:#3f4250;
+gap:5px;
+transition:.18s ease;
 }
 
 .rail-btn span{
-font-size:11px;
+font-size:13px;
+}
+
+.rail-btn:hover{
+background:#ecebff;
+color:#5a4cff;
 }
 
 .rail-btn.active{
-background:#7B5CFF;
+background:linear-gradient(135deg,#7B5CFF,#9F7BFF);
 color:white;
+box-shadow:0 12px 26px rgba(123,92,255,.28);
 }
 
 /* ================= LEFT PANEL ================= */
 
 .builder-panel{
-background:white;
+background:#ffffff;
 border-right:1px solid #e6e6ef;
-padding:20px;
+padding:28px!important;
 overflow:auto;
 display:none;
 }
@@ -146,80 +164,109 @@ display:block;
 }
 
 .builder-panel h2{
-font-size:18px;
-margin-bottom:8px;
+font-size:22px;
+font-weight:850;
+margin-bottom:6px;
+color:#111827;
 }
 
 .builder-panel p{
-font-size:13px;
-color:#777;
-margin-bottom:16px;
+font-size:14px;
+color:#666b78;
+margin-bottom:24px;
+line-height:1.45;
 }
 
-/* ================= UPLOAD ================= */
+/* ================= UPLOAD PANEL ================= */
 
 .upload-card{
 background:#fafafe;
-border:1px dashed #d6d6f2;
-border-radius:14px;
-padding:16px;
+border:1px dashed #cfcdf8;
+border-radius:18px;
+padding:18px;
 }
 
 .upload-card input{
 width:100%;
-margin-bottom:10px;
+padding:12px;
+border-radius:12px;
+border:1px solid #e6e6ef;
+background:white;
+margin-bottom:12px;
 }
 
 .upload-card button{
 width:100%;
-padding:10px;
-border-radius:10px;
+padding:12px;
+border-radius:12px;
 border:none;
-background:#7B5CFF;
+background:linear-gradient(135deg,#7B5CFF,#9F7BFF);
 color:white;
+font-weight:800;
 cursor:pointer;
 }
 
-/* ================= CANVAS ================= */
+#uploadStatus{
+font-size:13px;
+color:#777b8a;
+margin-top:10px;
+}
+
+/* ================= CANVAS AREA ================= */
 
 .builder-canvas-wrap{
 display:flex;
 flex-direction:column;
 background:#eef0f6;
-padding:20px;
+padding:24px 28px;
+overflow:hidden;
 }
 
 .canvas-toolbar{
-height:44px;
+height:54px;
 display:flex;
 align-items:center;
 justify-content:space-between;
-padding:0 12px;
-background:white;
-border-radius:12px 12px 0 0;
+padding:0 18px;
+background:#ffffff;
+border-radius:16px 16px 0 0;
 border:1px solid #e6e6ef;
 border-bottom:none;
+font-size:18px;
+font-weight:600;
+}
+
+.canvas-toolbar button{
+border:1px solid #d9d9e8;
+background:white;
+border-radius:10px;
+padding:7px 12px;
+font-size:14px;
+cursor:pointer;
 }
 
 .canvas-frame{
 flex:1;
+min-height:650px!important;
 background:white;
-border-radius:0 0 16px 16px;
+border-radius:0 0 18px 18px;
 border:1px solid #e6e6ef;
 overflow:hidden;
-box-shadow:0 10px 40px rgba(0,0,0,.08);
+box-shadow:0 18px 55px rgba(25,25,50,.08);
 }
 
 #gjs{
-height:100%;
+height:100%!important;
+min-height:650px!important;
+display:block!important;
 }
 
-/* ================= RIGHT PANEL ================= */
+/* ================= RIGHT STYLE PANEL ================= */
 
 .builder-style-panel{
-background:white;
+background:#ffffff;
 border-left:1px solid #e6e6ef;
-padding:20px;
+padding:28px;
 overflow:auto;
 display:none;
 }
@@ -229,16 +276,19 @@ display:block;
 }
 
 .builder-style-panel h2{
-margin-bottom:8px;
+font-size:22px;
+font-weight:850;
+margin-bottom:6px;
 }
 
 .builder-style-panel p{
-font-size:13px;
-color:#777;
-margin-bottom:16px;
+font-size:14px;
+color:#666b78;
+margin-bottom:22px;
+line-height:1.45;
 }
 
-/* ================= GRAPES CLEAN ================= */
+/* ================= GRAPESJS CANVAS FIXES ================= */
 
 .gjs-pn-panel,
 .gjs-toolbar{
@@ -258,83 +308,6 @@ color:#1f1f2e!important;
 color:#7B5CFF!important;
 }
 
-.gjs-cv-canvas{
-background:white!important;
-}
-
-.gjs-block{
-background:#f8f8ff!important;
-border:1px solid #e6e6ef!important;
-border-radius:12px!important;
-padding:16px!important;
-text-align:center;
-font-weight:600;
-}
-
-.gjs-block:hover{
-background:#f0efff!important;
-border-color:#7B5CFF!important;
-}
-
-/* STYLE PANEL FIX */
-
-.gjs-sm-sector{
-background:#fafafe!important;
-border:1px solid #e6e6ef!important;
-border-radius:14px!important;
-margin-bottom:14px!important;
-}
-
-.gjs-sm-sector-title{
-background:none!important;
-padding:12px!important;
-font-weight:600!important;
-}
-
-.gjs-sm-property{
-padding:10px!important;
-}
-
-/* ================= RESPONSIVE ================= */
-
-@media(max-width:1200px){
-.builder-app{
-grid-template-columns:70px 260px 1fr;
-}
-
-.builder-style-panel{
-display:none!important;
-}
-}
-
-.canvas-frame{
-flex:1;
-min-height:600px;
-}
-
-#gjs{
-height:100%!important;
-min-height:600px;
-}
-
-#gjs,
-.gjs-editor,
-.gjs-cv-canvas,
-.gjs-cv-canvas iframe{
-height:100%!important;
-min-height:650px!important;
-}
-
-.canvas-frame{
-min-height:650px!important;
-}
-
-#gjs{
-height:100%!important;
-min-height:650px!important;
-display:block!important;
-}
-
 .gjs-editor{
 height:100%!important;
 min-height:650px!important;
@@ -342,53 +315,173 @@ display:block!important;
 }
 
 .gjs-cv-canvas{
-display:block!important;
+display:flex!important;
+justify-content:center!important;
+align-items:flex-start!important;
 top:0!important;
 left:0!important;
 width:100%!important;
 height:100%!important;
 min-height:650px!important;
-background:#fff!important;
+background:#eef0f6!important;
+padding:34px 0!important;
 }
 
 .gjs-frame-wrapper{
-display:block!important;
-height:100%!important;
-min-height:650px!important;
-}
-
-.gjs-frame{
-display:block!important;
-height:100%!important;
-min-height:650px!important;
-}
-
-/* CENTER THE WEBSITE CANVAS LIKE WIX */
-
-.gjs-cv-canvas{
 display:flex!important;
 justify-content:center!important;
-align-items:flex-start!important;
-padding:40px 0!important;
-}
-
-/* constrain the website width */
-.gjs-frame-wrapper{
+height:100%!important;
+min-height:650px!important;
 width:100%!important;
-display:flex!important;
-justify-content:center!important;
 }
 
-/* actual website frame */
 .gjs-frame{
-width:1200px!important; /* desktop width */
+display:block!important;
+width:1100px!important;
 max-width:100%!important;
+height:100%!important;
+min-height:650px!important;
 margin:0 auto!important;
 background:white!important;
-border-radius:12px!important;
+border-radius:14px!important;
 box-shadow:0 20px 60px rgba(0,0,0,.12)!important;
 overflow:hidden!important;
 }
+
+.gjs-selected{
+outline:2px solid #7B5CFF!important;
+outline-offset:2px!important;
+}
+
+.gjs-hovered{
+outline:1px dashed #7B5CFF!important;
+}
+
+/* ================= WIX STYLE BLOCK GRID ================= */
+
+.gjs-blocks-c{
+display:grid!important;
+grid-template-columns:repeat(2,1fr)!important;
+gap:16px!important;
+}
+
+.gjs-block{
+height:90px!important;
+width:100%!important;
+border-radius:16px!important;
+background:#ffffff!important;
+border:1px solid #e1e2ee!important;
+display:flex!important;
+align-items:center!important;
+justify-content:center!important;
+text-align:center!important;
+font-weight:700!important;
+color:#2a2a35!important;
+box-shadow:0 6px 16px rgba(0,0,0,.06);
+transition:.18s ease!important;
+padding:12px!important;
+}
+
+.gjs-block:hover{
+transform:translateY(-3px);
+box-shadow:0 12px 26px rgba(0,0,0,.12);
+border-color:#7B5CFF!important;
+background:#fafaff!important;
+}
+
+.gjs-block-label{
+font-size:13px!important;
+line-height:1.2!important;
+font-weight:700!important;
+color:#242433!important;
+}
+
+.gjs-block-category{
+margin-bottom:22px!important;
+background:transparent!important;
+border:none!important;
+}
+
+.gjs-block-category .gjs-title,
+.gjs-title{
+background:#f0f0f4!important;
+color:#111827!important;
+font-size:18px!important;
+font-weight:750!important;
+padding:12px 16px!important;
+margin-bottom:14px!important;
+border-radius:0!important;
+border:none!important;
+box-shadow:none!important;
+}
+
+/* ================= STYLE MANAGER ================= */
+
+.gjs-sm-sector{
+background:#fafafe!important;
+border:1px solid #e6e6ef!important;
+border-radius:16px!important;
+margin-bottom:16px!important;
+overflow:hidden!important;
+}
+
+.gjs-sm-sector-title{
+background:#f4f4fb!important;
+color:#111827!important;
+font-size:16px!important;
+font-weight:800!important;
+padding:14px!important;
+}
+
+.gjs-sm-properties{
+padding:12px!important;
+}
+
+.gjs-sm-property{
+padding:10px 0!important;
+}
+
+.gjs-sm-label,
+.gjs-sm-label span{
+color:#111827!important;
+font-size:13px!important;
+font-weight:700!important;
+margin-bottom:7px!important;
+}
+
+.gjs-field{
+background:#ffffff!important;
+border:1px solid #dcddec!important;
+border-radius:12px!important;
+box-shadow:none!important;
+}
+
+.gjs-field input,
+.gjs-field select,
+.gjs-field textarea{
+background:transparent!important;
+color:#111827!important;
+font-weight:600!important;
+}
+
+.gjs-radio-items{
+background:#ffffff!important;
+border:1px solid #dcddec!important;
+border-radius:12px!important;
+overflow:hidden!important;
+}
+
+.gjs-radio-item label{
+padding:8px 11px!important;
+color:#111827!important;
+}
+
+.gjs-radio-item input:checked + label{
+background:#7B5CFF!important;
+color:white!important;
+}
+
+/* ================= WIX CONTROL BAR ================= */
 
 .wix-control-bar{
 position:fixed;
@@ -406,7 +499,7 @@ border:1px solid #e8e8f2;
 border:none;
 background:#f3f2ff;
 color:#5a4cff;
-font-weight:700;
+font-weight:800;
 border-radius:999px;
 padding:8px 12px;
 cursor:pointer;
@@ -418,57 +511,7 @@ background:#7B5CFF;
 color:white;
 }
 
-/* ===== WIX STYLE BLOCK CARDS ===== */
-
-.gjs-blocks-c{
-display:grid!important;
-grid-template-columns:repeat(2,1fr)!important;
-gap:14px!important;
-}
-
-.gjs-block{
-height:110px!important;
-border-radius:16px!important;
-background:white!important;
-border:1px solid #e6e6ef!important;
-display:flex!important;
-align-items:center!important;
-justify-content:center!important;
-flex-direction:column!important;
-font-weight:600!important;
-color:#333!important;
-box-shadow:0 6px 18px rgba(0,0,0,.06);
-transition:.2s ease;
-}
-
-.gjs-block:hover{
-transform:translateY(-4px);
-box-shadow:0 12px 26px rgba(0,0,0,.12);
-border-color:#7B5CFF!important;
-}
-
-.gjs-block-label{
-font-size:13px!important;
-margin-top:6px!important;
-}
-
-.builder-panel{
-padding:26px!important;
-}
-
-.builder-panel h2{
-font-size:20px;
-margin-bottom:10px;
-}
-
-.builder-panel p{
-margin-bottom:20px;
-line-height:1.5;
-}
-
-.gjs-block-category{
-margin-bottom:20px!important;
-}
+/* ================= ADD SECTION BUTTON ================= */
 
 .add-section-btn{
 position:fixed;
@@ -478,14 +521,98 @@ border:1px solid #e6e6ef;
 padding:10px 18px;
 border-radius:999px;
 font-size:13px;
-font-weight:600;
+font-weight:800;
 cursor:pointer;
 box-shadow:0 10px 25px rgba(0,0,0,.12);
 transition:.2s ease;
+color:#5a4cff;
 }
 
 .add-section-btn:hover{
 background:#7B5CFF;
 color:white;
 border-color:#7B5CFF;
+}
+
+/* ================= SCROLLBARS ================= */
+
+.builder-panel::-webkit-scrollbar,
+.builder-style-panel::-webkit-scrollbar{
+width:8px;
+}
+
+.builder-panel::-webkit-scrollbar-thumb,
+.builder-style-panel::-webkit-scrollbar-thumb{
+background:#c8c8dc;
+border-radius:20px;
+}
+
+.builder-panel::-webkit-scrollbar-track,
+.builder-style-panel::-webkit-scrollbar-track{
+background:#f4f4fb;
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media(max-width:1200px){
+.builder-app{
+grid-template-columns:78px 300px 1fr;
+}
+
+.builder-style-panel{
+display:none!important;
+}
+}
+
+@media(max-width:800px){
+body.builder-body{
+overflow:auto;
+}
+
+.builder-topbar{
+height:auto;
+padding:14px;
+gap:12px;
+flex-direction:column;
+align-items:flex-start;
+}
+
+.builder-actions{
+width:100%;
+justify-content:space-between;
+}
+
+.builder-app{
+display:block;
+height:auto;
+}
+
+.builder-rail{
+height:auto;
+flex-direction:row;
+justify-content:center;
+padding:12px;
+}
+
+.builder-panel{
+height:auto;
+max-height:360px;
+}
+
+.builder-canvas-wrap{
+height:75vh;
+padding:12px;
+}
+
+.canvas-frame{
+min-height:520px!important;
+}
+
+#gjs,
+.gjs-editor,
+.gjs-cv-canvas,
+.gjs-frame-wrapper,
+.gjs-frame{
+min-height:520px!important;
+}
 }
