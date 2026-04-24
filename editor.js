@@ -86,6 +86,54 @@ async function initEditor(){
 
   clientSiteRecord = clientRecord || null;
 
+if(!isAdminEditing && clientSiteRecord?.editor_locked){
+  document.body.innerHTML = `
+    <div style="
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:#07111f;
+      color:white;
+      font-family:Arial,sans-serif;
+      padding:24px;
+      text-align:center;
+    ">
+      <div style="
+        max-width:560px;
+        background:#0d1a2b;
+        border:1px solid #22324a;
+        border-radius:24px;
+        padding:34px;
+        box-shadow:0 20px 50px rgba(0,0,0,.35);
+      ">
+        <h1 style="margin-bottom:12px;">Editor Access Locked</h1>
+
+        <p style="color:#cbd5e1;line-height:1.6;">
+          Your editor access is currently locked.
+          ${
+            clientSiteRecord.editor_locked_reason
+              ? `<br><br><strong>Reason:</strong> ${clientSiteRecord.editor_locked_reason}`
+              : ""
+          }
+        </p>
+
+        <a href="dashboard.html" style="
+          display:inline-block;
+          margin-top:22px;
+          background:linear-gradient(135deg,#7B5CFF,#9F7BFF);
+          color:white;
+          text-decoration:none;
+          font-weight:900;
+          padding:13px 20px;
+          border-radius:14px;
+        ">Back to Dashboard</a>
+      </div>
+    </div>
+  `;
+  return;
+}
+  
   if(isAdminEditing){
     clientSafeMode = false;
   } else {
