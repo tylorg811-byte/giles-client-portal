@@ -202,6 +202,16 @@ color:#5a4cff;
 text-transform:capitalize;
 }
 
+.badge.full{
+background:#ecfdf3;
+color:#027a48;
+}
+
+.badge.safe{
+background:#fff7ed;
+color:#c2410c;
+}
+
 .actions{
 display:flex;
 gap:8px;
@@ -260,7 +270,7 @@ color:#5a4cff;
   <aside class="sidebar">
     <div class="logo">G</div>
     <h2>Admin Panel</h2>
-    <p>Manage clients, websites, domains, and change requests.</p>
+    <p>Manage clients, websites, domains, access, and change requests.</p>
 
     <a href="dashboard.html">Client Dashboard</a>
     <a href="editor.html">Open Editor</a>
@@ -361,15 +371,15 @@ color:#5a4cff;
             <option value="needs review">Needs Review</option>
           </select>
         </div>
-        
-<div>
-  <label>Editor Access</label>
-  <select id="editorAccess">
-    <option value="safe">Safe Mode</option>
-    <option value="full">Full Editor Access</option>
-  </select>
-</div>
-        
+
+        <div>
+          <label>Editor Access</label>
+          <select id="editorAccess">
+            <option value="safe">Safe Mode</option>
+            <option value="full">Full Editor Access</option>
+          </select>
+        </div>
+
         <div class="full">
           <label>Notes</label>
           <textarea id="notes" placeholder="Domain info, client requests, package notes, etc."></textarea>
