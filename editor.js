@@ -89,6 +89,11 @@ if(saved && saved.html){
   editor.setStyle(starterCss);
 }
 
+  // Force refresh so canvas actually renders
+setTimeout(() => {
+  editor.refresh();
+}, 200);
+  
   lockClientEditing();
 }
 
