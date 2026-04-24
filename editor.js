@@ -93,8 +93,28 @@ console.log("CLIENT RECORD ERROR:", clientError);
 clientSiteRecord = clientRecord || null;
 
 const lockValue = String(clientSiteRecord?.editor_locked).toLowerCase();
+const billingStatus = String(clientSiteRecord?.billing_status || "").toLowerCase();
+const billingOverride = String(clientSiteRecord?.billing_override).toLowerCase() === "true";
 
-if(!isAdminEditing && lockValue === "true"){
+let paymentOverdue = false;
+
+if(clientSiteRecord?.next_payment_date){
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  const nextPayment = new Date(clientSiteRecord.next_payment_date + "T00:00:00");
+  paymentOverdue = nextPayment < today;
+}
+
+const billingLocked =
+  !billingOverride &&
+  (
+    billingStatus === "past due" ||
+    billingStatus === "paused" ||
+    paymentOverdue
+  );
+
+if(!isAdminEditing && (lockValue === "true" || billingLocked)){
   document.body.innerHTML = `
     <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#07111f;color:white;font-family:Arial,sans-serif;padding:24px;text-align:center;">
       <div style="max-width:560px;background:#0d1a2b;border:1px solid #22324a;border-radius:24px;padding:34px;box-shadow:0 20px 50px rgba(0,0,0,.35);">
