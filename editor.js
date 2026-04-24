@@ -836,3 +836,137 @@ function setupHeaderRules(){
     setTimeout(enforceHeaderPosition, 100);
   });
 }
+
+function insertHeader(type){
+  const wrapper = editor.DomComponents.getWrapper();
+
+  wrapper.find("header").forEach(header => header.remove());
+
+  const headers = {
+    logoText: `
+<header class="site-header">
+  <div class="site-header-inner">
+    <div class="site-brand">
+      <div class="site-logo">G</div>
+      <span>Business Name</span>
+    </div>
+    <nav class="site-nav">
+      <a href="#">Home</a>
+      <a href="#">About</a>
+      <a href="#">Services</a>
+      <a href="#">Contact</a>
+    </nav>
+  </div>
+</header>`,
+
+    logoOnly: `
+<header class="site-header">
+  <div class="site-header-inner">
+    <div class="site-brand">
+      <div class="site-logo">Logo</div>
+    </div>
+    <nav class="site-nav">
+      <a href="#">Home</a>
+      <a href="#">Services</a>
+      <a href="#">Contact</a>
+    </nav>
+  </div>
+</header>`,
+
+    textOnly: `
+<header class="site-header">
+  <div class="site-header-inner">
+    <div class="site-brand">
+      <span>Business Name</span>
+    </div>
+    <nav class="site-nav">
+      <a href="#">Home</a>
+      <a href="#">About</a>
+      <a href="#">Services</a>
+      <a href="#">Contact</a>
+    </nav>
+  </div>
+</header>`,
+
+    menu: `
+<header class="site-header">
+  <div class="site-header-inner">
+    <div class="site-brand">
+      <div class="site-logo">G</div>
+      <span>Business Name</span>
+    </div>
+    <button class="menu-toggle" onclick="this.nextElementSibling.classList.toggle('open-menu')">☰ Menu</button>
+    <nav class="mobile-menu">
+      <a href="#">Home</a>
+      <a href="#">About</a>
+      <a href="#">Services</a>
+      <a href="#">Contact</a>
+    </nav>
+  </div>
+</header>`,
+
+    dark: `
+<header class="site-header dark">
+  <div class="site-header-inner">
+    <div class="site-brand">
+      <div class="site-logo">G</div>
+      <span>Business Name</span>
+    </div>
+    <nav class="site-nav">
+      <a href="#">Home</a>
+      <a href="#">About</a>
+      <a href="#">Services</a>
+      <a href="#">Contact</a>
+    </nav>
+  </div>
+</header>`,
+
+    glass: `
+<header class="site-header glass">
+  <div class="site-header-inner">
+    <div class="site-brand">
+      <div class="site-logo">G</div>
+      <span>Business Name</span>
+    </div>
+    <nav class="site-nav">
+      <a href="#">Home</a>
+      <a href="#">About</a>
+      <a href="#">Services</a>
+      <a href="#">Contact</a>
+    </nav>
+  </div>
+</header>`,
+
+    gradient: `
+<header class="site-header gradient">
+  <div class="site-header-inner">
+    <div class="site-brand">
+      <div class="site-logo">G</div>
+      <span>Business Name</span>
+    </div>
+    <nav class="site-nav">
+      <a href="#">Home</a>
+      <a href="#">About</a>
+      <a href="#">Services</a>
+      <a href="#">Contact</a>
+    </nav>
+  </div>
+</header>`
+  };
+
+  wrapper.components().add(headers[type], { at: 0 });
+
+  const header = wrapper.find("header")[0];
+
+  if(header){
+    header.set({
+      draggable:false,
+      droppable:true,
+      removable:true,
+      copyable:false,
+      selectable:true
+    });
+  }
+
+  editor.refresh();
+}
