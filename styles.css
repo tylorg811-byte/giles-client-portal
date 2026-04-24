@@ -1142,3 +1142,80 @@ background:#7B5CFF!important;
 color:white!important;
 font-weight:900!important;
 }
+
+/* ================= CLEAN PAGES PANEL ================= */
+
+.page-actions{
+display:grid!important;
+grid-template-columns:1fr!important;
+gap:10px!important;
+margin-bottom:22px!important;
+}
+
+.page-actions button{
+width:100%!important;
+border:none!important;
+border-radius:14px!important;
+background:#f4f4fb!important;
+color:#303445!important;
+padding:13px 14px!important;
+font-size:14px!important;
+font-weight:900!important;
+cursor:pointer!important;
+text-align:left!important;
+}
+
+.page-actions button:hover{
+background:#ecebff!important;
+color:#5a4cff!important;
+}
+
+.page-list{
+display:flex!important;
+flex-direction:column!important;
+gap:10px!important;
+}
+
+.page-item{
+display:flex!important;
+align-items:center!important;
+justify-content:space-between!important;
+gap:10px!important;
+padding:12px!important;
+border-radius:16px!important;
+background:#ffffff!important;
+border:1px solid #e6e6ef!important;
+box-shadow:0 8px 20px rgba(20,20,40,.05)!important;
+}
+
+.page-item.active{
+border-color:#7B5CFF!important;
+background:#f6f3ff!important;
+}
+
+.page-item button:first-child{
+flex:1!important;
+border:none!important;
+background:transparent!important;
+font-weight:900!important;
+font-size:14px!important;
+text-align:left!important;
+cursor:pointer!important;
+color:#111827!important;
+}
+
+.delete-page{
+border:none!important;
+background:#ffecec!important;
+color:#d11a2a!important;
+border-radius:10px!important;
+padding:8px 10px!important;
+font-size:12px!important;
+font-weight:900!important;
+cursor:pointer!important;
+}
+
+.delete-page:hover{
+background:#d11a2a!important;
+color:white!important;
+}
