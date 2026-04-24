@@ -828,3 +828,7 @@ function toggleClientForm(){
   const isOpen = wrap.style.display === "block";
   wrap.style.display = isOpen ? "none" : "block";
 }
+
+function toggleSidebar(){
+  document.body.classList.toggle("sidebar-open");
+}
