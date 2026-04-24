@@ -86,9 +86,10 @@ async function initEditor(){
   setupSearches();
   setupImageUploader();
   setupFormspreeEndpoint();
-  addWixControls();
-  addSectionAddButtons();
-
+setupHeaderRules();
+addWixControls();
+addSectionAddButtons();
+  
   setTimeout(()=>editor.refresh(),300);
 }
 
