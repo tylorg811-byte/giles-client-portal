@@ -1,5 +1,8 @@
 let dashboardUser = null;
 let dashboardSite = null;
+let clientSiteRecord = null;
+
+const BASE_URL = "https://tylorg811-byte.github.io/giles-client-portal";
 
 document.addEventListener("DOMContentLoaded", loadClientDashboard);
 
@@ -10,8 +13,21 @@ async function loadClientDashboard(){
   document.getElementById("userEmail").textContent = dashboardUser.email;
   document.getElementById("welcomeName").textContent = dashboardUser.email;
 
+  await loadClientSiteRecord();
   await loadClientSiteInfo();
   await loadChangeRequests();
+
+  updateLiveSiteLinks();
+}
+
+async function loadClientSiteRecord(){
+  const { data } = await db
+    .from("client_sites")
+    .select("*")
+    .eq("client_user_id", dashboardUser.id)
+    .single();
+
+  clientSiteRecord = data || null;
 }
 
 async function loadClientSiteInfo(){
@@ -36,6 +52,34 @@ async function loadClientSiteInfo(){
     : "—";
 }
 
+function getLiveUrl(){
+  if(clientSiteRecord && clientSiteRecord.domain && clientSiteRecord.domain_status === "live"){
+    return `https://${clientSiteRecord.domain}`;
+  }
+
+  return `${BASE_URL}/index.html?client=${dashboardUser.id}`;
+}
+
+function updateLiveSiteLinks(){
+  const liveUrl = getLiveUrl();
+
+  document.querySelectorAll('a[href="index.html"]').forEach(link=>{
+    link.href = liveUrl;
+  });
+
+  document.querySelectorAll('a[href="index.html"][target="_blank"]').forEach(link=>{
+    link.href = liveUrl;
+  });
+
+  const sidebarLinks = document.querySelectorAll(".sidebar a");
+
+  sidebarLinks.forEach(link=>{
+    if(link.textContent.trim().toLowerCase().includes("view live")){
+      link.href = liveUrl;
+    }
+  });
+}
+
 async function submitChangeRequest(){
   const type = document.getElementById("requestType").value;
   const message = document.getElementById("requestText").value.trim();
@@ -48,7 +92,10 @@ async function submitChangeRequest(){
 
   statusBox.textContent = "Submitting request...";
 
-  const businessName = dashboardSite?.site_settings?.businessName || "";
+  const businessName =
+    dashboardSite?.site_settings?.businessName ||
+    clientSiteRecord?.business_name ||
+    "";
 
   const { error } = await db
     .from("change_requests")
