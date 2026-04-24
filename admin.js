@@ -819,3 +819,9 @@ function escapeHtml(value){
     .replaceAll('"',"&quot;")
     .replaceAll("'","&#039;");
 }
+
+function toggleClientForm(){
+  const wrap = document.getElementById("clientFormWrap");
+  const isOpen = wrap.style.display === "block";
+  wrap.style.display = isOpen ? "none" : "block";
+}
