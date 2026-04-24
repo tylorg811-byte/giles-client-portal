@@ -19,12 +19,36 @@
 --purple2:#9F7BFF;
 --green:#16a34a;
 --red:#ef4444;
+--orange:#f97316;
 }
 
 body{
 font-family:Inter,Arial,sans-serif;
 background:#f6f7fb;
 color:#111827;
+}
+
+.mobile-menu-btn{
+display:none;
+position:fixed;
+top:14px;
+left:14px;
+z-index:3000;
+border:none;
+background:linear-gradient(135deg,#7B5CFF,#9F7BFF);
+color:white;
+font-weight:900;
+padding:12px 14px;
+border-radius:14px;
+box-shadow:0 14px 35px rgba(0,0,0,.25);
+}
+
+.sidebar-overlay{
+display:none;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.55);
+z-index:1999;
 }
 
 .admin-shell{
@@ -40,18 +64,18 @@ padding:38px 26px;
 position:sticky;
 top:0;
 height:100vh;
-
-/* FIXES */
+display:flex;
+flex-direction:column;
 overflow-y:auto;
 overflow-x:hidden;
 }
 
-  .sidebar::-webkit-scrollbar{
+.sidebar::-webkit-scrollbar{
 width:6px;
 }
 
 .sidebar::-webkit-scrollbar-thumb{
-background:rgba(255,255,255,0.2);
+background:rgba(255,255,255,.2);
 border-radius:10px;
 }
 
@@ -143,6 +167,12 @@ color:#667085;
 margin-top:6px;
 }
 
+.top-actions{
+display:flex;
+gap:12px;
+flex-wrap:wrap;
+}
+
 .primary{
 border:none;
 background:linear-gradient(135deg,var(--purple),var(--purple2));
@@ -162,53 +192,6 @@ font-weight:900;
 padding:13px 20px;
 border-radius:14px;
 cursor:pointer;
-}
-
-.card{
-background:white;
-border:1px solid #e6e6ef;
-border-radius:24px;
-padding:24px;
-box-shadow:0 12px 35px rgba(20,20,40,.06);
-margin-bottom:22px;
-}
-
-.dark-card{
-background:#0d1a2b;
-border:1px solid #22324a;
-color:white;
-border-radius:20px;
-padding:24px;
-box-shadow:0 20px 50px rgba(0,0,0,.18);
-margin-bottom:22px;
-}
-
-.dark-card h2{
-font-size:22px;
-margin-bottom:12px;
-}
-
-.dark-card p{
-color:#b8c4d8;
-line-height:1.5;
-}
-
-.step-title{
-display:flex;
-align-items:center;
-gap:14px;
-margin-bottom:14px;
-}
-
-.step-num{
-width:42px;
-height:42px;
-border-radius:14px;
-display:flex;
-align-items:center;
-justify-content:center;
-background:linear-gradient(135deg,var(--purple),var(--purple2));
-font-weight:900;
 }
 
 .grid{
@@ -234,7 +217,39 @@ color:#667085;
 margin-bottom:10px;
 }
 
-.stat strong{font-size:30px;}
+.stat strong{
+font-size:30px;
+}
+
+.card{
+background:white;
+border:1px solid #e6e6ef;
+border-radius:24px;
+padding:24px;
+box-shadow:0 12px 35px rgba(20,20,40,.06);
+margin-bottom:22px;
+}
+
+.dark-card{
+background:#0d1a2b;
+border:1px solid #22324a;
+color:white;
+border-radius:20px;
+padding:24px;
+box-shadow:0 20px 50px rgba(0,0,0,.18);
+margin-bottom:22px;
+}
+
+.card h2,
+.dark-card h2{
+font-size:22px;
+margin-bottom:18px;
+}
+
+.dark-card p{
+color:#b8c4d8;
+line-height:1.5;
+}
 
 .form-grid{
 display:grid;
@@ -250,7 +265,9 @@ margin-bottom:7px;
 color:#333;
 }
 
-.dark-card label{color:#e5e7eb;}
+.dark-card label{
+color:#e5e7eb;
+}
 
 input,
 select,
@@ -282,7 +299,37 @@ min-height:260px;
 font-family:Consolas,monospace;
 }
 
-.full{grid-column:1 / -1;}
+.full{
+grid-column:1 / -1;
+}
+
+.notice{
+background:#fff7ed;
+border:1px solid #fed7aa;
+color:#9a3412;
+padding:14px;
+border-radius:16px;
+font-size:13px;
+font-weight:800;
+line-height:1.5;
+margin-bottom:16px;
+}
+
+.page-section{
+display:none;
+}
+
+.page-section.active{
+display:block;
+}
+
+.filter-panel{
+display:grid;
+grid-template-columns:1.4fr repeat(4,1fr);
+gap:12px;
+align-items:end;
+margin-bottom:20px;
+}
 
 .client-list,
 .request-list{
@@ -291,30 +338,91 @@ flex-direction:column;
 gap:14px;
 }
 
-.client-card,
+.client-card{
+background:#fff;
+border:1px solid #e6e6ef;
+border-radius:22px;
+padding:22px;
+display:grid;
+grid-template-columns:1.4fr 1fr 1fr auto;
+gap:22px;
+align-items:start;
+box-shadow:0 8px 24px rgba(20,20,40,.05);
+transition:.18s ease;
+}
+
+.client-card:hover{
+transform:translateY(-2px);
+box-shadow:0 16px 38px rgba(20,20,40,.09);
+}
+
+.client-card h3{
+font-size:21px;
+margin-bottom:6px;
+}
+
+.client-card p{
+font-size:13px;
+color:#667085;
+line-height:1.5;
+margin-bottom:6px;
+}
+
+.detail-grid{
+display:grid;
+grid-template-columns:1.2fr 1fr;
+gap:22px;
+}
+
+.detail-card{
+background:#fff;
+border:1px solid #e6e6ef;
+border-radius:22px;
+padding:22px;
+box-shadow:0 8px 24px rgba(20,20,40,.05);
+}
+
+.detail-card h3{
+font-size:18px;
+margin-bottom:12px;
+}
+
+.detail-row{
+display:flex;
+justify-content:space-between;
+gap:14px;
+border-bottom:1px solid #eef0f6;
+padding:10px 0;
+font-size:14px;
+}
+
+.detail-row span:first-child{
+color:#667085;
+font-weight:800;
+}
+
+.detail-row span:last-child{
+font-weight:900;
+text-align:right;
+}
+
 .request-card{
 background:#fff;
 border:1px solid #e6e6ef;
 border-radius:22px;
 padding:22px;
 display:grid;
-grid-template-columns:1.3fr 1fr 1fr auto;
+grid-template-columns:1.2fr 1.6fr 1fr auto;
 gap:22px;
 align-items:start;
 box-shadow:0 8px 24px rgba(20,20,40,.05);
 }
 
-.request-card{
-grid-template-columns:1.2fr 1.6fr 1fr auto;
-}
-
-.client-card h3,
 .request-card h3{
 font-size:20px;
 margin-bottom:6px;
 }
 
-.client-card p,
 .request-card p{
 font-size:13px;
 color:#667085;
@@ -334,16 +442,31 @@ text-transform:capitalize;
 margin:2px 4px 2px 0;
 }
 
-.badge.full{background:#ecfdf3;color:#027a48;}
-.badge.safe{background:#fff7ed;color:#c2410c;}
-.badge.danger{background:#fee2e2;color:#b91c1c;}
-.badge.dark{background:#111827;color:#fff;}
+.badge.full{
+background:#ecfdf3;
+color:#027a48;
+}
+
+.badge.safe{
+background:#fff7ed;
+color:#c2410c;
+}
+
+.badge.danger{
+background:#fee2e2;
+color:#b91c1c;
+}
+
+.badge.dark{
+background:#111827;
+color:#fff;
+}
 
 .actions{
 display:grid;
 grid-template-columns:1fr 1fr;
 gap:10px;
-min-width:260px;
+min-width:280px;
 }
 
 .actions button,
@@ -377,33 +500,6 @@ background:#fff1f2!important;
 background:#d11a2a!important;
 color:white!important;
 }
-
-.filter-bar{
-display:flex;
-gap:12px;
-align-items:center;
-flex-wrap:wrap;
-margin-bottom:18px;
-}
-
-.filter-bar select{
-max-width:230px;
-}
-
-.notice{
-background:#fff7ed;
-border:1px solid #fed7aa;
-color:#9a3412;
-padding:14px;
-border-radius:16px;
-font-size:13px;
-font-weight:800;
-line-height:1.5;
-margin-bottom:16px;
-}
-
-.page-section{display:none;}
-.page-section.active{display:block;}
 
 .analytics-table{
 display:grid;
@@ -440,6 +536,24 @@ padding:14px;
 margin-top:10px;
 }
 
+.step-title{
+display:flex;
+align-items:center;
+gap:14px;
+margin-bottom:14px;
+}
+
+.step-num{
+width:42px;
+height:42px;
+border-radius:14px;
+display:flex;
+align-items:center;
+justify-content:center;
+background:linear-gradient(135deg,var(--purple),var(--purple2));
+font-weight:900;
+}
+
 #message{
 font-size:13px;
 font-weight:800;
@@ -447,54 +561,17 @@ margin-top:12px;
 color:#5a4cff;
 }
 
+.empty-state{
+background:#f8fafc;
+border:1px dashed #d9deea;
+border-radius:20px;
+padding:28px;
+text-align:center;
+color:#667085;
+font-weight:800;
+}
+
 @media(max-width:1100px){
-.admin-shell{display:block;}
-.sidebar{position:relative;height:auto;}
-.grid{grid-template-columns:1fr 1fr;}
-.client-card,.request-card{grid-template-columns:1fr;}
-.actions{grid-template-columns:1fr 1fr;min-width:0;}
-}
-
-@media(max-width:700px){
-.main{padding:20px;}
-.grid,.form-grid,.analytics-table,.import-page-row{grid-template-columns:1fr;}
-.top{display:block;}
-.primary{margin-top:16px;}
-.actions{grid-template-columns:1fr;}
-}
-
-  <style>
-...all your existing CSS above...
-
-/* MOBILE SIDEBAR (ADD THIS AT THE VERY BOTTOM) */
-.mobile-menu-btn{
-display:none;
-position:fixed;
-top:14px;
-left:14px;
-z-index:3000;
-border:none;
-background:linear-gradient(135deg,#7B5CFF,#9F7BFF);
-color:white;
-font-weight:900;
-padding:12px 14px;
-border-radius:14px;
-box-shadow:0 14px 35px rgba(0,0,0,.25);
-}
-
-.sidebar-overlay{
-display:none;
-position:fixed;
-inset:0;
-background:rgba(0,0,0,.55);
-z-index:1999;
-}
-
-@media(max-width:900px){
-.mobile-menu-btn{
-display:block;
-}
-
 .admin-shell{
 display:block;
 }
@@ -503,7 +580,7 @@ display:block;
 position:fixed;
 top:0;
 left:0;
-width:300px;
+width:310px;
 max-width:86vw;
 height:100vh;
 z-index:2000;
@@ -520,12 +597,57 @@ body.sidebar-open .sidebar-overlay{
 display:block;
 }
 
+.mobile-menu-btn{
+display:block;
+}
+
 .main{
 padding:76px 18px 24px;
 }
+
+.grid,
+.filter-panel,
+.detail-grid{
+grid-template-columns:1fr 1fr;
 }
 
-</style>
+.client-card,
+.request-card{
+grid-template-columns:1fr;
+}
+
+.actions{
+grid-template-columns:1fr 1fr;
+min-width:0;
+}
+}
+
+@media(max-width:700px){
+.main{
+padding:76px 16px 24px;
+}
+
+.grid,
+.form-grid,
+.analytics-table,
+.import-page-row,
+.filter-panel,
+.detail-grid{
+grid-template-columns:1fr;
+}
+
+.top{
+display:block;
+}
+
+.top-actions{
+margin-top:14px;
+}
+
+.actions{
+grid-template-columns:1fr;
+}
+}
 </style>
 </head>
 
@@ -533,7 +655,7 @@ padding:76px 18px 24px;
 
 <button class="mobile-menu-btn" onclick="toggleSidebar()">☰ Menu</button>
 <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
-  
+
 <div class="admin-shell">
 
   <aside class="sidebar">
@@ -568,7 +690,10 @@ padding:76px 18px 24px;
         <p id="adminEmail">Loading...</p>
       </div>
 
-      <button class="primary" onclick="scrollToForm()">+ Add Client Site</button>
+      <div class="top-actions">
+        <button class="secondary" onclick="showAdminPage('clients')">View Clients</button>
+        <button class="primary" onclick="scrollToForm()">+ Add Client Site</button>
+      </div>
     </div>
 
     <section class="grid">
@@ -578,6 +703,7 @@ padding:76px 18px 24px;
       <div class="stat"><span>New Requests</span><strong id="newRequests">0</strong></div>
     </section>
 
+    <!-- CLIENTS PAGE -->
     <section id="clientsPage" class="page-section active">
 
       <section class="card" id="clientFormCard">
@@ -687,27 +813,65 @@ padding:76px 18px 24px;
           </div>
 
           <button class="primary" style="margin-top:16px;" onclick="saveClientSite()">Save Client Site</button>
-          <button style="margin-top:16px;border:none;background:#f4f4fb;padding:13px 16px;border-radius:14px;font-weight:900;cursor:pointer;" onclick="clearClientForm()">Clear</button>
+          <button class="secondary" style="margin-top:16px;" onclick="clearClientForm()">Clear</button>
 
           <div id="message"></div>
         </div>
       </section>
 
       <section class="card">
-        <h2>All Client Sites</h2>
+        <h2>Client Directory</h2>
 
-        <div class="filter-bar">
-          <label style="margin:0;">Billing Filter</label>
-          <select id="billingFilter" onchange="applyBillingFilter()">
-            <option value="all">All Clients</option>
-            <option value="active">Active</option>
-            <option value="past">Past Due</option>
-            <option value="covered">Covered / Override</option>
-            <option value="free">Free / Comped</option>
-            <option value="trial">Trial</option>
-            <option value="paused">Paused</option>
-            <option value="manual paid">Manual Paid</option>
-          </select>
+        <div class="filter-panel">
+          <div>
+            <label>Search Clients</label>
+            <input id="clientSearch" placeholder="Search business, email, domain..." oninput="applyClientFilters()">
+          </div>
+
+          <div>
+            <label>Billing</label>
+            <select id="billingFilter" onchange="applyClientFilters()">
+              <option value="all">All</option>
+              <option value="active">Active</option>
+              <option value="past">Past Due</option>
+              <option value="covered">Covered</option>
+              <option value="free">Free</option>
+              <option value="trial">Trial</option>
+              <option value="paused">Paused</option>
+              <option value="manual paid">Manual Paid</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Site Status</label>
+            <select id="siteStatusFilter" onchange="applyClientFilters()">
+              <option value="all">All</option>
+              <option value="draft">Draft</option>
+              <option value="published">Published</option>
+              <option value="needs review">Needs Review</option>
+              <option value="paused">Paused</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Editor Access</label>
+            <select id="editorAccessFilter" onchange="applyClientFilters()">
+              <option value="all">All</option>
+              <option value="safe">Safe Mode</option>
+              <option value="full">Full Access</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Domain</label>
+            <select id="domainFilter" onchange="applyClientFilters()">
+              <option value="all">All</option>
+              <option value="live">Live</option>
+              <option value="pending">Pending</option>
+              <option value="not connected">Not Connected</option>
+              <option value="released">Released</option>
+            </select>
+          </div>
         </div>
 
         <div id="clientList" class="client-list">Loading clients...</div>
@@ -715,6 +879,22 @@ padding:76px 18px 24px;
 
     </section>
 
+    <!-- CLIENT DETAIL PAGE -->
+    <section id="clientDetailPage" class="page-section">
+      <section class="card">
+        <div style="display:flex;justify-content:space-between;gap:16px;align-items:center;">
+          <div>
+            <h2 id="detailBusinessName" style="margin-bottom:4px;">Client Details</h2>
+            <p id="detailClientEmail" style="color:#667085;">Select a client to view details.</p>
+          </div>
+          <button class="secondary" onclick="showAdminPage('clients')">← Back to Clients</button>
+        </div>
+      </section>
+
+      <div id="clientDetailContent"></div>
+    </section>
+
+    <!-- IMPORTER PAGE -->
     <section id="importerPage" class="page-section">
       <section class="dark-card">
         <div class="step-title">
@@ -761,10 +941,10 @@ padding:76px 18px 24px;
         <div class="form-grid">
           <div>
             <label>Client Website</label>
-           <div style="display:flex;gap:10px;align-items:center;">
-  <select id="importClientSelect" style="flex:1;"></select>
-  <button class="secondary" type="button" onclick="populateImportClientSelect()">Refresh</button>
-</div>
+            <div style="display:flex;gap:10px;align-items:center;">
+              <select id="importClientSelect" style="flex:1;"></select>
+              <button class="secondary" type="button" onclick="populateImportClientSelect()">Refresh</button>
+            </div>
           </div>
 
           <div>
@@ -778,6 +958,7 @@ padding:76px 18px 24px;
       </section>
     </section>
 
+    <!-- ANALYTICS PAGE -->
     <section id="analyticsPage" class="page-section">
       <section class="card">
         <h2>Analytics Dashboard</h2>
@@ -792,6 +973,7 @@ padding:76px 18px 24px;
       </section>
     </section>
 
+    <!-- REQUESTS PAGE -->
     <section id="requestsPage" class="page-section">
       <section class="card">
         <h2>Change Requests</h2>
@@ -799,6 +981,7 @@ padding:76px 18px 24px;
       </section>
     </section>
 
+    <!-- BILLING PAGE -->
     <section id="billingPage" class="page-section">
       <section class="card">
         <h2>Billing Overview</h2>
@@ -813,7 +996,7 @@ padding:76px 18px 24px;
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="app.js"></script>
 <script src="admin.js"></script>
-<script src="admin-importer.js?v=3"></script>
+<script src="admin-importer.js?v=4"></script>
 
 </body>
 </html>
