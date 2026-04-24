@@ -79,13 +79,15 @@ async function initEditor(){
 
   const saved = await loadSavedPage();
 
-  if(saved && saved.html){
-    editor.setComponents(saved.html);
-    editor.setStyle(saved.css || starterCss);
-  } else {
-    editor.setComponents(starterHtml);
-    editor.setStyle(starterCss);
-  }
+if(saved && saved.html){
+  console.log("Loaded saved page");
+  editor.setComponents(saved.html);
+  editor.setStyle(saved.css || starterCss);
+} else {
+  console.log("Loading starter template");
+  editor.setComponents(starterHtml);
+  editor.setStyle(starterCss);
+}
 
   lockClientEditing();
 }
