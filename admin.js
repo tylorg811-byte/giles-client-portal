@@ -2,24 +2,29 @@ let adminUser = null;
 let clientSites = [];
 let changeRequests = [];
 let analyticsEvents = [];
+let leadEvents = [];
 
 const LIVE_BASE_URL = "https://giles-sites.netlify.app";
 
 document.addEventListener("DOMContentLoaded", loadAdminDashboard);
 
+/* =========================
+   INIT
+========================= */
 async function loadAdminDashboard(){
   adminUser = await checkUser();
   if(!adminUser) return;
 
-  document.getElementById("adminEmail").textContent = adminUser.email;
+  setText("adminEmail", adminUser.email);
 
   const isAdmin = await checkAdminAccess();
 
   if(!isAdmin){
     document.querySelector(".main").innerHTML = `
-      <div class="card">
+      <section class="card">
         <h1>Admin access required</h1>
-      </div>
+        <p>You must be an approved admin to view this page.</p>
+      </section>
     `;
     return;
   }
@@ -27,6 +32,7 @@ async function loadAdminDashboard(){
   await loadClientSites();
   await loadChangeRequests();
   await loadAnalytics();
+  await loadLeads();
 
   renderStats();
   renderSmartAlerts();
@@ -34,12 +40,20 @@ async function loadAdminDashboard(){
   renderAnalyticsOverviewFull();
   populateAnalyticsClientDropdown();
   loadClientAnalyticsView();
+  renderBillingOverview();
 }
 
-/* NAV */
+/* =========================
+   NAV
+========================= */
 function showAdminPage(page){
-  document.querySelectorAll(".page-section").forEach(s=>s.classList.remove("active"));
-  document.querySelectorAll(".sidebar button").forEach(b=>b.classList.remove("active-nav"));
+  document.querySelectorAll(".page-section").forEach(section=>{
+    section.classList.remove("active");
+  });
+
+  document.querySelectorAll(".sidebar button").forEach(button=>{
+    button.classList.remove("active-nav");
+  });
 
   const pageEl = document.getElementById(`${page}Page`);
   if(pageEl) pageEl.classList.add("active");
@@ -56,7 +70,7 @@ function showAdminPage(page){
     billing:"Billing"
   };
 
-  document.getElementById("pageTitle").textContent = titles[page] || "Admin";
+  setText("pageTitle", titles[page] || "Admin");
 
   if(page === "analytics"){
     renderAnalyticsOverviewFull();
@@ -64,26 +78,35 @@ function showAdminPage(page){
     loadClientAnalyticsView();
   }
 
-  if(page === "requests") renderChangeRequests();
-  if(page === "billing") renderBillingOverview();
+  if(page === "requests"){
+    renderChangeRequests();
+  }
 
-  if(window.innerWidth <= 1100){
+  if(page === "billing"){
+    renderBillingOverview();
+  }
+
+  if(window.innerWidth <= 1150){
     document.body.classList.remove("sidebar-open");
   }
 }
 
-/* AUTH */
+/* =========================
+   AUTH
+========================= */
 async function checkAdminAccess(){
-  const { data } = await db
+  const { data, error } = await db
     .from("admin_users")
     .select("*")
     .eq("user_id", adminUser.id)
     .single();
 
-  return !!data;
+  return !!data && !error;
 }
 
-/* LOAD DATA */
+/* =========================
+   LOAD DATA
+========================= */
 async function loadClientSites(){
   const { data, error } = await db
     .from("client_sites")
@@ -92,7 +115,8 @@ async function loadClientSites(){
 
   if(error){
     console.error(error);
-    document.getElementById("clientList").innerHTML = `<div class="empty-state">Could not load clients.</div>`;
+    const list = document.getElementById("clientList");
+    if(list) list.innerHTML = `<div class="empty-state">Could not load clients.</div>`;
     return;
   }
 
@@ -126,70 +150,114 @@ async function loadAnalytics(){
     .gte("created_at", since.toISOString())
     .order("created_at", { ascending:false });
 
-  analyticsEvents = error ? [] : data || [];
+  if(error){
+    console.error(error);
+    analyticsEvents = [];
+    return;
+  }
+
+  analyticsEvents = data || [];
 }
 
-/* STATS / ALERTS */
+async function loadLeads(){
+  const since = new Date();
+  since.setDate(since.getDate() - 30);
+
+  const { data, error } = await db
+    .from("site_leads")
+    .select("*")
+    .gte("created_at", since.toISOString())
+    .order("created_at", { ascending:false });
+
+  if(error){
+    console.warn("Leads not loaded. Make sure site_leads SQL was run.", error);
+    leadEvents = [];
+    return;
+  }
+
+  leadEvents = data || [];
+}
+
+/* =========================
+   STATS / ALERTS
+========================= */
 function renderStats(){
-  document.getElementById("totalClients").textContent = clientSites.length;
+  setText("totalClients", clientSites.length);
 
-  document.getElementById("publishedClients").textContent =
-    clientSites.filter(s=>s.site_status === "published").length;
+  setText(
+    "publishedClients",
+    clientSites.filter(site=>site.site_status === "published").length
+  );
 
-  document.getElementById("pastDueClients").textContent =
-    clientSites.filter(s=>getBillingStatus(s).text === "Past Due").length;
+  setText(
+    "pastDueClients",
+    clientSites.filter(site=>getBillingStatus(site).text === "Past Due").length
+  );
 
-  document.getElementById("newRequests").textContent =
-    changeRequests.filter(r=>r.status === "new").length;
+  setText(
+    "newRequests",
+    changeRequests.filter(req=>req.status === "new").length
+  );
 }
 
 function renderSmartAlerts(){
   const box = document.getElementById("smartAlerts");
   if(!box) return;
 
-  const pastDue = clientSites.filter(s=>getBillingStatus(s).text === "Past Due").length;
-  const pendingDomains = clientSites.filter(s=>s.domain_status === "pending").length;
-  const newRequests = changeRequests.filter(r=>r.status === "new").length;
-  const lockedEditors = clientSites.filter(s=>s.editor_locked).length;
+  const pastDue = clientSites.filter(site=>getBillingStatus(site).text === "Past Due").length;
+  const pendingDomains = clientSites.filter(site=>site.domain_status === "pending").length;
+  const newRequests = changeRequests.filter(req=>req.status === "new").length;
+  const lockedEditors = clientSites.filter(site=>site.editor_locked).length;
+  const leadsToday = leadEvents.filter(lead=>isToday(lead.created_at)).length;
 
   const alerts = [];
 
-  if(pastDue) alerts.push(`⚠️ ${pastDue} client${pastDue === 1 ? "" : "s"} past due`);
-  if(pendingDomains) alerts.push(`🌐 ${pendingDomains} domain${pendingDomains === 1 ? "" : "s"} pending`);
-  if(newRequests) alerts.push(`💬 ${newRequests} new request${newRequests === 1 ? "" : "s"}`);
-  if(lockedEditors) alerts.push(`🔒 ${lockedEditors} editor lock${lockedEditors === 1 ? "" : "s"} active`);
+  if(pastDue) alerts.push(`<span class="badge danger">⚠️ ${pastDue} Past Due</span>`);
+  if(pendingDomains) alerts.push(`<span class="badge safe">🌐 ${pendingDomains} Domains Pending</span>`);
+  if(newRequests) alerts.push(`<span class="badge safe">💬 ${newRequests} New Requests</span>`);
+  if(lockedEditors) alerts.push(`<span class="badge danger">🔒 ${lockedEditors} Editor Locks</span>`);
+  if(leadsToday) alerts.push(`<span class="badge full">🔥 ${leadsToday} Leads Today</span>`);
 
   if(!alerts.length){
-    box.innerHTML = `<strong>✅ Everything looks good.</strong>`;
+    box.innerHTML = `
+      <strong>✅ Command Center</strong>
+      <p style="margin-top:8px;color:#64748b;">Everything looks good right now.</p>
+    `;
     return;
   }
 
   box.innerHTML = `
     <strong>Command Center</strong>
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">
-      ${alerts.map(a=>`<span class="badge safe">${a}</span>`).join("")}
+      ${alerts.join("")}
     </div>
   `;
 }
 
-/* FILTERS */
+/* =========================
+   FILTERS
+========================= */
 function applyClientFilters(){
-  const search = document.getElementById("clientSearch")?.value.toLowerCase() || "";
-  const billing = document.getElementById("billingFilter")?.value || "all";
-  const siteStatus = document.getElementById("siteStatusFilter")?.value || "all";
-  const access = document.getElementById("editorAccessFilter")?.value || "all";
-  const domain = document.getElementById("domainFilter")?.value || "all";
+  const search = cleanValue("clientSearch").toLowerCase();
+  const billing = cleanValue("billingFilter") || "all";
+  const siteStatus = cleanValue("siteStatusFilter") || "all";
+  const access = cleanValue("editorAccessFilter") || "all";
+  const domain = cleanValue("domainFilter") || "all";
 
   let filtered = [...clientSites];
 
   filtered = filtered.filter(site=>{
-    const matchSearch =
-      (site.business_name || "").toLowerCase().includes(search) ||
-      (site.client_email || "").toLowerCase().includes(search) ||
-      (site.domain || "").toLowerCase().includes(search) ||
-      (site.client_tags || "").toLowerCase().includes(search);
+    const searchable = [
+      site.business_name,
+      site.client_email,
+      site.domain,
+      site.client_tags,
+      site.package_name
+    ].join(" ").toLowerCase();
 
     const billingText = getBillingStatus(site).text.toLowerCase();
+
+    const matchSearch = searchable.includes(search);
 
     const matchBilling =
       billing === "all" ||
@@ -208,7 +276,9 @@ function applyClientFilters(){
   renderClientSites(filtered);
 }
 
-/* CLIENT LIST */
+/* =========================
+   CLIENT CARDS
+========================= */
 function renderClientSites(sites){
   const list = document.getElementById("clientList");
   if(!list) return;
@@ -224,14 +294,16 @@ function renderClientSites(sites){
     const billing = getBillingStatus(site);
     const liveUrl = getClientLiveUrl(site);
     const analytics = site.client_user_id ? getClientAnalytics(site.client_user_id) : null;
+    const leads = site.client_user_id ? getClientLeads(site.client_user_id) : null;
 
     const card = document.createElement("div");
     card.className = "client-card";
 
     card.innerHTML = `
       <div>
+        <div class="card-group-title">Client</div>
         <h3>${escapeHtml(site.business_name || "Unnamed Business")}</h3>
-        <p>${escapeHtml(site.client_email || "")}</p>
+        <p>${escapeHtml(site.client_email || "No email")}</p>
         <p>${escapeHtml(site.domain || "No domain")}</p>
 
         <div style="margin-top:10px;">
@@ -244,32 +316,38 @@ function renderClientSites(sites){
       </div>
 
       <div>
+        <div class="card-group-title">Website</div>
         <p><strong>Status:</strong> ${escapeHtml(site.site_status || "draft")}</p>
         <p><strong>Editor:</strong> ${escapeHtml(site.editor_access || "safe")}</p>
-        <p><strong>Views:</strong> ${analytics ? analytics.month : 0} / 30d</p>
+        <p><strong>Domain:</strong> ${escapeHtml(site.domain_status || "not connected")}</p>
       </div>
 
       <div>
-        <p><strong>Billing:</strong> ${escapeHtml(site.billing_status || "active")}</p>
-        <p><strong>Next:</strong> ${formatDate(site.next_payment_date)}</p>
+        <div class="card-group-title">Performance</div>
+        <p><strong>Views:</strong> ${analytics ? analytics.month : 0} / 30d</p>
+        <p><strong>Leads:</strong> ${leads ? leads.month : 0} / 30d</p>
         <p><strong>Top Page:</strong> ${analytics ? escapeHtml(analytics.topPage) : "—"}</p>
+        <p><strong>Next:</strong> ${formatDate(site.next_payment_date)}</p>
       </div>
 
       <div class="actions">
         <button onclick="openClientDetail('${site.id}')">View</button>
-        <a href="${liveUrl}" target="_blank">View Site</a>
-        <a href="editor.html?client=${site.client_user_id}" target="_blank">Editor</a>
         <button onclick="editClientSite('${site.id}')">Edit</button>
+
+        <a href="${liveUrl}" target="_blank">Live</a>
+        <a href="editor.html?client=${site.client_user_id || ""}" target="_blank">Editor</a>
 
         <button onclick="quickPublish('${site.id}')">Publish</button>
         <button onclick="quickPause('${site.id}')">Pause</button>
-        <button onclick="quickMarkPaid('${site.id}')">Mark Paid</button>
-        <button onclick="toggleSafeMode('${site.id}')">Toggle Safe</button>
-        <button onclick="toggleEditorLock('${site.id}')">${site.editor_locked ? "Unlock" : "Lock"}</button>
-        <button onclick="copyText('${liveUrl}')">Copy Live</button>
 
-        ${site.domain ? `<button class="release-btn" onclick="releaseDomain('${site.id}')">Release Domain</button>` : ""}
-        <button class="danger" onclick="deleteClientSite('${site.id}')">Delete</button>
+        <button onclick="quickMarkPaid('${site.id}')">Mark Paid</button>
+        <button onclick="toggleSafeMode('${site.id}')">Safe/Full</button>
+
+        <button onclick="toggleEditorLock('${site.id}')">${site.editor_locked ? "Unlock" : "Lock"}</button>
+        <button onclick="copyText('${liveUrl}')">Copy Link</button>
+
+        ${site.domain ? `<button class="release-btn wide" onclick="releaseDomain('${site.id}')">Release Domain</button>` : ""}
+        <button class="danger wide" onclick="deleteClientSite('${site.id}')">Delete Client</button>
       </div>
     `;
 
@@ -277,7 +355,9 @@ function renderClientSites(sites){
   });
 }
 
-/* QUICK ACTIONS */
+/* =========================
+   QUICK ACTIONS
+========================= */
 async function quickPublish(id){
   await updateClientQuick(id, { site_status:"published" }, "Client marked as published.");
 }
@@ -293,31 +373,31 @@ async function quickMarkPaid(id){
 
   await updateClientQuick(id, {
     billing_status:"active",
+    billing_override:false,
     last_payment_date:toDateInput(today),
-    next_payment_date:toDateInput(next),
-    billing_override:false
+    next_payment_date:toDateInput(next)
   }, "Payment marked as received.");
 }
 
 async function toggleSafeMode(id){
-  const site = clientSites.find(s=>s.id === id);
+  const site = clientSites.find(item=>item.id === id);
   if(!site) return;
 
   const nextAccess = site.editor_access === "full" ? "safe" : "full";
 
   await updateClientQuick(id, {
     editor_access:nextAccess
-  }, `Editor access changed to ${nextAccess === "full" ? "Full Access" : "Safe Mode"}.`);
+  }, `Editor access changed to ${nextAccess === "full" ? "Full Editor Access" : "Safe Mode"}.`);
 }
 
 async function toggleEditorLock(id){
-  const site = clientSites.find(s=>s.id === id);
+  const site = clientSites.find(item=>item.id === id);
   if(!site) return;
 
-  let reason = site.editor_locked_reason || "";
+  let reason = "";
 
   if(!site.editor_locked){
-    reason = prompt("Why are you locking this client out of the editor?", "Safety or account issue") || "";
+    reason = prompt("Why are you locking this client out of the editor?", "Safety, non-payment, or preference") || "";
   }
 
   await updateClientQuick(id, {
@@ -341,7 +421,7 @@ async function updateClientQuick(id, updates, successMessage){
     return;
   }
 
-  const site = clientSites.find(s=>s.id === id);
+  const site = clientSites.find(item=>item.id === id);
 
   if(site?.client_user_id){
     await db.from("notifications").insert({
@@ -355,10 +435,12 @@ async function updateClientQuick(id, updates, successMessage){
   await loadClientSites();
   renderStats();
   renderSmartAlerts();
-  applyClientFilters();
+  renderBillingOverview();
 }
 
-/* CLIENT FORM */
+/* =========================
+   CLIENT FORM ACTIONS
+========================= */
 async function saveClientSite(){
   const id = cleanValue("clientRecordId");
 
@@ -385,7 +467,7 @@ async function saveClientSite(){
     next_payment_date: cleanValue("nextPaymentDate") || null,
     last_payment_date: cleanValue("lastPaymentDate") || null,
     notes: cleanValue("notes"),
-    updated_at: new Date().toISOString()
+    updated_at:new Date().toISOString()
   };
 
   if(payload.domain_release_status === "released"){
@@ -396,14 +478,19 @@ async function saveClientSite(){
   let response;
 
   if(id){
-    response = await db.from("client_sites").update(payload).eq("id", id);
+    response = await db
+      .from("client_sites")
+      .update(payload)
+      .eq("id", id);
   } else {
-    response = await db.from("client_sites").insert(payload);
+    response = await db
+      .from("client_sites")
+      .insert(payload);
   }
 
   if(response.error){
     console.error(response.error);
-    document.getElementById("message").textContent = "Save failed.";
+    setText("message", "Save failed.");
     return;
   }
 
@@ -418,12 +505,15 @@ async function saveClientSite(){
     });
   }
 
-  document.getElementById("message").textContent = "Client site saved.";
+  setText("message", "Client site saved.");
+
   clearClientForm();
 
   await loadClientSites();
   renderStats();
   renderSmartAlerts();
+  renderBillingOverview();
+  populateAnalyticsClientDropdown();
 }
 
 function editClientSite(id){
@@ -484,10 +574,11 @@ function clearClientForm(){
     notes:""
   };
 
-  Object.entries(defaults).forEach(([id,value])=>setValue(id,value));
+  Object.entries(defaults).forEach(([id,value])=>{
+    setValue(id,value);
+  });
 
-  const msg = document.getElementById("message");
-  if(msg) msg.textContent = "";
+  setText("message", "");
 }
 
 function closeClientForm(){
@@ -495,10 +586,35 @@ function closeClientForm(){
   if(wrap) wrap.style.display = "none";
 }
 
+function toggleClientForm(){
+  const wrap = document.getElementById("clientFormWrap");
+  if(!wrap) return;
+
+  wrap.style.display = wrap.style.display === "block" ? "none" : "block";
+}
+
+function scrollToForm(){
+  showAdminPage("clients");
+
+  const wrap = document.getElementById("clientFormWrap");
+  if(wrap) wrap.style.display = "block";
+
+  const card = document.getElementById("clientFormCard");
+  if(card){
+    card.scrollIntoView({
+      behavior:"smooth",
+      block:"start"
+    });
+  }
+}
+
 async function deleteClientSite(id){
   if(!confirm("Delete this client site record?")) return;
 
-  const { error } = await db.from("client_sites").delete().eq("id", id);
+  const { error } = await db
+    .from("client_sites")
+    .delete()
+    .eq("id", id);
 
   if(error){
     console.error(error);
@@ -509,6 +625,7 @@ async function deleteClientSite(id){
   await loadClientSites();
   renderStats();
   renderSmartAlerts();
+  renderBillingOverview();
 }
 
 async function releaseDomain(id){
@@ -554,7 +671,9 @@ async function releaseDomain(id){
   renderSmartAlerts();
 }
 
-/* REQUESTS */
+/* =========================
+   CHANGE REQUESTS
+========================= */
 function renderChangeRequests(){
   const list = document.getElementById("changeRequestList");
   if(!list) return;
@@ -570,8 +689,13 @@ function renderChangeRequests(){
     const card = document.createElement("div");
     card.className = "request-card";
 
-    const editorUrl = req.client_user_id ? `editor.html?client=${req.client_user_id}` : "editor.html";
-    const liveUrl = req.client_user_id ? `${LIVE_BASE_URL}/?client=${req.client_user_id}` : LIVE_BASE_URL;
+    const editorUrl = req.client_user_id
+      ? `editor.html?client=${req.client_user_id}`
+      : "editor.html";
+
+    const liveUrl = req.client_user_id
+      ? `${LIVE_BASE_URL}/?client=${req.client_user_id}`
+      : LIVE_BASE_URL;
 
     card.innerHTML = `
       <div>
@@ -603,7 +727,8 @@ function renderChangeRequests(){
         <button onclick="updateChangeRequest('${req.id}', '${req.client_user_id || ""}')">Update</button>
         <a href="${editorUrl}" target="_blank">Editor</a>
         <a href="${liveUrl}" target="_blank">View Site</a>
-        <button class="danger" onclick="deleteChangeRequest('${req.id}')">Delete</button>
+        <button onclick="completeRequest('${req.id}', '${req.client_user_id || ""}')">Complete</button>
+        <button class="danger wide" onclick="deleteChangeRequest('${req.id}')">Delete</button>
       </div>
     `;
 
@@ -612,8 +737,8 @@ function renderChangeRequests(){
 }
 
 async function updateChangeRequest(id, clientUserId){
-  const status = document.getElementById(`status-${id}`).value;
-  const notes = document.getElementById(`notes-${id}`).value.trim();
+  const status = cleanValue(`status-${id}`);
+  const notes = cleanValue(`notes-${id}`);
 
   const { error } = await db
     .from("change_requests")
@@ -645,10 +770,46 @@ async function updateChangeRequest(id, clientUserId){
   renderSmartAlerts();
 }
 
+async function completeRequest(id, clientUserId){
+  const notes = cleanValue(`notes-${id}`) || "Completed by Giles Web Design.";
+
+  const { error } = await db
+    .from("change_requests")
+    .update({
+      status:"done",
+      admin_notes:notes,
+      updated_at:new Date().toISOString()
+    })
+    .eq("id", id);
+
+  if(error){
+    alert("Could not complete request.");
+    console.error(error);
+    return;
+  }
+
+  if(clientUserId){
+    await db.from("notifications").insert({
+      user_id:clientUserId,
+      title:"Request completed",
+      message:`Your requested change has been completed.${notes ? " Note: " + notes : ""}`,
+      type:"request"
+    });
+  }
+
+  await loadChangeRequests();
+  renderChangeRequests();
+  renderStats();
+  renderSmartAlerts();
+}
+
 async function deleteChangeRequest(id){
   if(!confirm("Delete this change request?")) return;
 
-  const { error } = await db.from("change_requests").delete().eq("id", id);
+  const { error } = await db
+    .from("change_requests")
+    .delete()
+    .eq("id", id);
 
   if(error){
     alert("Delete failed.");
@@ -662,27 +823,42 @@ async function deleteChangeRequest(id){
   renderSmartAlerts();
 }
 
-/* ANALYTICS */
+/* =========================
+   ANALYTICS + LEADS
+========================= */
 function renderAnalyticsOverviewFull(){
   const container = document.getElementById("analyticsOverview");
   if(!container) return;
 
   const total = analyticsEvents.length;
-  const today = analyticsEvents.filter(e=>isToday(e.created_at)).length;
-  const week = analyticsEvents.filter(e=>isWithinDays(e.created_at,7)).length;
-  const topPage = getTopValue(analyticsEvents,"page") || "—";
+  const today = analyticsEvents.filter(event=>isToday(event.created_at)).length;
+  const week = analyticsEvents.filter(event=>isWithinDays(event.created_at,7)).length;
+  const leads = leadEvents.length;
   const topDevice = getTopValue(analyticsEvents,"device") || "—";
 
   container.innerHTML = `
-    <div class="grid">
+    <div class="analytics-header-grid">
       <div class="stat"><span>Total Views</span><strong>${total}</strong></div>
       <div class="stat"><span>Today</span><strong>${today}</strong></div>
       <div class="stat"><span>7 Days</span><strong>${week}</strong></div>
-      <div class="stat"><span>Top Device</span><strong style="font-size:20px;">${escapeHtml(topDevice)}</strong></div>
+      <div class="stat"><span>Leads</span><strong>${leads}</strong></div>
     </div>
 
-    <div class="analytics-client-card">
-      <p><strong>Top Page Overall:</strong> ${escapeHtml(topPage)}</p>
+    <div class="source-grid">
+      <div class="source-card">
+        <span>Top Device</span>
+        <strong>${escapeHtml(topDevice)}</strong>
+      </div>
+
+      <div class="source-card">
+        <span>Top Source</span>
+        <strong>${escapeHtml(getTopReferrer(analyticsEvents))}</strong>
+      </div>
+
+      <div class="source-card">
+        <span>Top Page</span>
+        <strong>${escapeHtml(getTopValue(analyticsEvents,"page") || "—")}</strong>
+      </div>
     </div>
   `;
 }
@@ -710,6 +886,7 @@ function populateAnalyticsClientDropdown(){
 function loadClientAnalyticsView(){
   const select = document.getElementById("analyticsClientSelect");
   const container = document.getElementById("analyticsClientView");
+
   if(!select || !container) return;
 
   const id = select.value;
@@ -719,72 +896,123 @@ function loadClientAnalyticsView(){
     return;
   }
 
-  const site = clientSites.find(s=>s.client_user_id === id);
-  const events = analyticsEvents.filter(e=>e.client_user_id === id);
+  const site = clientSites.find(item=>item.client_user_id === id);
+  const events = analyticsEvents.filter(event=>event.client_user_id === id);
+  const leads = leadEvents.filter(lead=>lead.client_user_id === id);
 
-  const today = events.filter(e=>isToday(e.created_at)).length;
-  const week = events.filter(e=>isWithinDays(e.created_at,7)).length;
+  const today = events.filter(event=>isToday(event.created_at)).length;
+  const week = events.filter(event=>isWithinDays(event.created_at,7)).length;
   const month = events.length;
+  const leadMonth = leads.length;
+
   const topPage = getTopValue(events,"page") || "—";
   const topDevice = getTopValue(events,"device") || "—";
   const topBrowser = getTopValue(events,"browser") || "—";
   const topSource = getTopReferrer(events);
 
-  const recent = events.slice(0,10).map(e=>`
+  const recentVisits = events.slice(0,8).map(event=>`
     <div class="analytics-client-card">
-      <p><strong>${escapeHtml(e.page || "home")}</strong></p>
-      <p>${escapeHtml(e.device || "unknown")} • ${escapeHtml(e.browser || "unknown")} • ${timeAgo(e.created_at)}</p>
-      <p><strong>Source:</strong> ${escapeHtml(cleanReferrer(e.referrer))}</p>
+      <p><strong>${escapeHtml(event.page || "home")}</strong></p>
+      <p>${escapeHtml(event.device || "unknown")} • ${escapeHtml(event.browser || "unknown")}</p>
+      <p><strong>Source:</strong> ${escapeHtml(cleanReferrer(event.referrer))}</p>
+      <p style="color:#64748b;font-size:13px;">${timeAgo(event.created_at)}</p>
+    </div>
+  `).join("");
+
+  const recentLeads = leads.slice(0,6).map(lead=>`
+    <div class="analytics-client-card">
+      <p><strong>${escapeHtml(lead.form_name || "Website Lead")}</strong></p>
+      <p>${escapeHtml(lead.page || "unknown page")}</p>
+      <p><strong>Source:</strong> ${escapeHtml(cleanReferrer(lead.source))}</p>
+      <p style="color:#64748b;font-size:13px;">${timeAgo(lead.created_at)}</p>
     </div>
   `).join("");
 
   container.innerHTML = `
     <h2>${escapeHtml(site?.business_name || "Client Analytics")}</h2>
 
-    <div class="grid">
+    <div class="analytics-header-grid">
       <div class="stat"><span>Today</span><strong>${today}</strong></div>
       <div class="stat"><span>7 Days</span><strong>${week}</strong></div>
       <div class="stat"><span>30 Days</span><strong>${month}</strong></div>
-      <div class="stat"><span>Top Page</span><strong style="font-size:20px;">${escapeHtml(topPage)}</strong></div>
+      <div class="stat"><span>Leads</span><strong>${leadMonth}</strong></div>
     </div>
 
-    <div class="grid">
-      <div class="stat"><span>Top Source</span><strong style="font-size:20px;">${escapeHtml(topSource)}</strong></div>
-      <div class="stat"><span>Top Device</span><strong style="font-size:20px;">${escapeHtml(topDevice)}</strong></div>
-      <div class="stat"><span>Top Browser</span><strong style="font-size:20px;">${escapeHtml(topBrowser)}</strong></div>
-      <div class="stat"><span>Total Events</span><strong>${events.length}</strong></div>
+    <div class="source-grid">
+      <div class="source-card">
+        <span>Top Source</span>
+        <strong>${escapeHtml(topSource)}</strong>
+      </div>
+
+      <div class="source-card">
+        <span>Top Page</span>
+        <strong>${escapeHtml(topPage)}</strong>
+      </div>
+
+      <div class="source-card">
+        <span>Top Device</span>
+        <strong>${escapeHtml(topDevice)}</strong>
+      </div>
+
+      <div class="source-card">
+        <span>Top Browser</span>
+        <strong>${escapeHtml(topBrowser)}</strong>
+      </div>
+
+      <div class="source-card">
+        <span>Live URL</span>
+        <strong style="font-size:16px;">${escapeHtml(site ? getClientLiveUrl(site) : "—")}</strong>
+      </div>
+
+      <div class="source-card">
+        <span>Domain</span>
+        <strong>${escapeHtml(site?.domain || "No domain")}</strong>
+      </div>
     </div>
 
-    <h3 style="margin:22px 0 12px;">Recent Visits</h3>
-    <div class="request-list">
-      ${recent || "<div class='empty-state'>No analytics yet.</div>"}
+    <h3 style="margin:24px 0 12px;">Recent Leads</h3>
+    <div class="visit-list">
+      ${recentLeads || `<div class="empty-state">No leads yet.</div>`}
+    </div>
+
+    <h3 style="margin:24px 0 12px;">Recent Visits</h3>
+    <div class="visit-list">
+      ${recentVisits || `<div class="empty-state">No visits yet.</div>`}
     </div>
   `;
 }
 
-/* DETAIL / BILLING */
+/* =========================
+   DETAIL / BILLING
+========================= */
 function openClientDetail(id){
-  const site = clientSites.find(s=>s.id === id);
+  const site = clientSites.find(item=>item.id === id);
   if(!site) return;
 
   showAdminPage("clientDetail");
 
-  document.getElementById("detailBusinessName").textContent = site.business_name || "Client Details";
-  document.getElementById("detailClientEmail").textContent = site.client_email || "";
+  setText("detailBusinessName", site.business_name || "Client Details");
+  setText("detailClientEmail", site.client_email || "");
 
   const analytics = site.client_user_id ? getClientAnalytics(site.client_user_id) : null;
+  const leads = site.client_user_id ? getClientLeads(site.client_user_id) : null;
   const billing = getBillingStatus(site);
 
-  document.getElementById("clientDetailContent").innerHTML = `
+  const container = document.getElementById("clientDetailContent");
+
+  container.innerHTML = `
     <div class="detail-grid">
       <div class="detail-card">
         <h3>Website</h3>
         <div class="detail-row"><span>Status</span><span>${escapeHtml(site.site_status || "draft")}</span></div>
         <div class="detail-row"><span>Domain</span><span>${escapeHtml(site.domain || "—")}</span></div>
+        <div class="detail-row"><span>Domain Status</span><span>${escapeHtml(site.domain_status || "—")}</span></div>
         <div class="detail-row"><span>Editor Access</span><span>${escapeHtml(site.editor_access || "safe")}</span></div>
         <div class="detail-row"><span>Editor Lock</span><span>${site.editor_locked ? "Locked" : "Unlocked"}</span></div>
-        <div style="margin-top:14px;">
+
+        <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
           <a class="primary" href="${getClientLiveUrl(site)}" target="_blank">Open Site</a>
+          <a class="secondary" href="editor.html?client=${site.client_user_id || ""}" target="_blank">Open Editor</a>
         </div>
       </div>
 
@@ -792,20 +1020,23 @@ function openClientDetail(id){
         <h3>Billing</h3>
         <div class="detail-row"><span>Status</span><span>${billing.text}</span></div>
         <div class="detail-row"><span>Cycle</span><span>${escapeHtml(site.billing_cycle || "monthly")}</span></div>
+        <div class="detail-row"><span>Last Payment</span><span>${formatDate(site.last_payment_date)}</span></div>
         <div class="detail-row"><span>Next Payment</span><span>${formatDate(site.next_payment_date)}</span></div>
       </div>
 
       <div class="detail-card">
-        <h3>Analytics</h3>
-        <div class="detail-row"><span>Today</span><span>${analytics ? analytics.today : 0}</span></div>
-        <div class="detail-row"><span>7 Days</span><span>${analytics ? analytics.week : 0}</span></div>
-        <div class="detail-row"><span>30 Days</span><span>${analytics ? analytics.month : 0}</span></div>
+        <h3>Performance</h3>
+        <div class="detail-row"><span>Views Today</span><span>${analytics ? analytics.today : 0}</span></div>
+        <div class="detail-row"><span>Views 7 Days</span><span>${analytics ? analytics.week : 0}</span></div>
+        <div class="detail-row"><span>Views 30 Days</span><span>${analytics ? analytics.month : 0}</span></div>
+        <div class="detail-row"><span>Leads 30 Days</span><span>${leads ? leads.month : 0}</span></div>
         <div class="detail-row"><span>Top Page</span><span>${analytics ? escapeHtml(analytics.topPage) : "—"}</span></div>
       </div>
 
       <div class="detail-card">
         <h3>Notes</h3>
         <p>${escapeHtml(site.notes || "No notes.")}</p>
+        ${site.client_tags ? `<p style="margin-top:12px;"><strong>Tags:</strong> ${escapeHtml(site.client_tags)}</p>` : ""}
       </div>
     </div>
   `;
@@ -815,10 +1046,20 @@ function renderBillingOverview(){
   const box = document.getElementById("billingOverview");
   if(!box) return;
 
-  const active = clientSites.filter(s=>getBillingStatus(s).text === "Active").length;
-  const covered = clientSites.filter(s=>getBillingStatus(s).text === "Covered by Giles").length;
-  const past = clientSites.filter(s=>getBillingStatus(s).text === "Past Due").length;
-  const manual = clientSites.filter(s=>s.billing_status === "manual paid").length;
+  const active = clientSites.filter(site=>getBillingStatus(site).text === "Active").length;
+  const covered = clientSites.filter(site=>getBillingStatus(site).text === "Covered by Giles").length;
+  const past = clientSites.filter(site=>getBillingStatus(site).text === "Past Due").length;
+  const manual = clientSites.filter(site=>site.billing_status === "manual paid").length;
+
+  const pastDueList = clientSites
+    .filter(site=>getBillingStatus(site).text === "Past Due")
+    .map(site=>`
+      <div class="analytics-client-card">
+        <p><strong>${escapeHtml(site.business_name || "Unnamed Business")}</strong></p>
+        <p>${escapeHtml(site.client_email || "")}</p>
+        <p>Next due: ${formatDate(site.next_payment_date)}</p>
+      </div>
+    `).join("");
 
   box.innerHTML = `
     <div class="grid">
@@ -827,18 +1068,37 @@ function renderBillingOverview(){
       <div class="stat"><span>Manual Paid</span><strong>${manual}</strong></div>
       <div class="stat"><span>Past Due</span><strong>${past}</strong></div>
     </div>
+
+    <h3 style="margin:20px 0 12px;">Past Due Clients</h3>
+    <div class="visit-list">
+      ${pastDueList || `<div class="empty-state">No past due clients.</div>`}
+    </div>
   `;
 }
 
-/* HELPERS */
+/* =========================
+   HELPERS
+========================= */
 function getClientAnalytics(clientUserId){
-  const events = analyticsEvents.filter(e=>e.client_user_id === clientUserId);
+  const events = analyticsEvents.filter(event=>event.client_user_id === clientUserId);
 
   return {
-    today:events.filter(e=>isToday(e.created_at)).length,
-    week:events.filter(e=>isWithinDays(e.created_at,7)).length,
+    today:events.filter(event=>isToday(event.created_at)).length,
+    week:events.filter(event=>isWithinDays(event.created_at,7)).length,
     month:events.length,
-    topPage:getTopValue(events,"page") || "—"
+    topPage:getTopValue(events,"page") || "—",
+    topSource:getTopReferrer(events)
+  };
+}
+
+function getClientLeads(clientUserId){
+  const leads = leadEvents.filter(lead=>lead.client_user_id === clientUserId);
+
+  return {
+    today:leads.filter(lead=>isToday(lead.created_at)).length,
+    week:leads.filter(lead=>isWithinDays(lead.created_at,7)).length,
+    month:leads.length,
+    topSource:getTopLeadSource(leads)
   };
 }
 
@@ -861,31 +1121,15 @@ function getBillingStatus(site){
   const today = new Date();
   today.setHours(0,0,0,0);
 
-  const next = site.next_payment_date ? new Date(site.next_payment_date + "T00:00:00") : null;
+  const next = site.next_payment_date
+    ? new Date(site.next_payment_date + "T00:00:00")
+    : null;
 
   if(next && next < today){
     return { text:"Past Due", class:"danger" };
   }
 
   return { text:"Active", class:"full" };
-}
-
-function toggleClientForm(){
-  const wrap = document.getElementById("clientFormWrap");
-  if(!wrap) return;
-  wrap.style.display = wrap.style.display === "block" ? "none" : "block";
-}
-
-function scrollToForm(){
-  showAdminPage("clients");
-
-  const wrap = document.getElementById("clientFormWrap");
-  if(wrap) wrap.style.display = "block";
-
-  document.getElementById("clientFormCard").scrollIntoView({
-    behavior:"smooth",
-    block:"start"
-  });
 }
 
 function toggleSidebar(){
@@ -907,22 +1151,65 @@ function setValue(id,value){
   if(el) el.value = value || "";
 }
 
+function setText(id,value){
+  const el = document.getElementById(id);
+  if(el) el.textContent = value;
+}
+
 function toDateInput(date){
   return date.toISOString().split("T")[0];
 }
 
 function getTopValue(items,key){
   const counts = {};
+
   items.forEach(item=>{
     const value = item[key] || "unknown";
     counts[value] = (counts[value] || 0) + 1;
   });
-  return Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0] || null;
+
+  return Object.entries(counts)
+    .sort((a,b)=>b[1]-a[1])[0]?.[0] || null;
+}
+
+function getTopReferrer(events){
+  const counts = {};
+
+  events.forEach(event=>{
+    const source = cleanReferrer(event.referrer);
+    counts[source] = (counts[source] || 0) + 1;
+  });
+
+  return Object.entries(counts)
+    .sort((a,b)=>b[1]-a[1])[0]?.[0] || "direct";
+}
+
+function getTopLeadSource(leads){
+  const counts = {};
+
+  leads.forEach(lead=>{
+    const source = cleanReferrer(lead.source);
+    counts[source] = (counts[source] || 0) + 1;
+  });
+
+  return Object.entries(counts)
+    .sort((a,b)=>b[1]-a[1])[0]?.[0] || "direct";
+}
+
+function cleanReferrer(ref){
+  if(!ref || ref === "direct") return "direct";
+
+  try{
+    return new URL(ref).hostname;
+  }catch(e){
+    return ref;
+  }
 }
 
 function isToday(dateString){
   const date = new Date(dateString);
   const today = new Date();
+
   return date.getFullYear() === today.getFullYear() &&
     date.getMonth() === today.getMonth() &&
     date.getDate() === today.getDate();
@@ -941,44 +1228,26 @@ function timeAgo(dateString){
   const seconds = Math.floor((new Date() - date) / 1000);
 
   if(seconds < 60) return "just now";
+
   const minutes = Math.floor(seconds / 60);
   if(minutes < 60) return `${minutes} min ago`;
+
   const hours = Math.floor(minutes / 60);
   if(hours < 24) return `${hours} hr ago`;
+
   const days = Math.floor(hours / 24);
   if(days < 7) return `${days} day${days === 1 ? "" : "s"} ago`;
 
   return date.toLocaleDateString();
 }
 
-function formatDate(d){
-  if(!d) return "—";
-  return new Date(d + "T00:00:00").toLocaleDateString();
+function formatDate(dateString){
+  if(!dateString) return "—";
+  return new Date(dateString + "T00:00:00").toLocaleDateString();
 }
 
-function getTopReferrer(events){
-  const cleaned = events.map(e=>cleanReferrer(e.referrer));
-  const counts = {};
-
-  cleaned.forEach(source=>{
-    counts[source] = (counts[source] || 0) + 1;
-  });
-
-  return Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0] || "direct";
-}
-
-function cleanReferrer(ref){
-  if(!ref || ref === "direct") return "direct";
-
-  try{
-    return new URL(ref).hostname;
-  }catch(e){
-    return ref;
-  }
-}
-
-function escapeHtml(str){
-  return String(str || "")
+function escapeHtml(value){
+  return String(value || "")
     .replaceAll("&","&amp;")
     .replaceAll("<","&lt;")
     .replaceAll(">","&gt;")
@@ -986,6 +1255,6 @@ function escapeHtml(str){
     .replaceAll("'","&#039;");
 }
 
-function capitalize(str){
-  return str.charAt(0).toUpperCase() + str.slice(1);
+function capitalize(text){
+  return String(text || "").charAt(0).toUpperCase() + String(text || "").slice(1);
 }
