@@ -127,6 +127,16 @@ metaKeywords.name = "keywords";
 metaKeywords.content = data.seo_keywords || "";
 document.head.appendChild(metaKeywords);
 
+  const schema = document.createElement("script");
+schema.type = "application/ld+json";
+schema.innerHTML = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "name": data.site_settings?.businessName || "",
+  "url": window.location.href
+});
+  
+document.head.appendChild(schema);
   const style = document.createElement("style");
   style.innerHTML = page.css || data.css || "";
   document.head.appendChild(style);
