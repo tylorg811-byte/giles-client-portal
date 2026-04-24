@@ -724,6 +724,9 @@ function clearClientForm(){
 }
 
 function scrollToForm(){
+  const wrap = document.getElementById("clientFormWrap");
+  if(wrap) wrap.style.display = "block";
+
   document.getElementById("clientFormCard").scrollIntoView({
     behavior:"smooth",
     block:"start"
