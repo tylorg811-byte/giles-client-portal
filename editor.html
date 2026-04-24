@@ -50,7 +50,18 @@
   <aside class="builder-panel active-panel" id="addPanel">
     <h2>Add Elements</h2>
     <p>Drag elements onto the page. These create new content instead of changing existing content.</p>
-    <div id="blocks"></div>
+    <div class="header-tools">
+  <h3>Headers</h3>
+  <button onclick="insertHeader('logoText')">Logo + Text Header</button>
+  <button onclick="insertHeader('logoOnly')">Logo Only Header</button>
+  <button onclick="insertHeader('textOnly')">Text Only Header</button>
+  <button onclick="insertHeader('menu')">Menu Header</button>
+  <button onclick="insertHeader('dark')">Dark Header</button>
+  <button onclick="insertHeader('glass')">Glass Header</button>
+  <button onclick="insertHeader('gradient')">Gradient Header</button>
+</div>
+
+<div id="blocks"></div>
   </aside>
 
   <aside class="builder-panel" id="designPanel">
