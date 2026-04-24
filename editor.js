@@ -989,3 +989,57 @@ function slugify(text){
 function formatPageName(slug){
   return slug.replace(/-/g," ").replace(/\b\w/g,l=>l.toUpperCase());
 }
+
+/* ================= IMAGE UPLOAD SYSTEM ================= */
+
+function setupImageUpload(){
+  const fileInput = document.getElementById("imageUploadInput");
+  if(!fileInput) return;
+
+  let selectedImageComponent = null;
+
+  /* When user selects an image in editor */
+  editor.on("component:selected", component=>{
+    if(!component) return;
+
+    const tag = component.get("tagName");
+    const type = component.get("type");
+
+    if(tag === "img" || type === "image"){
+      selectedImageComponent = component;
+    } else {
+      selectedImageComponent = null;
+    }
+  });
+
+  /* Double click image → open upload */
+  editor.on("component:dblclick", component=>{
+    const tag = component.get("tagName");
+    const type = component.get("type");
+
+    if(tag === "img" || type === "image"){
+      selectedImageComponent = component;
+      fileInput.click();
+    }
+  });
+
+  /* Handle file selection */
+  fileInput.addEventListener("change", e=>{
+    const file = e.target.files[0];
+    if(!file || !selectedImageComponent) return;
+
+    const reader = new FileReader();
+
+    reader.onload = function(event){
+      selectedImageComponent.addAttributes({
+        src: event.target.result
+      });
+
+      editor.refresh();
+    };
+
+    reader.readAsDataURL(file);
+
+    fileInput.value = "";
+  });
+}
