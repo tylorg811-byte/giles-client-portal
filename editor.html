@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Visual Editor | Giles Client Portal</title>
+
+<link rel="stylesheet" href="https://unpkg.com/grapesjs/dist/css/grapes.min.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+<div class="editor-topbar">
+  <div>
+    <strong>Giles Visual Editor</strong>
+    <span id="userEmail"></span>
+  </div>
+
+  <div class="editor-actions">
+    <button onclick="savePage()">Save Draft</button>
+    <button onclick="publishPage()">Publish</button>
+    <button onclick="logout()">Logout</button>
+  </div>
+</div>
+
+<div id="gjs"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/grapesjs"></script>
+<script src="app.js"></script>
+<script src="editor.js"></script>
+
+</body>
+</html>
