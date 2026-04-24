@@ -777,18 +777,22 @@ async function savePage(){
 
 async function publishPage(){
   collectSiteSettings();
-  saveCurrentPageToMemory();
 
-  const {error} = await db.from("visual_pages").upsert({
-    user_id:editingUserId,
-    html:pages.home?.html || editor.getHtml(),
-    css:pages.home?.css || editor.getCss(),
-    pages,
-    site_settings:siteSettings,
-    active_page:activePage,
-    status:"published",
-    updated_at:new Date().toISOString()
-  },{onConflict:"user_id"});
+  pages[activePage] = {
+    html: editor.getHtml(),
+    css: editor.getCss()
+  };
+
+  const { error } = await db.from("visual_pages").upsert({
+    user_id: editingUserId,
+    html: pages.home?.html || editor.getHtml(),
+    css: pages.home?.css || editor.getCss(),
+    pages: pages,
+    site_settings: siteSettings,
+    active_page: activePage,
+    status: "published",
+    updated_at: new Date().toISOString()
+  }, { onConflict:"user_id" });
 
   if(error){
     console.error(error);
