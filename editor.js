@@ -259,3 +259,57 @@ function addWixControls(){
   });
 
 }
+
+function addSectionAddButtons(){
+
+  editor.on("load", () => {
+
+    setTimeout(() => {
+      renderAddButtons();
+    }, 500);
+
+  });
+
+  editor.on("component:update", () => {
+    renderAddButtons();
+  });
+
+}
+
+function renderAddButtons(){
+
+  document.querySelectorAll(".add-section-btn").forEach(e => e.remove());
+
+  const sections = editor.DomComponents.getWrapper().find("section");
+
+  sections.forEach((section, index) => {
+
+    const el = section.view?.el;
+    if(!el) return;
+
+    const rect = el.getBoundingClientRect();
+
+    const btn = document.createElement("div");
+    btn.className = "add-section-btn";
+    btn.innerText = "+ Add Section";
+
+    btn.style.left = rect.left + rect.width/2 - 70 + "px";
+    btn.style.top = rect.bottom - 20 + "px";
+
+    btn.onclick = () => {
+      const newSection = editor.addComponents(`
+        <section class="content-section">
+          <h2>New Section</h2>
+          <p>Add your content here.</p>
+        </section>
+      `)[0];
+
+      section.parent().append(newSection, { at: index + 1 });
+      editor.select(newSection);
+      editor.refresh();
+    };
+
+    document.body.appendChild(btn);
+
+  });
+}
