@@ -1,72 +1,269 @@
-<!-- ONLY showing the updated/important sections so you don’t break anything -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel</title>
 
-<!-- =========================
-TOP BAR (ADD ALERTS)
-========================= -->
-<div id="smartAlerts" class="card" style="margin-bottom:18px;"></div>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
 
+body{
+font-family:Arial,sans-serif;
+background:#f6f7fb;
+display:flex;
+min-height:100vh;
+}
 
-<!-- =========================
-CLIENT FORM (UPDATED)
-========================= -->
-<section class="card" id="clientFormCard">
+/* SIDEBAR */
+.sidebar{
+width:260px;
+background:#07111f;
+color:white;
+padding:24px;
+display:flex;
+flex-direction:column;
+gap:12px;
+}
 
-  <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;">
-    <h2 style="margin:0;">Add / Update Client</h2>
-    <div style="display:flex;gap:10px;">
-      <button class="primary" onclick="toggleClientForm()">Open Form</button>
-      <button class="secondary" onclick="closeClientForm()">Close</button>
+.sidebar h2{margin-bottom:10px;}
+
+.sidebar button,
+.sidebar a{
+background:#152335;
+border:none;
+color:white;
+padding:12px;
+border-radius:10px;
+cursor:pointer;
+text-decoration:none;
+text-align:left;
+font-weight:700;
+}
+
+.sidebar button:hover,
+.sidebar a:hover{
+background:#7B5CFF;
+}
+
+/* MAIN */
+.main{
+flex:1;
+padding:24px;
+}
+
+.card{
+background:white;
+border-radius:16px;
+padding:20px;
+margin-bottom:20px;
+}
+
+/* GRID */
+.grid{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:12px;
+}
+
+.stat{
+background:white;
+padding:16px;
+border-radius:14px;
+}
+
+/* CLIENT CARD */
+.client-card{
+background:white;
+border-radius:14px;
+padding:16px;
+margin-bottom:12px;
+display:grid;
+grid-template-columns:1fr 1fr 1fr auto;
+gap:12px;
+}
+
+.actions{
+display:flex;
+flex-wrap:wrap;
+gap:6px;
+}
+
+.actions button,
+.actions a{
+padding:6px 10px;
+border:none;
+background:#eee;
+border-radius:6px;
+font-size:12px;
+cursor:pointer;
+text-decoration:none;
+color:black;
+}
+
+.actions button:hover{
+background:#7B5CFF;
+color:white;
+}
+
+/* FORM */
+.form-grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+}
+
+input,select,textarea{
+width:100%;
+padding:10px;
+border-radius:8px;
+border:1px solid #ddd;
+}
+
+textarea{min-height:80px;}
+
+.full{grid-column:1 / -1;}
+
+.page-section{display:none;}
+.page-section.active{display:block;}
+
+</style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <h2>Admin Panel</h2>
+
+  <button onclick="showAdminPage('clients')">Clients</button>
+  <button onclick="showAdminPage('analytics')">Analytics</button>
+  <button onclick="showAdminPage('requests')">Requests</button>
+  <button onclick="showAdminPage('billing')">Billing</button>
+
+  <a href="dashboard.html">Client Dashboard</a>
+  <a href="editor.html">Editor</a>
+  <a href="login.html">Login</a>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <h1 id="pageTitle">Client Websites</h1>
+  <p id="adminEmail"></p>
+
+  <!-- SMART ALERTS -->
+  <div id="smartAlerts" class="card"></div>
+
+  <!-- STATS -->
+  <div class="grid">
+    <div class="stat"><b>Total Clients</b><div id="totalClients">0</div></div>
+    <div class="stat"><b>Published</b><div id="publishedClients">0</div></div>
+    <div class="stat"><b>Past Due</b><div id="pastDueClients">0</div></div>
+    <div class="stat"><b>Requests</b><div id="newRequests">0</div></div>
+  </div>
+
+  <!-- CLIENT PAGE -->
+  <div id="clientsPage" class="page-section active">
+
+    <!-- FORM -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;">
+        <h2>Add / Update Client</h2>
+        <div>
+          <button onclick="toggleClientForm()">Open Form</button>
+          <button onclick="closeClientForm()">Close</button>
+        </div>
+      </div>
+
+      <div id="clientFormWrap" style="display:none;margin-top:16px;">
+
+        <div class="form-grid">
+
+          <input type="hidden" id="clientRecordId">
+
+          <input id="businessName" placeholder="Business Name">
+          <input id="clientEmail" placeholder="Client Email">
+
+          <input id="clientUserId" placeholder="Client User ID">
+          <input id="packageName" placeholder="Package">
+
+          <input id="domain" placeholder="Domain">
+          <input id="domainStatus" placeholder="Domain Status">
+
+          <input id="siteStatus" placeholder="Site Status">
+          <input id="editorAccess" placeholder="Editor Access">
+
+          <input id="billingStatus" placeholder="Billing Status">
+          <input id="billingOverride" placeholder="Billing Override">
+
+          <input id="billingCycle" placeholder="Billing Cycle">
+          <input id="nextPaymentDate" placeholder="Next Payment Date">
+
+          <input id="lastPaymentDate" placeholder="Last Payment Date">
+          <input id="clientTags" placeholder="Client Tags">
+
+          <select id="editorLocked">
+            <option value="false">Unlocked</option>
+            <option value="true">Locked</option>
+          </select>
+
+          <input id="editorLockedReason" placeholder="Lock Reason">
+
+          <textarea id="notes" class="full" placeholder="Notes"></textarea>
+
+        </div>
+
+        <button onclick="saveClientSite()">Save</button>
+        <button onclick="clearClientForm()">Clear</button>
+
+        <div id="message"></div>
+
+      </div>
+    </div>
+
+    <!-- CLIENT LIST -->
+    <div class="card">
+      <h2>Clients</h2>
+      <input id="clientSearch" placeholder="Search..." oninput="applyClientFilters()">
+      <div id="clientList">Loading...</div>
+    </div>
+
+  </div>
+
+  <!-- ANALYTICS -->
+  <div id="analyticsPage" class="page-section">
+    <div class="card">
+      <h2>Analytics</h2>
+      <div id="analyticsOverview"></div>
+
+      <select id="analyticsClientSelect" onchange="loadClientAnalyticsView()"></select>
+      <div id="analyticsClientView"></div>
     </div>
   </div>
 
-  <div id="clientFormWrap" style="display:none;margin-top:18px;">
-
-    <div class="notice">
-      Billing Override keeps a site active even if Stripe/subscriptions are not active.
+  <!-- REQUESTS -->
+  <div id="requestsPage" class="page-section">
+    <div class="card">
+      <h2>Change Requests</h2>
+      <div id="changeRequestList">Loading...</div>
     </div>
-
-    <div class="form-grid">
-
-      <!-- EXISTING FIELDS ABOVE THIS LINE -->
-
-      <div class="full">
-        <label>Client Tags</label>
-        <input id="clientTags" placeholder="VIP, fast pay, high maintenance">
-      </div>
-
-      <div>
-        <label>Editor Lock</label>
-        <select id="editorLocked">
-          <option value="false">Unlocked</option>
-          <option value="true">Locked (No Access)</option>
-        </select>
-      </div>
-
-      <div>
-        <label>Lock Reason</label>
-        <input id="editorLockedReason" placeholder="Non-payment, safety, etc.">
-      </div>
-
-      <!-- EXISTING FIELDS BELOW -->
-    </div>
-
-    <button class="primary" style="margin-top:16px;" onclick="saveClientSite()">Save Client Site</button>
-    <button class="secondary" style="margin-top:16px;" onclick="clearClientForm()">Clear</button>
-
-    <div id="message"></div>
   </div>
-</section>
 
+  <!-- BILLING -->
+  <div id="billingPage" class="page-section">
+    <div class="card">
+      <h2>Billing</h2>
+      <div id="billingOverview"></div>
+    </div>
+  </div>
 
-<!-- =========================
-IMPORTER (NO CHANGE)
-========================= -->
+</div>
 
-
-<!-- =========================
-SCRIPT LOADS (KEEP THIS ORDER)
-========================= -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="app.js"></script>
 <script src="admin.js"></script>
-<script src="admin-importer.js?v=5"></script>
+<script src="admin-importer.js"></script>
+
+</body>
+</html>
