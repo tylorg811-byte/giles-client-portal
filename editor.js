@@ -730,6 +730,21 @@ async function publishPage(){
     return;
   }
 
+  await db
+    .from("client_sites")
+    .update({
+      site_status:"published",
+      updated_at:new Date().toISOString()
+    })
+    .eq("client_user_id", editingUserId);
+
+  await db.from("notifications").insert({
+    user_id: editingUserId,
+    title: "Website published",
+    message: "Your website has been published successfully.",
+    type: "site"
+  });
+
   alert("Published");
 }
 
