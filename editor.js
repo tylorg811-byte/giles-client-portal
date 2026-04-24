@@ -606,41 +606,58 @@ function slugify(text){return text.toLowerCase().trim().replace(/[^a-z0-9]+/g,"-
 function formatPageName(slug){return slug.replace(/-/g," ").replace(/\b\w/g,l=>l.toUpperCase());}
 
 function setupHeaderRules(){
+  let movingHeader = false;
+
   editor.on("component:add", component => {
+    if(movingHeader) return;
+
     setTimeout(() => {
       const tag = component.get("tagName");
 
       if(tag !== "header") return;
 
-      const wrapper = editor.DomComponents.getWrapper();
-      const existingHeaders = wrapper.find("header");
+      movingHeader = true;
 
-      existingHeaders.forEach(header => {
+      const wrapper = editor.DomComponents.getWrapper();
+
+      const allHeaders = wrapper.find("header");
+
+      allHeaders.forEach(header => {
         if(header !== component){
           header.remove();
         }
       });
 
-      const headerHtml = component.toHTML();
+      const parent = component.parent();
 
-      component.remove();
+      if(parent){
+        const index = component.index();
 
-      wrapper.components().add(headerHtml, { at: 0 });
+        if(index !== 0 || parent !== wrapper){
+          const headerClone = component.clone();
 
-      const newHeader = wrapper.find("header")[0];
+          component.remove();
 
-      if(newHeader){
-        newHeader.set({
-          draggable:false,
-          copyable:false,
-          removable:true,
-          selectable:true
-        });
+          wrapper.components().add(headerClone, { at: 0 });
+
+          const newHeader = wrapper.find("header")[0];
+
+          if(newHeader){
+            newHeader.set({
+              draggable:false,
+              copyable:false,
+              removable:true,
+              selectable:true,
+              droppable:true
+            });
+          }
+        }
       }
+
+      movingHeader = false;
 
       editor.refresh();
 
-      alert("Header added to the top of the website.");
     }, 100);
   });
 }
