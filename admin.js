@@ -1,7 +1,6 @@
 let adminUser = null;
 let clientSites = [];
 let changeRequests = [];
-let notifications = [];
 
 const BASE_URL = "https://tylorg811-byte.github.io/giles-client-portal";
 
@@ -126,6 +125,7 @@ function renderClientSites(){
         <h3>${escapeHtml(site.business_name || "Unnamed Business")}</h3>
         <p>${escapeHtml(site.client_email || "No email")}</p>
         <p><strong>User ID:</strong> ${escapeHtml(site.client_user_id || "Not assigned")}</p>
+        <p><strong>Editor:</strong> ${site.editor_access === "full" ? "Full Access" : "Safe Mode"}</p>
       </div>
 
       <div>
@@ -219,8 +219,6 @@ async function updateChangeRequest(id, clientUserId){
 
   const request = changeRequests.find(req => req.id === id);
 
-  const oldStatus = request?.status || "new";
-
   const { error } = await db
     .from("change_requests")
     .update({
@@ -246,12 +244,7 @@ async function updateChangeRequest(id, clientUserId){
   }
 
   await loadChangeRequests();
-
-  if(oldStatus !== status){
-    alert("Request updated and client notification created.");
-  } else {
-    alert("Request updated.");
-  }
+  alert("Request updated.");
 }
 
 async function deleteChangeRequest(id){
@@ -283,6 +276,7 @@ async function saveClientSite(){
     domain: cleanValue("domain").replace(/^https?:\/\//,"").replace(/\/$/,""),
     domain_status: cleanValue("domainStatus"),
     site_status: cleanValue("siteStatus"),
+    editor_access: cleanValue("editorAccess") || "safe",
     notes: cleanValue("notes"),
     updated_at: new Date().toISOString()
   };
@@ -309,8 +303,8 @@ async function saveClientSite(){
   if(payload.client_user_id){
     await db.from("notifications").insert({
       user_id: payload.client_user_id,
-      title: "Website status updated",
-      message: `Your website status is now "${payload.site_status}". Domain status: "${payload.domain_status}".`,
+      title: "Website access updated",
+      message: `Your website access is now set to "${payload.editor_access === "full" ? "Full Editor Access" : "Safe Mode"}".`,
       type: "site"
     });
   }
@@ -332,6 +326,7 @@ function editClientSite(id){
   document.getElementById("domain").value = site.domain || "";
   document.getElementById("domainStatus").value = site.domain_status || "not connected";
   document.getElementById("siteStatus").value = site.site_status || "draft";
+  document.getElementById("editorAccess").value = site.editor_access || "safe";
   document.getElementById("notes").value = site.notes || "";
 
   scrollToForm();
@@ -363,6 +358,7 @@ function clearClientForm(){
   document.getElementById("domain").value = "";
   document.getElementById("domainStatus").value = "not connected";
   document.getElementById("siteStatus").value = "draft";
+  document.getElementById("editorAccess").value = "safe";
   document.getElementById("notes").value = "";
 }
 
@@ -374,13 +370,11 @@ function scrollToForm(){
 }
 
 function copyLoginLink(){
-  const link = `${BASE_URL}/login.html`;
-  copyText(link);
+  copyText(`${BASE_URL}/login.html`);
 }
 
 function copyClientEditorLink(editorUrl){
-  const fullLink = `${BASE_URL}/${editorUrl}`;
-  copyText(fullLink);
+  copyText(`${BASE_URL}/${editorUrl}`);
 }
 
 function copyText(text){
