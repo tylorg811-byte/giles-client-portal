@@ -237,6 +237,18 @@ color:white;
 .release-btn:hover,
 .danger:hover{background:#d11a2a!important;color:white!important;}
 
+.filter-bar{
+display:flex;
+gap:12px;
+align-items:center;
+flex-wrap:wrap;
+margin-bottom:18px;
+}
+
+.filter-bar select{
+max-width:230px;
+}
+
 #message{
 font-size:13px;
 font-weight:800;
@@ -310,8 +322,8 @@ margin-bottom:16px;
       </div>
 
       <div class="stat">
-        <span>Domains Live</span>
-        <strong id="liveDomains">0</strong>
+        <span>Past Due</span>
+        <strong id="pastDueClients">0</strong>
       </div>
 
       <div class="stat">
@@ -331,7 +343,7 @@ margin-bottom:16px;
       <h2>Add / Update Client</h2>
 
       <div class="notice">
-        Billing Override keeps a site active even if Stripe or subscriptions are not active. Domain Release removes the domain from your portal tracking, but real registrar/DNS removal still needs API automation or manual provider changes.
+        Billing Override keeps a site active even if Stripe/subscriptions are not active. Use Manual Payment, Free/Comped, Trial, Past Due, or Paused to keep your records clean.
       </div>
 
       <div class="form-grid">
@@ -424,6 +436,25 @@ margin-bottom:16px;
           </select>
         </div>
 
+        <div>
+          <label>Billing Cycle</label>
+          <select id="billingCycle">
+            <option value="monthly">Monthly</option>
+            <option value="yearly">Yearly</option>
+            <option value="one-time">One Time</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Next Payment Date</label>
+          <input type="date" id="nextPaymentDate">
+        </div>
+
+        <div>
+          <label>Last Payment Date</label>
+          <input type="date" id="lastPaymentDate">
+        </div>
+
         <div class="full">
           <label>Override Reason</label>
           <input id="billingOverrideReason" placeholder="Example: Mom's business, paid cash, comped client, etc.">
@@ -453,6 +484,21 @@ margin-bottom:16px;
 
     <section class="card">
       <h2>All Client Sites</h2>
+
+      <div class="filter-bar">
+        <label style="margin:0;">Billing Filter</label>
+        <select id="billingFilter" onchange="applyBillingFilter()">
+          <option value="all">All Clients</option>
+          <option value="active">Active</option>
+          <option value="past">Past Due</option>
+          <option value="covered">Covered / Override</option>
+          <option value="free">Free / Comped</option>
+          <option value="trial">Trial</option>
+          <option value="paused">Paused</option>
+          <option value="manual paid">Manual Paid</option>
+        </select>
+      </div>
+
       <div id="clientList" class="client-list">
         Loading clients...
       </div>
