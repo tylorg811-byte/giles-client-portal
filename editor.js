@@ -60,6 +60,7 @@ async function initEditor(){
   const clientId = params.get("client");
 
   editingUserId = currentUser.id;
+  isAdminEditing = false;
 
   if(clientId){
     const { data: adminRow } = await db
