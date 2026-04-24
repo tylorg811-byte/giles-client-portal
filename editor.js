@@ -37,42 +37,43 @@ async function initEditor(){
   if(!currentUser) return;
 
   editor = grapesjs.init({
-    container: "#gjs",
-    height: "100%",
-    fromElement: false,
-    storageManager: false,
+  container: "#gjs",
+  height: "100%",
+  fromElement: false,
+  storageManager: false,
 
-    blockManager: { appendTo: "#blocks" },
+  blockManager: { appendTo: "#blocks" },
 
-    assetManager: {
-      upload: false,
-      assets: []
-    },
+  styleManager: {
+    appendTo: "#styles",
+    sectors: [
+      {
+        name: "Text",
+        open: true,
+        buildProps: ["color","font-size","text-align"]
+      },
+      {
+        name: "Spacing",
+        open: false,
+        buildProps: ["margin","padding"]
+      },
+      {
+        name: "Design",
+        open: false,
+        buildProps: ["background-color","border-radius"]
+      }
+    ]
+  },
 
-    styleManager: {
-      appendTo: "#styles",
-      sectors: [
-        {
-          name: "Text",
-          open: true,
-          buildProps: ["color", "font-size", "text-align"]
-        },
-        {
-          name: "Spacing",
-          open: false,
-          buildProps: ["margin", "padding"]
-        },
-        {
-          name: "Design",
-          open: false,
-          buildProps: ["background-color", "border-radius", "width", "height"]
-        }
-      ]
-    },
+  // 🔥 THIS IS THE MAGIC
+  dragMode: "absolute", // smoother positioning
 
-    panels: { defaults: [] }
-  });
+  canvas: {
+    styles: []
+  },
 
+  panels: { defaults: [] }
+});
   addClientBlocks();
   addImageUploader();
 
@@ -251,10 +252,25 @@ async function uploadImageToSupabase(){
 }
 
 function lockClientEditing(){
+
   editor.DomComponents.getWrapper().find("*").forEach(component => {
     const classes = component.getClasses();
 
-    if(classes.includes("editable-text")){
+    const isText = classes.includes("editable-text");
+    const isSection = classes.includes("locked-section");
+    const isImage = classes.includes("editable-image");
+
+    if(isSection){
+      component.set({
+        draggable: true,
+        droppable: true,
+        removable: false,
+        copyable: false,
+        selectable: true
+      });
+    }
+
+    else if(isText){
       component.set({
         editable: true,
         draggable: false,
@@ -264,7 +280,7 @@ function lockClientEditing(){
       });
     }
 
-    if(classes.includes("editable-image")){
+    else if(isImage){
       component.set({
         editable: true,
         draggable: true,
@@ -273,24 +289,19 @@ function lockClientEditing(){
       });
     }
 
-    if(classes.includes("editable-card") || classes.includes("client-added-section")){
+    else{
       component.set({
-        draggable: true,
-        droppable: true,
-        removable: true,
-        copyable: true
+        draggable: false,
+        droppable: false,
+        removable: false,
+        copyable: false
       });
     }
   });
 
-  editor.on("component:add", component => {
-    component.set({
-      editable: true,
-      draggable: true,
-      droppable: true,
-      removable: true,
-      copyable: true
-    });
+  // 🔥 Smooth snapping feeling
+  editor.on("component:drag:end", () => {
+    editor.refresh();
   });
 }
 
