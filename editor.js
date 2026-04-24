@@ -842,6 +842,120 @@ function insertHeader(type){
 
   wrapper.find("header").forEach(header => header.remove());
 
+  const headerCss = `
+.site-header{
+position:sticky;
+top:0;
+z-index:999;
+padding:18px 26px;
+background:white;
+border-bottom:1px solid #e6e6ef;
+}
+
+.site-header-inner{
+max-width:1200px;
+margin:auto;
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:20px;
+}
+
+.site-brand{
+display:flex;
+align-items:center;
+gap:12px;
+font-weight:900;
+font-size:22px;
+color:#111827;
+}
+
+.site-logo{
+width:46px;
+height:46px;
+border-radius:14px;
+background:#7B5CFF;
+color:white;
+display:flex;
+align-items:center;
+justify-content:center;
+font-weight:900;
+}
+
+.site-nav{
+display:flex;
+gap:22px;
+align-items:center;
+}
+
+.site-nav a{
+color:#111827;
+text-decoration:none;
+font-weight:800;
+}
+
+.site-header.dark{
+background:#07111f;
+border-bottom:1px solid rgba(255,255,255,.14);
+}
+
+.site-header.dark .site-brand,
+.site-header.dark .site-nav a{
+color:white;
+}
+
+.site-header.glass{
+background:rgba(255,255,255,.72);
+backdrop-filter:blur(18px);
+}
+
+.site-header.gradient{
+background:linear-gradient(135deg,#7B5CFF,#9F7BFF);
+}
+
+.site-header.gradient .site-brand,
+.site-header.gradient .site-nav a{
+color:white;
+}
+
+.menu-toggle{
+border:none;
+background:#7B5CFF;
+color:white;
+border-radius:12px;
+padding:12px 15px;
+font-weight:900;
+cursor:pointer;
+}
+
+.mobile-menu{
+display:none;
+position:absolute;
+right:0;
+top:60px;
+background:white;
+border:1px solid #e6e6ef;
+border-radius:18px;
+box-shadow:0 20px 50px rgba(0,0,0,.14);
+padding:16px;
+min-width:210px;
+}
+
+.mobile-menu.open-menu{
+display:block!important;
+}
+
+.mobile-menu a{
+display:block;
+color:#111827;
+text-decoration:none;
+font-weight:800;
+padding:10px;
+}
+`;
+
+  editor.setStyle(editor.getCss() + headerCss);
+
   const headers = {
     logoText: `
 <header class="site-header">
@@ -851,6 +965,23 @@ function insertHeader(type){
       <span>Business Name</span>
     </div>
     <nav class="site-nav">
+      <a href="#">Home</a>
+      <a href="#">About</a>
+      <a href="#">Services</a>
+      <a href="#">Contact</a>
+    </nav>
+  </div>
+</header>`,
+
+    menu: `
+<header class="site-header">
+  <div class="site-header-inner" style="position:relative;">
+    <div class="site-brand">
+      <div class="site-logo">G</div>
+      <span>Business Name</span>
+    </div>
+    <button class="menu-toggle" onclick="this.nextElementSibling.classList.toggle('open-menu')">☰ Menu</button>
+    <nav class="mobile-menu">
       <a href="#">Home</a>
       <a href="#">About</a>
       <a href="#">Services</a>
@@ -880,23 +1011,6 @@ function insertHeader(type){
       <span>Business Name</span>
     </div>
     <nav class="site-nav">
-      <a href="#">Home</a>
-      <a href="#">About</a>
-      <a href="#">Services</a>
-      <a href="#">Contact</a>
-    </nav>
-  </div>
-</header>`,
-
-    menu: `
-<header class="site-header">
-  <div class="site-header-inner">
-    <div class="site-brand">
-      <div class="site-logo">G</div>
-      <span>Business Name</span>
-    </div>
-    <button class="menu-toggle" onclick="this.nextElementSibling.classList.toggle('open-menu')">☰ Menu</button>
-    <nav class="mobile-menu">
       <a href="#">Home</a>
       <a href="#">About</a>
       <a href="#">Services</a>
@@ -969,4 +1083,5 @@ function insertHeader(type){
   }
 
   editor.refresh();
+}
 }
