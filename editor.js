@@ -151,112 +151,146 @@ function addBlocks(){
 /* HEADER INSERT BUTTONS */
 function insertHeader(type){
   const wrapper = editor.DomComponents.getWrapper();
+
+  // Remove existing header
   wrapper.find("header").forEach(header => header.remove());
 
+  const logo = `
+<img src="https://via.placeholder.com/120x120?text=Logo"
+     alt="Logo"
+     style="width:52px;height:52px;border-radius:14px;object-fit:cover;">
+`;
+
   const headers = {
+
     logoText: `
 <header style="position:sticky;top:0;z-index:999;background:white;border-bottom:1px solid #e6e6ef;padding:18px 26px;">
   <div style="max-width:1200px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:20px;">
+    
     <div style="display:flex;align-items:center;gap:12px;font-weight:900;font-size:22px;color:#111827;">
-      <div style="width:46px;height:46px;border-radius:14px;background:#7B5CFF;color:white;display:flex;align-items:center;justify-content:center;font-weight:900;">G</div>
+      ${logo}
       <span>Business Name</span>
     </div>
+
     <nav style="display:flex;gap:22px;align-items:center;">
-      <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Home</a>
-      <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">About</a>
-      <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Services</a>
-      <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Contact</a>
+      <a href="#">Home</a>
+      <a href="#">About</a>
+      <a href="#">Services</a>
+      <a href="#">Contact</a>
     </nav>
+
   </div>
 </header>`,
 
     logoOnly: `
 <header style="position:sticky;top:0;z-index:999;background:white;border-bottom:1px solid #e6e6ef;padding:18px 26px;">
   <div style="max-width:1200px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:20px;">
-    <div style="width:52px;height:52px;border-radius:14px;background:#7B5CFF;color:white;display:flex;align-items:center;justify-content:center;font-weight:900;">Logo</div>
+    
+    ${logo}
+
     <nav style="display:flex;gap:22px;align-items:center;">
-      <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Home</a>
-      <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Services</a>
-      <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Contact</a>
+      <a href="#">Home</a>
+      <a href="#">Services</a>
+      <a href="#">Contact</a>
     </nav>
+
   </div>
 </header>`,
 
     textOnly: `
 <header style="position:sticky;top:0;z-index:999;background:white;border-bottom:1px solid #e6e6ef;padding:18px 26px;">
-  <div style="max-width:1200px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:20px;">
-    <strong style="font-size:24px;color:#111827;">Business Name</strong>
-    <nav style="display:flex;gap:22px;align-items:center;">
-      <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Home</a>
-      <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">About</a>
-      <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Services</a>
-      <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Contact</a>
+  <div style="max-width:1200px;margin:auto;display:flex;align-items:center;justify-content:space-between;">
+    
+    <strong style="font-size:24px;">Business Name</strong>
+
+    <nav style="display:flex;gap:22px;">
+      <a href="#">Home</a>
+      <a href="#">About</a>
+      <a href="#">Services</a>
+      <a href="#">Contact</a>
     </nav>
+
   </div>
 </header>`,
 
     menu: `
 <header style="position:sticky;top:0;z-index:999;background:white;border-bottom:1px solid #e6e6ef;padding:18px 26px;">
-  <div style="max-width:1200px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:20px;position:relative;">
-    <div style="display:flex;align-items:center;gap:12px;font-weight:900;font-size:22px;color:#111827;">
-      <div style="width:46px;height:46px;border-radius:14px;background:#7B5CFF;color:white;display:flex;align-items:center;justify-content:center;font-weight:900;">G</div>
+  <div style="max-width:1200px;margin:auto;display:flex;align-items:center;justify-content:space-between;position:relative;">
+    
+    <div style="display:flex;align-items:center;gap:12px;font-weight:900;font-size:22px;">
+      ${logo}
       <span>Business Name</span>
     </div>
-    <button onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block'" style="border:none;background:#7B5CFF;color:white;border-radius:12px;padding:12px 15px;font-weight:900;cursor:pointer;">☰ Menu</button>
-    <nav style="display:none;position:absolute;right:0;top:62px;background:white;border:1px solid #e6e6ef;border-radius:18px;box-shadow:0 20px 50px rgba(0,0,0,.14);padding:16px;min-width:210px;">
-      <a href="#" style="display:block;color:#111827;text-decoration:none;font-weight:800;padding:10px;">Home</a>
-      <a href="#" style="display:block;color:#111827;text-decoration:none;font-weight:800;padding:10px;">About</a>
-      <a href="#" style="display:block;color:#111827;text-decoration:none;font-weight:800;padding:10px;">Services</a>
-      <a href="#" style="display:block;color:#111827;text-decoration:none;font-weight:800;padding:10px;">Contact</a>
+
+    <button onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block'"
+      style="border:none;background:#7B5CFF;color:white;border-radius:12px;padding:12px 15px;font-weight:900;cursor:pointer;">
+      ☰
+    </button>
+
+    <nav style="display:none;position:absolute;right:0;top:60px;background:white;border:1px solid #e6e6ef;border-radius:18px;box-shadow:0 20px 50px rgba(0,0,0,.14);padding:16px;">
+      <a href="#">Home</a><br>
+      <a href="#">About</a><br>
+      <a href="#">Services</a><br>
+      <a href="#">Contact</a>
     </nav>
+
   </div>
 </header>`,
 
     dark: `
 <header style="position:sticky;top:0;z-index:999;background:#07111f;border-bottom:1px solid rgba(255,255,255,.14);padding:18px 26px;">
-  <div style="max-width:1200px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:20px;">
+  <div style="max-width:1200px;margin:auto;display:flex;align-items:center;justify-content:space-between;">
+    
     <div style="display:flex;align-items:center;gap:12px;font-weight:900;font-size:22px;color:white;">
-      <div style="width:46px;height:46px;border-radius:14px;background:#7B5CFF;color:white;display:flex;align-items:center;justify-content:center;font-weight:900;">G</div>
+      ${logo}
       <span>Business Name</span>
     </div>
-    <nav style="display:flex;gap:22px;align-items:center;">
-      <a href="#" style="color:white;text-decoration:none;font-weight:800;">Home</a>
-      <a href="#" style="color:white;text-decoration:none;font-weight:800;">About</a>
-      <a href="#" style="color:white;text-decoration:none;font-weight:800;">Services</a>
-      <a href="#" style="color:white;text-decoration:none;font-weight:800;">Contact</a>
+
+    <nav style="display:flex;gap:22px;">
+      <a href="#" style="color:white;">Home</a>
+      <a href="#" style="color:white;">About</a>
+      <a href="#" style="color:white;">Services</a>
+      <a href="#" style="color:white;">Contact</a>
     </nav>
+
   </div>
 </header>`,
 
     glass: `
-<header style="position:sticky;top:0;z-index:999;background:rgba(255,255,255,.72);backdrop-filter:blur(18px);border-bottom:1px solid rgba(255,255,255,.5);padding:18px 26px;">
-  <div style="max-width:1200px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:20px;">
-    <div style="display:flex;align-items:center;gap:12px;font-weight:900;font-size:22px;color:#111827;">
-      <div style="width:46px;height:46px;border-radius:14px;background:#7B5CFF;color:white;display:flex;align-items:center;justify-content:center;font-weight:900;">G</div>
+<header style="position:sticky;top:0;z-index:999;background:rgba(255,255,255,.7);backdrop-filter:blur(16px);border-bottom:1px solid #e6e6ef;padding:18px 26px;">
+  <div style="max-width:1200px;margin:auto;display:flex;align-items:center;justify-content:space-between;">
+    
+    <div style="display:flex;align-items:center;gap:12px;font-weight:900;font-size:22px;">
+      ${logo}
       <span>Business Name</span>
     </div>
-    <nav style="display:flex;gap:22px;align-items:center;">
-      <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Home</a>
-      <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">About</a>
-      <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Services</a>
-      <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Contact</a>
+
+    <nav style="display:flex;gap:22px;">
+      <a href="#">Home</a>
+      <a href="#">About</a>
+      <a href="#">Services</a>
+      <a href="#">Contact</a>
     </nav>
+
   </div>
 </header>`,
 
     gradient: `
-<header style="position:sticky;top:0;z-index:999;background:linear-gradient(135deg,#7B5CFF,#9F7BFF);border-bottom:1px solid rgba(255,255,255,.25);padding:18px 26px;">
-  <div style="max-width:1200px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:20px;">
+<header style="position:sticky;top:0;z-index:999;background:linear-gradient(135deg,#7B5CFF,#9F7BFF);padding:18px 26px;">
+  <div style="max-width:1200px;margin:auto;display:flex;align-items:center;justify-content:space-between;">
+    
     <div style="display:flex;align-items:center;gap:12px;font-weight:900;font-size:22px;color:white;">
-      <div style="width:46px;height:46px;border-radius:14px;background:white;color:#7B5CFF;display:flex;align-items:center;justify-content:center;font-weight:900;">G</div>
+      ${logo}
       <span>Business Name</span>
     </div>
-    <nav style="display:flex;gap:22px;align-items:center;">
-      <a href="#" style="color:white;text-decoration:none;font-weight:800;">Home</a>
-      <a href="#" style="color:white;text-decoration:none;font-weight:800;">About</a>
-      <a href="#" style="color:white;text-decoration:none;font-weight:800;">Services</a>
-      <a href="#" style="color:white;text-decoration:none;font-weight:800;">Contact</a>
+
+    <nav style="display:flex;gap:22px;">
+      <a href="#" style="color:white;">Home</a>
+      <a href="#" style="color:white;">About</a>
+      <a href="#" style="color:white;">Services</a>
+      <a href="#" style="color:white;">Contact</a>
     </nav>
+
   </div>
 </header>`
   };
