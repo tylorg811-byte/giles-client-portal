@@ -19,6 +19,7 @@ async function loadClientDashboard(){
   await loadNotifications();
 
   updateLiveSiteLinks();
+  renderBillingCard();
 }
 
 async function loadClientSiteRecord(){
@@ -53,8 +54,114 @@ async function loadClientSiteInfo(){
     : "—";
 }
 
+function getClientBillingStatus(){
+  const site = clientSiteRecord || {};
+
+  if(site.billing_override){
+    return {
+      text:"Covered by Giles",
+      class:"full",
+      description:"Your website is manually covered by Giles Web Design."
+    };
+  }
+
+  if(site.billing_status === "free"){
+    return {
+      text:"Covered by Giles",
+      class:"full",
+      description:"Your website is currently covered at no charge."
+    };
+  }
+
+  if(site.billing_status === "manual paid"){
+    return {
+      text:"Paid",
+      class:"full",
+      description:"Your payment was received outside the automatic billing system."
+    };
+  }
+
+  if(site.billing_status === "trial"){
+    return {
+      text:"Trial",
+      class:"safe",
+      description:"Your website is currently in a trial period."
+    };
+  }
+
+  if(site.billing_status === "paused"){
+    return {
+      text:"Paused",
+      class:"dark",
+      description:"Your website service is currently paused."
+    };
+  }
+
+  if(site.billing_status === "past due"){
+    return {
+      text:"Past Due",
+      class:"danger",
+      description:"Your website payment is past due. Please contact Giles Web Design."
+    };
+  }
+
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  const next = site.next_payment_date ? new Date(site.next_payment_date + "T00:00:00") : null;
+
+  if(next && next < today){
+    return {
+      text:"Past Due",
+      class:"danger",
+      description:"Your website payment is past due. Please contact Giles Web Design."
+    };
+  }
+
+  return {
+    text:"Active",
+    class:"full",
+    description:"Your website plan is active."
+  };
+}
+
+function renderBillingCard(){
+  let panel = document.getElementById("billingCard");
+
+  if(!panel){
+    const main = document.querySelector(".main");
+    const card = document.createElement("section");
+    card.className = "card";
+    card.id = "billingCard";
+    main.insertBefore(card, main.children[2]);
+    panel = card;
+  }
+
+  const billing = getClientBillingStatus();
+  const site = clientSiteRecord || {};
+
+  panel.innerHTML = `
+    <h2>Billing & Package</h2>
+    <p>${billing.description}</p>
+
+    <div class="request-item">
+      <h3>${escapeHtml(site.package_name || "Website Plan")}</h3>
+      <p><strong>Status:</strong> <span class="badge">${billing.text}</span></p>
+      <p><strong>Billing Cycle:</strong> ${escapeHtml(site.billing_cycle || "monthly")}</p>
+      ${site.last_payment_date ? `<p><strong>Last Payment:</strong> ${formatDate(site.last_payment_date)}</p>` : ""}
+      ${site.next_payment_date ? `<p><strong>Next Payment:</strong> ${formatDate(site.next_payment_date)}</p>` : ""}
+      ${site.billing_notes ? `<p><strong>Notes:</strong> ${escapeHtml(site.billing_notes)}</p>` : ""}
+    </div>
+  `;
+}
+
 function getLiveUrl(){
-  if(clientSiteRecord && clientSiteRecord.domain && clientSiteRecord.domain_status === "live"){
+  if(
+    clientSiteRecord &&
+    clientSiteRecord.domain &&
+    clientSiteRecord.domain_status === "live" &&
+    clientSiteRecord.domain_release_status !== "released"
+  ){
     return `https://${clientSiteRecord.domain}`;
   }
 
@@ -173,7 +280,7 @@ async function loadNotifications(){
       <h2>Notifications</h2>
       <div id="notificationList" class="request-list">Loading notifications...</div>
     `;
-    main.insertBefore(notificationCard, main.children[2]);
+    main.insertBefore(notificationCard, main.children[3]);
     panel = document.getElementById("notificationList");
   }
 
@@ -225,6 +332,8 @@ async function markNotificationRead(id){
 }
 
 function timeAgo(dateString){
+  if(!dateString) return "—";
+
   const date = new Date(dateString);
   const seconds = Math.floor((new Date() - date) / 1000);
 
@@ -240,6 +349,11 @@ function timeAgo(dateString){
   if(days < 7) return `${days} day${days === 1 ? "" : "s"} ago`;
 
   return date.toLocaleDateString();
+}
+
+function formatDate(dateString){
+  if(!dateString) return "—";
+  return new Date(dateString + "T00:00:00").toLocaleDateString();
 }
 
 function escapeHtml(value){
