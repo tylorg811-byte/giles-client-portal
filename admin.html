@@ -189,6 +189,7 @@ margin-bottom:5px;
 font-size:13px;
 color:#667085;
 line-height:1.45;
+margin-bottom:4px;
 }
 
 .badge{
@@ -202,15 +203,10 @@ color:#5a4cff;
 text-transform:capitalize;
 }
 
-.badge.full{
-background:#ecfdf3;
-color:#027a48;
-}
-
-.badge.safe{
-background:#fff7ed;
-color:#c2410c;
-}
+.badge.full{background:#ecfdf3;color:#027a48;}
+.badge.safe{background:#fff7ed;color:#c2410c;}
+.badge.danger{background:#fee2e2;color:#b91c1c;}
+.badge.dark{background:#111827;color:#fff;}
 
 .actions{
 display:flex;
@@ -238,13 +234,26 @@ background:#7B5CFF;
 color:white;
 }
 
-.danger:hover{background:#d11a2a!important;}
+.release-btn:hover,
+.danger:hover{background:#d11a2a!important;color:white!important;}
 
 #message{
 font-size:13px;
 font-weight:800;
 margin-top:12px;
 color:#5a4cff;
+}
+
+.notice{
+background:#fff7ed;
+border:1px solid #fed7aa;
+color:#9a3412;
+padding:14px;
+border-radius:16px;
+font-size:13px;
+font-weight:800;
+line-height:1.5;
+margin-bottom:16px;
 }
 
 @media(max-width:1000px){
@@ -270,7 +279,7 @@ color:#5a4cff;
   <aside class="sidebar">
     <div class="logo">G</div>
     <h2>Admin Panel</h2>
-    <p>Manage clients, websites, domains, access, and change requests.</p>
+    <p>Manage clients, websites, domains, billing, access, and change requests.</p>
 
     <a href="dashboard.html">Client Dashboard</a>
     <a href="editor.html">Open Editor</a>
@@ -321,6 +330,10 @@ color:#5a4cff;
     <section class="card" id="clientFormCard">
       <h2>Add / Update Client</h2>
 
+      <div class="notice">
+        Billing Override keeps a site active even if Stripe or subscriptions are not active. Domain Release removes the domain from your portal tracking, but real registrar/DNS removal still needs API automation or manual provider changes.
+      </div>
+
       <div class="form-grid">
         <input type="hidden" id="clientRecordId">
 
@@ -360,6 +373,16 @@ color:#5a4cff;
             <option value="not connected">Not Connected</option>
             <option value="pending">Pending</option>
             <option value="live">Live</option>
+            <option value="released">Released</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Domain Release Status</label>
+          <select id="domainReleaseStatus">
+            <option value="connected">Connected / Managed</option>
+            <option value="release requested">Release Requested</option>
+            <option value="released">Released</option>
           </select>
         </div>
 
@@ -369,6 +392,7 @@ color:#5a4cff;
             <option value="draft">Draft</option>
             <option value="published">Published</option>
             <option value="needs review">Needs Review</option>
+            <option value="paused">Paused</option>
           </select>
         </div>
 
@@ -380,8 +404,43 @@ color:#5a4cff;
           </select>
         </div>
 
+        <div>
+          <label>Billing Status</label>
+          <select id="billingStatus">
+            <option value="active">Active / Paid</option>
+            <option value="manual paid">Manual Payment Received</option>
+            <option value="free">Free / Family / Comped</option>
+            <option value="trial">Trial</option>
+            <option value="past due">Past Due</option>
+            <option value="paused">Paused</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Billing Override</label>
+          <select id="billingOverride">
+            <option value="false">No Override</option>
+            <option value="true">Override Enabled</option>
+          </select>
+        </div>
+
         <div class="full">
-          <label>Notes</label>
+          <label>Override Reason</label>
+          <input id="billingOverrideReason" placeholder="Example: Mom's business, paid cash, comped client, etc.">
+        </div>
+
+        <div class="full">
+          <label>Billing Notes</label>
+          <textarea id="billingNotes" placeholder="Payment notes, renewal notes, outside payment details, etc."></textarea>
+        </div>
+
+        <div class="full">
+          <label>Domain Release Notes</label>
+          <textarea id="domainReleaseNotes" placeholder="Example: Client is moving to another provider, release requested, DNS removed manually, etc."></textarea>
+        </div>
+
+        <div class="full">
+          <label>General Notes</label>
           <textarea id="notes" placeholder="Domain info, client requests, package notes, etc."></textarea>
         </div>
       </div>
