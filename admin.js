@@ -39,6 +39,7 @@ async function loadAdminDashboard(){
   renderChangeRequests();
   renderAnalyticsOverviewFull();
   populateAnalyticsClientDropdown();
+  populateSEOClientDropdown();
   loadClientAnalyticsView();
   renderBillingOverview();
 }
@@ -65,12 +66,18 @@ function showAdminPage(page){
     clients:"Client Websites",
     clientDetail:"Client Details",
     importer:"Website Importer",
+    seo:"SEO Panel",
     analytics:"Analytics",
     requests:"Change Requests",
     billing:"Billing"
   };
 
   setText("pageTitle", titles[page] || "Admin");
+
+  if(page === "seo"){
+    populateSEOClientDropdown();
+    loadSEOClient();
+  }
 
   if(page === "analytics"){
     renderAnalyticsOverviewFull();
@@ -209,6 +216,7 @@ function renderSmartAlerts(){
   const newRequests = changeRequests.filter(req=>req.status === "new").length;
   const lockedEditors = clientSites.filter(site=>site.editor_locked).length;
   const leadsToday = leadEvents.filter(lead=>isToday(lead.created_at)).length;
+  const lowSeo = clientSites.filter(site=>(site.seo_score || 0) < 60).length;
 
   const alerts = [];
 
@@ -217,6 +225,7 @@ function renderSmartAlerts(){
   if(newRequests) alerts.push(`<span class="badge safe">💬 ${newRequests} New Requests</span>`);
   if(lockedEditors) alerts.push(`<span class="badge danger">🔒 ${lockedEditors} Editor Locks</span>`);
   if(leadsToday) alerts.push(`<span class="badge full">🔥 ${leadsToday} Leads Today</span>`);
+  if(lowSeo) alerts.push(`<span class="badge safe">🔎 ${lowSeo} SEO Needs Review</span>`);
 
   if(!alerts.length){
     box.innerHTML = `
@@ -252,7 +261,10 @@ function applyClientFilters(){
       site.client_email,
       site.domain,
       site.client_tags,
-      site.package_name
+      site.package_name,
+      site.business_type,
+      site.business_location,
+      site.seo_title
     ].join(" ").toLowerCase();
 
     const billingText = getBillingStatus(site).text.toLowerCase();
@@ -296,6 +308,9 @@ function renderClientSites(sites){
     const analytics = site.client_user_id ? getClientAnalytics(site.client_user_id) : null;
     const leads = site.client_user_id ? getClientLeads(site.client_user_id) : null;
 
+    const seoScore = Number(site.seo_score || 0);
+    const seoClass = seoScore >= 80 ? "full" : seoScore >= 60 ? "safe" : "danger";
+
     const card = document.createElement("div");
     card.className = "client-card";
 
@@ -309,6 +324,7 @@ function renderClientSites(sites){
         <div style="margin-top:10px;">
           <span class="badge">${escapeHtml(site.package_name || "Package")}</span>
           <span class="badge ${billing.class}">${billing.text}</span>
+          <span class="badge ${seoClass}">SEO ${seoScore}/100</span>
           ${site.editor_locked ? `<span class="badge danger">Editor Locked</span>` : ""}
         </div>
 
@@ -337,11 +353,13 @@ function renderClientSites(sites){
         <a href="${liveUrl}" target="_blank">Live</a>
         <a href="editor.html?client=${site.client_user_id || ""}" target="_blank">Editor</a>
 
+        <button onclick="openSEOForClient('${site.client_user_id || ""}')">SEO</button>
+        <button onclick="createCheckoutForClient('${site.id}')">Stripe Link</button>
+
         <button onclick="quickPublish('${site.id}')">Publish</button>
         <button onclick="quickPause('${site.id}')">Pause</button>
 
         <button onclick="quickMarkPaid('${site.id}')">Mark Paid</button>
-        <button onclick="createCheckoutForClient('${site.id}')">Stripe Link</button>
         <button onclick="toggleSafeMode('${site.id}')">Safe/Full</button>
 
         <button onclick="toggleEditorLock('${site.id}')">${site.editor_locked ? "Unlock" : "Lock"}</button>
@@ -433,10 +451,7 @@ async function updateClientQuick(id, updates, successMessage){
     });
   }
 
-  await loadClientSites();
-  renderStats();
-  renderSmartAlerts();
-  renderBillingOverview();
+  await refreshAdminData();
 }
 
 /* =========================
@@ -451,6 +466,8 @@ async function saveClientSite(){
     client_email: cleanValue("clientEmail"),
     business_name: cleanValue("businessName"),
     package_name: cleanValue("packageName"),
+    business_type: cleanValue("businessType"),
+    business_location: cleanValue("businessLocation"),
     domain: cleanValue("domain").replace(/^https?:\/\//,"").replace(/\/$/,""),
     domain_status: cleanValue("domainStatus"),
     domain_release_status: cleanValue("domainReleaseStatus") || "connected",
@@ -474,6 +491,14 @@ async function saveClientSite(){
   if(payload.domain_release_status === "released"){
     payload.domain_status = "released";
     payload.domain_released_at = new Date().toISOString();
+  }
+
+  if(!payload.seo_title && payload.business_name){
+    const generated = generateSEOFromValues(payload.business_name, payload.business_type, payload.business_location);
+    payload.seo_title = generated.title;
+    payload.seo_description = generated.description;
+    payload.seo_keywords = generated.keywords;
+    payload.seo_score = calculateSEOScore(generated.title, generated.description, generated.keywords, "", payload.business_type, payload.business_location);
   }
 
   let response;
@@ -507,14 +532,9 @@ async function saveClientSite(){
   }
 
   setText("message", "Client site saved.");
-
   clearClientForm();
 
-  await loadClientSites();
-  renderStats();
-  renderSmartAlerts();
-  renderBillingOverview();
-  populateAnalyticsClientDropdown();
+  await refreshAdminData();
 }
 
 function editClientSite(id){
@@ -528,6 +548,8 @@ function editClientSite(id){
   setValue("clientEmail", site.client_email);
   setValue("clientUserId", site.client_user_id);
   setValue("packageName", site.package_name || "Starter");
+  setValue("businessType", site.business_type);
+  setValue("businessLocation", site.business_location);
   setValue("domain", site.domain);
   setValue("domainStatus", site.domain_status || "not connected");
   setValue("domainReleaseStatus", site.domain_release_status || "connected");
@@ -556,6 +578,8 @@ function clearClientForm(){
     clientEmail:"",
     clientUserId:"",
     packageName:"Starter",
+    businessType:"",
+    businessLocation:"",
     domain:"",
     domainStatus:"not connected",
     domainReleaseStatus:"connected",
@@ -623,10 +647,7 @@ async function deleteClientSite(id){
     return;
   }
 
-  await loadClientSites();
-  renderStats();
-  renderSmartAlerts();
-  renderBillingOverview();
+  await refreshAdminData();
 }
 
 async function releaseDomain(id){
@@ -667,9 +688,362 @@ async function releaseDomain(id){
     });
   }
 
+  await refreshAdminData();
+}
+
+/* =========================
+   SEO PANEL
+========================= */
+function populateSEOClientDropdown(){
+  const select = document.getElementById("seoClientSelect");
+  if(!select) return;
+
+  select.innerHTML = "";
+
+  clientSites.forEach(site=>{
+    if(!site.client_user_id) return;
+
+    const option = document.createElement("option");
+    option.value = site.client_user_id;
+    option.textContent = site.business_name || site.client_email || site.client_user_id;
+    select.appendChild(option);
+  });
+
+  if(!select.innerHTML){
+    select.innerHTML = `<option value="">No clients available</option>`;
+  }
+}
+
+function loadSEOClient(){
+  const select = document.getElementById("seoClientSelect");
+  if(!select) return;
+
+  const clientUserId = select.value;
+  const site = clientSites.find(item=>item.client_user_id === clientUserId);
+
+  if(!site){
+    clearSEOForm();
+    return;
+  }
+
+  setValue("seoImage", site.seo_image || "");
+  setValue("seoBusinessType", site.business_type || "");
+  setValue("seoBusinessLocation", site.business_location || "");
+  setValue("seoTitle", site.seo_title || "");
+  setValue("seoDescription", site.seo_description || "");
+  setValue("seoKeywords", site.seo_keywords || "");
+
+  updateSEOPreview();
+  updateSEOScoreDisplay(site.seo_score || scoreSEO(false));
+}
+
+function openSEOForClient(clientUserId){
+  showAdminPage("seo");
+  populateSEOClientDropdown();
+
+  const select = document.getElementById("seoClientSelect");
+  if(select && clientUserId){
+    select.value = clientUserId;
+  }
+
+  loadSEOClient();
+}
+
+function autoGenerateSEO(){
+  const select = document.getElementById("seoClientSelect");
+  if(!select) return;
+
+  const site = clientSites.find(item=>item.client_user_id === select.value);
+  if(!site){
+    setText("seoMessage", "Choose a client first.");
+    return;
+  }
+
+  const businessType = cleanValue("seoBusinessType") || site.business_type || "Business";
+  const location = cleanValue("seoBusinessLocation") || site.business_location || "";
+  const generated = generateSEOFromValues(site.business_name || "Business", businessType, location);
+
+  setValue("seoTitle", generated.title);
+  setValue("seoDescription", generated.description);
+  setValue("seoKeywords", generated.keywords);
+
+  scoreSEO();
+  updateSEOPreview();
+
+  setText("seoMessage", "SEO generated. Review it, then save.");
+}
+
+function generateSEOFromValues(name,type,location){
+  const cleanName = name || "Business";
+  const cleanType = type || "Business";
+  const cleanLocation = location || "";
+
+  const title = cleanLocation
+    ? `${cleanName} | ${cleanType} in ${cleanLocation}`
+    : `${cleanName} | ${cleanType} Website`;
+
+  const description = cleanLocation
+    ? `${cleanName} provides professional ${cleanType.toLowerCase()} services in ${cleanLocation}. Contact today to learn more.`
+    : `${cleanName} provides professional ${cleanType.toLowerCase()} services. Contact today to learn more.`;
+
+  const keywords = [
+    cleanName,
+    cleanType,
+    cleanLocation,
+    `${cleanType} near me`,
+    `affordable ${cleanType}`,
+    `${cleanName} website`
+  ].filter(Boolean).join(", ");
+
+  return { title, description, keywords };
+}
+
+function scoreSEO(showMessage = true){
+  const title = cleanValue("seoTitle");
+  const description = cleanValue("seoDescription");
+  const keywords = cleanValue("seoKeywords");
+  const image = cleanValue("seoImage");
+  const type = cleanValue("seoBusinessType");
+  const location = cleanValue("seoBusinessLocation");
+
+  const score = calculateSEOScore(title, description, keywords, image, type, location);
+  updateSEOScoreDisplay(score);
+  updateSEOPreview();
+
+  if(showMessage){
+    setText("seoMessage", `SEO score updated: ${score}/100`);
+  }
+
+  return score;
+}
+
+function calculateSEOScore(title,description,keywords,image,type,location){
+  let score = 0;
+
+  if(title) score += 20;
+  if(title.length >= 35 && title.length <= 70) score += 10;
+
+  if(description) score += 20;
+  if(description.length >= 90 && description.length <= 180) score += 10;
+
+  if(keywords) score += 10;
+  if(keywords.split(",").filter(k=>k.trim()).length >= 4) score += 10;
+
+  if(type) score += 10;
+  if(location) score += 10;
+  if(image) score += 10;
+
+  return Math.min(score,100);
+}
+
+function updateSEOScoreDisplay(score){
+  const scoreNum = Number(score || 0);
+  const ring = document.getElementById("seoScoreRing");
+  const text = document.getElementById("seoScoreText");
+  const notes = document.getElementById("seoScoreNotes");
+
+  if(text) text.textContent = scoreNum;
+
+  const degrees = Math.round((scoreNum / 100) * 360);
+  let color = "#ef4444";
+  let message = "Needs work. Add stronger title, description, type, location, and image.";
+
+  if(scoreNum >= 80){
+    color = "#16a34a";
+    message = "Great SEO foundation. This client is ready to publish.";
+  } else if(scoreNum >= 60){
+    color = "#f97316";
+    message = "Good start. Add missing details to improve it.";
+  }
+
+  if(ring){
+    ring.style.background = `conic-gradient(${color} 0deg, ${color} ${degrees}deg, #e5e7eb ${degrees}deg)`;
+  }
+
+  if(notes) notes.textContent = message;
+}
+
+function updateSEOPreview(){
+  const select = document.getElementById("seoClientSelect");
+  const site = clientSites.find(item=>item.client_user_id === select?.value);
+
+  const title = cleanValue("seoTitle") || "SEO title preview";
+  const description = cleanValue("seoDescription") || "SEO description preview will show here.";
+  const url = site ? getClientLiveUrl(site) : "https://clientsite.com";
+
+  setText("seoPreviewUrl", url);
+  setText("seoPreviewTitle", title);
+  setText("seoPreviewDesc", description);
+}
+
+async function saveSEO(){
+  const select = document.getElementById("seoClientSelect");
+  if(!select || !select.value){
+    setText("seoMessage", "Choose a client first.");
+    return;
+  }
+
+  const score = scoreSEO(false);
+
+  const payload = {
+    business_type: cleanValue("seoBusinessType"),
+    business_location: cleanValue("seoBusinessLocation"),
+    seo_title: cleanValue("seoTitle"),
+    seo_description: cleanValue("seoDescription"),
+    seo_keywords: cleanValue("seoKeywords"),
+    seo_image: cleanValue("seoImage"),
+    seo_score: score,
+    updated_at: new Date().toISOString()
+  };
+
+  const { error } = await db
+    .from("client_sites")
+    .update(payload)
+    .eq("client_user_id", select.value);
+
+  if(error){
+    console.error(error);
+    setText("seoMessage", "SEO save failed.");
+    return;
+  }
+
+  setText("seoMessage", "SEO saved successfully.");
+
   await loadClientSites();
+  populateSEOClientDropdown();
+  select.value = payload.client_user_id || select.value;
   renderStats();
   renderSmartAlerts();
+  applyClientFilters();
+}
+
+function clearSEOForm(){
+  setValue("seoImage", "");
+  setValue("seoBusinessType", "");
+  setValue("seoBusinessLocation", "");
+  setValue("seoTitle", "");
+  setValue("seoDescription", "");
+  setValue("seoKeywords", "");
+  updateSEOScoreDisplay(0);
+  updateSEOPreview();
+  setText("seoMessage", "");
+}
+
+/* =========================
+   STRIPE / CLIENT CREATOR
+========================= */
+async function createClientAccount(){
+  const email = prompt("Client Email:");
+  if(!email) return;
+
+  const businessName = prompt("Business Name:");
+  if(!businessName) return;
+
+  const passwordInput = prompt("Set a password, or leave blank to auto-generate:");
+  const password = passwordInput || generateClientPassword();
+
+  try{
+    const res = await fetch("https://giles-sites.netlify.app/.netlify/functions/create-client", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify({
+        email,
+        password,
+        businessName
+      })
+    });
+
+    const data = await res.json();
+
+    if(data.error){
+      alert("Error: " + data.error);
+      return;
+    }
+
+    alert(
+`CLIENT CREATED ✅
+
+Email: ${data.email}
+Password: ${data.password}
+User ID: ${data.userId}
+
+Copy this info before closing.`
+    );
+
+    await refreshAdminData();
+
+  }catch(error){
+    console.error(error);
+    alert("Client creation failed. Check console.");
+  }
+}
+
+function generateClientPassword(){
+  return "Site" + Math.random().toString(36).slice(2,10) + "!";
+}
+
+async function createCheckoutForClient(clientSiteId){
+  const site = clientSites.find(item=>item.id === clientSiteId);
+
+  if(!site){
+    alert("Client not found.");
+    return;
+  }
+
+  if(!site.client_user_id){
+    alert("This client needs a Supabase User ID first.");
+    return;
+  }
+
+  if(site.stripe_checkout_url){
+    const useOld = confirm("This client already has a saved Stripe checkout link. Copy existing link?");
+    if(useOld){
+      copyText(site.stripe_checkout_url);
+      return;
+    }
+  }
+
+  const priceId = prompt(
+    "Paste the Stripe recurring Price ID for this client:",
+    site.stripe_price_id || ""
+  );
+
+  if(!priceId) return;
+
+  try{
+    const response = await fetch("https://giles-sites.netlify.app/.netlify/functions/create-checkout-session", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify({
+        client_user_id:site.client_user_id,
+        price_id:priceId
+      })
+    });
+
+    const result = await response.json();
+
+    if(!response.ok){
+      alert(result.error || "Could not create checkout session.");
+      console.error(result);
+      return;
+    }
+
+    copyText(result.url);
+
+    alert(
+`Stripe Checkout created.
+
+Client: ${site.business_name || site.client_email}
+
+Checkout link copied to clipboard.`
+    );
+
+    await loadClientSites();
+
+  }catch(error){
+    console.error(error);
+    alert("Checkout creation failed.");
+  }
 }
 
 /* =========================
@@ -1010,10 +1384,12 @@ function openClientDetail(id){
         <div class="detail-row"><span>Domain Status</span><span>${escapeHtml(site.domain_status || "—")}</span></div>
         <div class="detail-row"><span>Editor Access</span><span>${escapeHtml(site.editor_access || "safe")}</span></div>
         <div class="detail-row"><span>Editor Lock</span><span>${site.editor_locked ? "Locked" : "Unlocked"}</span></div>
+        <div class="detail-row"><span>SEO Score</span><span>${site.seo_score || 0}/100</span></div>
 
         <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
           <a class="primary" href="${getClientLiveUrl(site)}" target="_blank">Open Site</a>
           <a class="secondary" href="editor.html?client=${site.client_user_id || ""}" target="_blank">Open Editor</a>
+          <button class="secondary" onclick="openSEOForClient('${site.client_user_id || ""}')">SEO Panel</button>
         </div>
       </div>
 
@@ -1080,6 +1456,21 @@ function renderBillingOverview(){
 /* =========================
    HELPERS
 ========================= */
+async function refreshAdminData(){
+  await loadClientSites();
+  await loadChangeRequests();
+  await loadAnalytics();
+  await loadLeads();
+
+  renderStats();
+  renderSmartAlerts();
+  renderChangeRequests();
+  renderAnalyticsOverviewFull();
+  populateAnalyticsClientDropdown();
+  populateSEOClientDropdown();
+  renderBillingOverview();
+}
+
 function getClientAnalytics(clientUserId){
   const events = analyticsEvents.filter(event=>event.client_user_id === clientUserId);
 
@@ -1258,131 +1649,4 @@ function escapeHtml(value){
 
 function capitalize(text){
   return String(text || "").charAt(0).toUpperCase() + String(text || "").slice(1);
-}
-
-async function createClientAccount(){
-  const email = prompt("Client Email:");
-  if(!email) return;
-
-  const businessName = prompt("Business Name:");
-  if(!businessName) return;
-
-  const passwordInput = prompt("Set a password, or leave blank to auto-generate:");
-  const password = passwordInput || generateClientPassword();
-
-  try{
-    const res = await fetch("https://giles-sites.netlify.app/.netlify/functions/create-client", {
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json"
-      },
-      body:JSON.stringify({
-        email,
-        password,
-        businessName
-      })
-    });
-
-    const data = await res.json();
-
-    if(data.error){
-      alert("Error: " + data.error);
-      return;
-    }
-
-    alert(
-`CLIENT CREATED ✅
-
-Email: ${data.email}
-Password: ${data.password}
-User ID: ${data.userId}
-
-Copy this info before closing.`
-    );
-
-    await loadClientSites();
-    renderStats();
-    renderSmartAlerts();
-    populateAnalyticsClientDropdown();
-
-  }catch(error){
-    console.error(error);
-    alert("Client creation failed. Check console.");
-  }
-}
-
-function generateClientPassword(){
-  return "Site" + Math.random().toString(36).slice(2,10) + "!";
-}
-
-async function createCheckoutForClient(clientSiteId){
-  const site = clientSites.find(item => item.id === clientSiteId);
-
-  if(!site){
-    alert("Client not found.");
-    return;
-  }
-
-  if(!site.client_user_id){
-    alert("This client needs a Supabase User ID first.");
-    return;
-  }
-
-  const priceId = prompt(
-    "Paste the Stripe recurring Price ID for this client:",
-    site.stripe_price_id || ""
-  );
-
-  if(!priceId) return;
-
-  try{
-    const response = await fetch("https://giles-sites.netlify.app/.netlify/functions/create-checkout-session", {
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json"
-      },
-      body:JSON.stringify({
-        client_user_id:site.client_user_id,
-        price_id:priceId
-      })
-    });
-
-    const result = await response.json();
-
-    if(!response.ok){
-      alert(result.error || "Could not create checkout session.");
-      console.error(result);
-      return;
-    }
-
-    const message =
-`Stripe Checkout created.
-
-Client: ${site.business_name || site.client_email}
-Checkout Link:
-${result.url}`;
-
-    navigator.clipboard.writeText(result.url);
-    alert(message + "\n\nLink copied to clipboard.");
-
-  }catch(error){
-    console.error(error);
-    alert("Checkout creation failed.");
-  }
-}
-
-function generateSEO(site){
-  const name = site.business_name || "Business";
-  const type = site.business_type || "Business";
-  const location = site.location || "";
-
-  const title = `${name} | ${type} Website ${location ? "in " + location : ""}`;
-
-  const description = `Professional ${type.toLowerCase()} website for ${name}. ${
-    location ? "Serving " + location + "." : ""
-  } Contact today.`;
-
-  const keywords = `${name}, ${type}, ${location}, affordable ${type} website`;
-
-  return { title, description, keywords };
 }
