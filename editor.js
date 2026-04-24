@@ -94,43 +94,244 @@ addSectionAddButtons();
 }
 
 function addBlocks(){
-  editor.BlockManager.add("header-direct-nav",{
-    label:"Header Nav",
+
+  editor.BlockManager.add("header-logo-text-nav",{
+    label:"Logo + Text Header",
     category:"Headers",
-    content:`<header style="position:sticky;top:0;z-index:999;background:white;border-bottom:1px solid #e6e6ef;padding:18px 24px;"><div style="max-width:1200px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:20px;"><strong style="font-size:22px;">Business Name</strong><nav style="display:flex;gap:22px;align-items:center;"><a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Home</a><a href="#" style="color:#111827;text-decoration:none;font-weight:800;">About</a><a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Services</a><a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Contact</a></nav></div></header>`
+    content:`
+<header data-site-header="true" style="position:sticky;top:0;z-index:999;background:white;border-bottom:1px solid #e6e6ef;padding:18px 24px;">
+  <div style="max-width:1200px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:20px;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div style="width:42px;height:42px;border-radius:12px;background:#7B5CFF;color:white;display:flex;align-items:center;justify-content:center;font-weight:900;">Logo</div>
+      <strong style="font-size:22px;">Business Name</strong>
+    </div>
+
+    <nav style="display:flex;gap:22px;align-items:center;">
+      <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Home</a>
+      <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">About</a>
+      <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Services</a>
+      <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Contact</a>
+    </nav>
+  </div>
+</header>`
+  });
+
+  editor.BlockManager.add("header-logo-only",{
+    label:"Logo Only Header",
+    category:"Headers",
+    content:`
+<header data-site-header="true" style="position:sticky;top:0;z-index:999;background:white;border-bottom:1px solid #e6e6ef;padding:18px 24px;">
+  <div style="max-width:1200px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:20px;">
+    <div style="width:52px;height:52px;border-radius:14px;background:#7B5CFF;color:white;display:flex;align-items:center;justify-content:center;font-weight:900;">Logo</div>
+
+    <nav style="display:flex;gap:22px;align-items:center;">
+      <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Home</a>
+      <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Services</a>
+      <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Contact</a>
+    </nav>
+  </div>
+</header>`
+  });
+
+  editor.BlockManager.add("header-text-only",{
+    label:"Text Only Header",
+    category:"Headers",
+    content:`
+<header data-site-header="true" style="position:sticky;top:0;z-index:999;background:white;border-bottom:1px solid #e6e6ef;padding:18px 24px;">
+  <div style="max-width:1200px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:20px;">
+    <strong style="font-size:24px;">Business Name</strong>
+
+    <nav style="display:flex;gap:22px;align-items:center;">
+      <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Home</a>
+      <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">About</a>
+      <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Services</a>
+      <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Contact</a>
+    </nav>
+  </div>
+</header>`
+  });
+
+  editor.BlockManager.add("header-plain-nav",{
+    label:"Plain Header",
+    category:"Headers",
+    content:`
+<header data-site-header="true" style="position:sticky;top:0;z-index:999;background:white;border-bottom:1px solid #e6e6ef;padding:16px 24px;">
+  <div style="max-width:1200px;margin:auto;display:flex;align-items:center;justify-content:center;gap:26px;">
+    <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Home</a>
+    <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">About</a>
+    <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Services</a>
+    <a href="#" style="color:#111827;text-decoration:none;font-weight:800;">Contact</a>
+  </div>
+</header>`
   });
 
   editor.BlockManager.add("header-menu-button",{
-    label:"Header Menu",
+    label:"Menu Button Header",
     category:"Headers",
-    content:`<header style="position:sticky;top:0;z-index:999;background:white;border-bottom:1px solid #e6e6ef;padding:18px 24px;"><div style="max-width:1200px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:20px;position:relative;"><strong style="font-size:22px;">Business Name</strong><button onclick="this.nextElementSibling.classList.toggle('open-menu')" style="border:none;background:#7B5CFF;color:white;border-radius:12px;padding:12px 15px;font-weight:900;cursor:pointer;">☰ Menu</button><nav class="mobile-menu" style="display:none;position:absolute;right:0;top:58px;background:white;border:1px solid #e6e6ef;border-radius:18px;box-shadow:0 20px 50px rgba(0,0,0,.14);padding:16px;min-width:210px;"><a href="#" style="display:block;color:#111827;text-decoration:none;font-weight:800;padding:10px;">Home</a><a href="#" style="display:block;color:#111827;text-decoration:none;font-weight:800;padding:10px;">About</a><a href="#" style="display:block;color:#111827;text-decoration:none;font-weight:800;padding:10px;">Services</a><a href="#" style="display:block;color:#111827;text-decoration:none;font-weight:800;padding:10px;">Contact</a></nav></div></header>`
+    content:`
+<header data-site-header="true" style="position:sticky;top:0;z-index:999;background:white;border-bottom:1px solid #e6e6ef;padding:18px 24px;">
+  <div style="max-width:1200px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:20px;position:relative;">
+    <strong style="font-size:22px;">Business Name</strong>
+
+    <button onclick="this.nextElementSibling.classList.toggle('open-menu')" style="border:none;background:#7B5CFF;color:white;border-radius:12px;padding:12px 15px;font-weight:900;cursor:pointer;">
+      ☰ Menu
+    </button>
+
+    <nav class="mobile-menu" style="display:none;position:absolute;right:0;top:58px;background:white;border:1px solid #e6e6ef;border-radius:18px;box-shadow:0 20px 50px rgba(0,0,0,.14);padding:16px;min-width:210px;">
+      <a href="#" style="display:block;color:#111827;text-decoration:none;font-weight:800;padding:10px;">Home</a>
+      <a href="#" style="display:block;color:#111827;text-decoration:none;font-weight:800;padding:10px;">About</a>
+      <a href="#" style="display:block;color:#111827;text-decoration:none;font-weight:800;padding:10px;">Services</a>
+      <a href="#" style="display:block;color:#111827;text-decoration:none;font-weight:800;padding:10px;">Contact</a>
+    </nav>
+  </div>
+</header>`
   });
 
-  editor.BlockManager.add("header-dark-luxe",{
-    label:"Dark Luxe Header",
-    category:"Headers",
-    content:`<header style="position:sticky;top:0;z-index:999;background:rgba(7,17,31,.92);backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,.12);padding:18px 24px;"><div style="max-width:1200px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:20px;"><strong style="font-size:22px;color:white;">Business Name</strong><nav style="display:flex;gap:22px;align-items:center;"><a href="#" style="color:white;text-decoration:none;font-weight:800;">Home</a><a href="#" style="color:white;text-decoration:none;font-weight:800;">About</a><a href="#" style="color:white;text-decoration:none;font-weight:800;">Services</a><a href="#" style="color:white;text-decoration:none;font-weight:800;">Contact</a></nav></div></header>`
+  editor.BlockManager.add("hero-section",{
+    label:"Hero Section",
+    category:"Sections",
+    content:`
+<section class="content-section" style="min-height:80vh;display:flex;align-items:center;text-align:center;background:linear-gradient(135deg,#07111f,#141b5f);color:white;">
+  <div style="max-width:800px;margin:auto;">
+    <p style="letter-spacing:3px;color:#cbd5e1;">YOUR TAGLINE HERE</p>
+    <h1>Build Something Beautiful</h1>
+    <p style="color:#dbeafe;">Add your business message here.</p>
+    <a href="#contact" class="main-btn">Get Started</a>
+  </div>
+</section>`
   });
 
-  editor.BlockManager.add("hero-section",{label:"Hero Section",category:"Sections",content:`<section class="content-section" style="min-height:80vh;display:flex;align-items:center;text-align:center;background:linear-gradient(135deg,#07111f,#141b5f);color:white;"><div style="max-width:800px;margin:auto;"><p style="letter-spacing:3px;color:#cbd5e1;">YOUR TAGLINE HERE</p><h1>Build Something Beautiful</h1><p style="color:#dbeafe;">Add your business message here.</p><a href="#contact" class="main-btn">Get Started</a></div></section>`});
-  editor.BlockManager.add("heading",{label:"Heading",category:"Text",content:`<h2>New Heading</h2>`});
-  editor.BlockManager.add("paragraph",{label:"Paragraph",category:"Text",content:`<p>Add your text here.</p>`});
-  editor.BlockManager.add("button-primary",{label:"Button",category:"Buttons",content:`<a href="#" class="main-btn">Button Text</a>`});
-  editor.BlockManager.add("image",{label:"Image",category:"Images",content:`<img class="site-image" src="https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=900&q=80">`});
+  editor.BlockManager.add("heading",{
+    label:"Heading",
+    category:"Text",
+    content:`<h2>New Heading</h2>`
+  });
 
-  editor.BlockManager.add("services-grid",{label:"Services Grid",category:"Sections",content:`<section class="content-section"><div style="max-width:1000px;margin:auto;text-align:center;"><h2>Our Services</h2><p>Highlight what your business offers.</p><div class="grid-3" style="margin-top:35px;"><div class="card"><h3>Service One</h3><p>Describe this service.</p></div><div class="card"><h3>Service Two</h3><p>Describe this service.</p></div><div class="card"><h3>Service Three</h3><p>Describe this service.</p></div></div></div></section>`});
+  editor.BlockManager.add("paragraph",{
+    label:"Paragraph",
+    category:"Text",
+    content:`<p>Add your text here.</p>`
+  });
 
-  editor.BlockManager.add("pricing-section",{label:"Pricing",category:"Sections",content:`<section class="content-section" style="background:#07111f;color:white;text-align:center;"><h2>Pricing Packages</h2><div class="grid-3" style="margin-top:35px;"><div class="card"><h3>Starter</h3><h2>$100</h2><p>Simple site to get started.</p></div><div class="card"><h3>Popular</h3><h2>$250</h2><p>Best for growing businesses.</p></div><div class="card"><h3>Premium</h3><h2>$500</h2><p>Full professional setup.</p></div></div></section>`});
+  editor.BlockManager.add("button-primary",{
+    label:"Button",
+    category:"Buttons",
+    content:`<a href="#" class="main-btn">Button Text</a>`
+  });
 
-  editor.BlockManager.add("contact-form",{label:"Contact Form",category:"Forms",content:`<section class="content-section" id="contact" style="background:#f8fafc;"><div style="max-width:680px;margin:auto;"><h2 style="text-align:center;">Contact Us</h2><p style="text-align:center;">Fill out the form below and we’ll be in touch.</p><form data-needs-formspree="true" action="FORM_ENDPOINT_HERE" method="POST" style="background:white;padding:28px;border-radius:24px;box-shadow:0 15px 45px rgba(0,0,0,.1);"><p style="font-size:14px;color:#666;text-align:center;margin-bottom:18px;">Form setup needed: add your Formspree endpoint so submissions go to your email.</p><input name="name" placeholder="Your Name" required style="width:100%;padding:14px;margin-bottom:12px;border:1px solid #e6e6ef;border-radius:12px;"><input name="email" type="email" placeholder="Your Email" required style="width:100%;padding:14px;margin-bottom:12px;border:1px solid #e6e6ef;border-radius:12px;"><input name="phone" placeholder="Phone Number" style="width:100%;padding:14px;margin-bottom:12px;border:1px solid #e6e6ef;border-radius:12px;"><textarea name="message" placeholder="How can we help?" required style="width:100%;padding:14px;margin-bottom:12px;border:1px solid #e6e6ef;border-radius:12px;min-height:130px;"></textarea><button type="submit" class="main-btn" style="border:none;cursor:pointer;">Send Message</button></form></div></section>`});
+  editor.BlockManager.add("image",{
+    label:"Image",
+    category:"Images",
+    content:`<img class="site-image" src="https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=900&q=80">`
+  });
 
-  editor.BlockManager.add("booking-form",{label:"Booking Form",category:"Forms",content:`<section class="content-section"><div style="max-width:760px;margin:auto;"><h2 style="text-align:center;">Book an Appointment</h2><form data-needs-formspree="true" action="FORM_ENDPOINT_HERE" method="POST" style="background:#f8fafc;padding:28px;border-radius:24px;"><p style="font-size:14px;color:#666;text-align:center;margin-bottom:18px;">Form setup needed: add your Formspree endpoint so bookings go to your email.</p><input name="name" placeholder="Full Name" required style="width:100%;padding:14px;margin-bottom:12px;border:1px solid #e6e6ef;border-radius:12px;"><input name="email" type="email" placeholder="Email" required style="width:100%;padding:14px;margin-bottom:12px;border:1px solid #e6e6ef;border-radius:12px;"><input name="date" type="date" required style="width:100%;padding:14px;margin-bottom:12px;border:1px solid #e6e6ef;border-radius:12px;"><input name="time" type="time" required style="width:100%;padding:14px;margin-bottom:12px;border:1px solid #e6e6ef;border-radius:12px;"><textarea name="notes" placeholder="Notes" style="width:100%;padding:14px;margin-bottom:12px;border:1px solid #e6e6ef;border-radius:12px;"></textarea><button type="submit" class="main-btn" style="border:none;cursor:pointer;">Request Booking</button></form></div></section>`});
+  editor.BlockManager.add("services-grid",{
+    label:"Services Grid",
+    category:"Sections",
+    content:`
+<section class="content-section">
+  <div style="max-width:1000px;margin:auto;text-align:center;">
+    <h2>Our Services</h2>
+    <p>Highlight what your business offers.</p>
+    <div class="grid-3" style="margin-top:35px;">
+      <div class="card"><h3>Service One</h3><p>Describe this service.</p></div>
+      <div class="card"><h3>Service Two</h3><p>Describe this service.</p></div>
+      <div class="card"><h3>Service Three</h3><p>Describe this service.</p></div>
+    </div>
+  </div>
+</section>`
+  });
 
-  editor.BlockManager.add("map-section",{label:"Map / Location",category:"Business",content:`<section class="content-section"><div style="max-width:1000px;margin:auto;text-align:center;"><h2>Visit Us</h2><p>123 Business Street, City, State</p><div style="border-radius:24px;overflow:hidden;box-shadow:0 15px 45px rgba(0,0,0,.12);"><iframe src="https://www.google.com/maps?q=Tampa%20FL&output=embed" width="100%" height="360" style="border:0;" loading="lazy"></iframe></div></div></section>`});
-  editor.BlockManager.add("divider",{label:"Divider",category:"Graphics",content:`<div style="height:2px;width:80%;margin:40px auto;background:linear-gradient(90deg,transparent,#7B5CFF,transparent);"></div>`});
-  editor.BlockManager.add("spacer",{label:"Spacer",category:"Graphics",content:`<div style="height:70px;"></div>`});
+  editor.BlockManager.add("pricing-section",{
+    label:"Pricing",
+    category:"Sections",
+    content:`
+<section class="content-section" style="background:#07111f;color:white;text-align:center;">
+  <h2>Pricing Packages</h2>
+  <div class="grid-3" style="margin-top:35px;">
+    <div class="card"><h3>Starter</h3><h2>$100</h2><p>Simple site to get started.</p></div>
+    <div class="card"><h3>Popular</h3><h2>$250</h2><p>Best for growing businesses.</p></div>
+    <div class="card"><h3>Premium</h3><h2>$500</h2><p>Full professional setup.</p></div>
+  </div>
+</section>`
+  });
+
+  editor.BlockManager.add("contact-form",{
+    label:"Contact Form",
+    category:"Forms",
+    content:`
+<section class="content-section" id="contact" style="background:#f8fafc;">
+  <div style="max-width:680px;margin:auto;">
+    <h2 style="text-align:center;">Contact Us</h2>
+    <p style="text-align:center;">Fill out the form below and we’ll be in touch.</p>
+
+    <form data-needs-formspree="true" action="FORM_ENDPOINT_HERE" method="POST" style="background:white;padding:28px;border-radius:24px;box-shadow:0 15px 45px rgba(0,0,0,.1);">
+      <p style="font-size:14px;color:#666;text-align:center;margin-bottom:18px;">
+        Form setup needed: add your Formspree endpoint so submissions go to your email.
+      </p>
+
+      <input name="name" placeholder="Your Name" required style="width:100%;padding:14px;margin-bottom:12px;border:1px solid #e6e6ef;border-radius:12px;">
+      <input name="email" type="email" placeholder="Your Email" required style="width:100%;padding:14px;margin-bottom:12px;border:1px solid #e6e6ef;border-radius:12px;">
+      <input name="phone" placeholder="Phone Number" style="width:100%;padding:14px;margin-bottom:12px;border:1px solid #e6e6ef;border-radius:12px;">
+      <textarea name="message" placeholder="How can we help?" required style="width:100%;padding:14px;margin-bottom:12px;border:1px solid #e6e6ef;border-radius:12px;min-height:130px;"></textarea>
+      <button type="submit" class="main-btn" style="border:none;cursor:pointer;">Send Message</button>
+    </form>
+  </div>
+</section>`
+  });
+
+  editor.BlockManager.add("booking-form",{
+    label:"Booking Form",
+    category:"Forms",
+    content:`
+<section class="content-section">
+  <div style="max-width:760px;margin:auto;">
+    <h2 style="text-align:center;">Book an Appointment</h2>
+
+    <form data-needs-formspree="true" action="FORM_ENDPOINT_HERE" method="POST" style="background:#f8fafc;padding:28px;border-radius:24px;">
+      <p style="font-size:14px;color:#666;text-align:center;margin-bottom:18px;">
+        Form setup needed: add your Formspree endpoint so bookings go to your email.
+      </p>
+
+      <input name="name" placeholder="Full Name" required style="width:100%;padding:14px;margin-bottom:12px;border:1px solid #e6e6ef;border-radius:12px;">
+      <input name="email" type="email" placeholder="Email" required style="width:100%;padding:14px;margin-bottom:12px;border:1px solid #e6e6ef;border-radius:12px;">
+      <input name="date" type="date" required style="width:100%;padding:14px;margin-bottom:12px;border:1px solid #e6e6ef;border-radius:12px;">
+      <input name="time" type="time" required style="width:100%;padding:14px;margin-bottom:12px;border:1px solid #e6e6ef;border-radius:12px;">
+      <textarea name="notes" placeholder="Notes" style="width:100%;padding:14px;margin-bottom:12px;border:1px solid #e6e6ef;border-radius:12px;"></textarea>
+      <button type="submit" class="main-btn" style="border:none;cursor:pointer;">Request Booking</button>
+    </form>
+  </div>
+</section>`
+  });
+
+  editor.BlockManager.add("map-section",{
+    label:"Map / Location",
+    category:"Business",
+    content:`
+<section class="content-section">
+  <div style="max-width:1000px;margin:auto;text-align:center;">
+    <h2>Visit Us</h2>
+    <p>123 Business Street, City, State</p>
+    <div style="border-radius:24px;overflow:hidden;box-shadow:0 15px 45px rgba(0,0,0,.12);">
+      <iframe src="https://www.google.com/maps?q=Tampa%20FL&output=embed" width="100%" height="360" style="border:0;" loading="lazy"></iframe>
+    </div>
+  </div>
+</section>`
+  });
+
+  editor.BlockManager.add("divider",{
+    label:"Divider",
+    category:"Graphics",
+    content:`<div style="height:2px;width:80%;margin:40px auto;background:linear-gradient(90deg,transparent,#7B5CFF,transparent);"></div>`
+  });
+
+  editor.BlockManager.add("spacer",{
+    label:"Spacer",
+    category:"Graphics",
+    content:`<div style="height:70px;"></div>`
+  });
+
 }
-
 function buildLibraries(){
   stylePresets = [
     {category:"buttons",name:"Purple Gradient Button",keywords:"purple gradient rounded modern",css:{background:"linear-gradient(135deg,#7B5CFF,#9F7BFF)",color:"#fff",borderRadius:"999px",boxShadow:"0 12px 28px rgba(123,92,255,.35)",fontWeight:"800",padding:"14px 30px"}},
