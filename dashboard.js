@@ -183,13 +183,8 @@ function renderAnalytics(){
 
   renderChart("analyticsChart", analyticsEvents);
 
-  const visitsBox = document.getElementById("visitsList");
-  if(!analyticsEvents.length){
-    visitsBox.innerHTML = `<div class="empty">No visits tracked yet.</div>`;
-    return;
-  }
-
-  visitsBox.innerHTML = analyticsEvents.slice(0,15).map(event=>`
+  setupVisitFilters();
+renderVisitsList();
     <div class="item">
       <strong>${escapeHtml(event.page || "Website Visit")}</strong>
       <p class="small">Source: ${escapeHtml(cleanReferrer(event.referrer))}</p>
