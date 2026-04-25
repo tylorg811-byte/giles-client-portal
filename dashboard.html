@@ -27,7 +27,10 @@
 
 body{
   font-family:'Inter',Arial,sans-serif;
-  background:var(--bg);
+  background:
+    radial-gradient(circle at top left,rgba(123,92,255,.13),transparent 30%),
+    radial-gradient(circle at top right,rgba(56,189,248,.10),transparent 28%),
+    var(--bg);
   color:var(--text);
   min-height:100vh;
 }
@@ -93,11 +96,13 @@ body{
   font-weight:900;
   text-align:left;
   cursor:pointer;
+  transition:.2s ease;
 }
 
 .nav button:hover,.nav button.active,.nav a:hover{
   background:linear-gradient(135deg,var(--purple),var(--purple2));
   color:white;
+  transform:translateX(3px);
 }
 
 .main{padding:26px;min-width:0;}
@@ -112,7 +117,9 @@ body{
 .mobile-drawer.open{display:block;}
 
 .hero{
-  background:linear-gradient(135deg,rgba(7,17,31,.97),rgba(15,23,42,.94));
+  background:
+    linear-gradient(135deg,rgba(7,17,31,.97),rgba(15,23,42,.94)),
+    radial-gradient(circle at top right,rgba(123,92,255,.45),transparent 38%);
   color:white;
   border-radius:30px;
   padding:30px;
@@ -129,9 +136,12 @@ body{
 .btn{
   border:none;border-radius:15px;padding:13px 17px;font-weight:900;
   text-decoration:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;
+  transition:.2s ease;
 }
+.btn:hover{transform:translateY(-2px);}
 .btn-primary{background:linear-gradient(135deg,var(--purple),var(--purple2));color:white;}
 .btn-light{background:white;color:#111827;}
+.btn-muted{background:#f8fafc;color:#0f172a;border:1px solid var(--line);}
 
 .badge{
   display:inline-flex;align-items:center;gap:6px;padding:8px 11px;border-radius:999px;
@@ -155,6 +165,12 @@ body{
   border-radius:24px;
   padding:22px;
   box-shadow:var(--shadow);
+  transition:.2s ease;
+}
+
+.card:hover{
+  transform:translateY(-2px);
+  box-shadow:0 24px 55px rgba(15,23,42,.11);
 }
 
 .stat span{
@@ -186,7 +202,7 @@ body{
 .tabs button.active{background:linear-gradient(135deg,var(--purple),var(--purple2));color:white;border-color:transparent;}
 
 .page{display:none;}
-.page.active{display:block;}
+.page.active{display:block;animation:fadeUp .3s ease both;}
 
 .list{display:grid;gap:12px;}
 
@@ -215,6 +231,7 @@ body{
 .bar{
   width:100%;min-height:8px;border-radius:12px 12px 5px 5px;
   background:linear-gradient(180deg,var(--purple2),var(--purple));
+  transition:.8s ease;
 }
 .bar-label{
   position:absolute;bottom:-26px;left:50%;transform:translateX(-50%);
@@ -224,8 +241,15 @@ body{
 
 .form-grid{
   display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:14px;
+}
+
+.filter-grid{
+  display:grid;
   grid-template-columns:repeat(4,1fr);
   gap:14px;
+  margin-bottom:18px;
 }
 
 label{display:block;font-size:13px;font-weight:900;color:#334155;margin-bottom:7px;}
@@ -235,11 +259,16 @@ input,select,textarea{
   font-size:14px;background:#fbfcff;outline:none;
 }
 
+input:focus,select:focus,textarea:focus{
+  border-color:var(--purple);
+  box-shadow:0 0 0 5px rgba(123,92,255,.12);
+}
+
 textarea{min-height:120px;resize:vertical;}
 .full{grid-column:1/-1;}
 
 .progress{height:12px;background:#e5e7eb;border-radius:999px;overflow:hidden;margin-top:14px;}
-.progress div{height:100%;width:0;background:linear-gradient(135deg,var(--purple),var(--purple2));}
+.progress div{height:100%;width:0;background:linear-gradient(135deg,var(--purple),var(--purple2));transition:.8s ease;}
 
 .empty{
   background:#f8fafc;border:1px dashed #cbd5e1;border-radius:18px;
@@ -261,13 +290,18 @@ textarea{min-height:120px;resize:vertical;}
   font-weight:900;
 }
 
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(10px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
 @media(max-width:1050px){
   .app{display:block;}
   .sidebar{display:none;}
   .mobile-top{display:flex;}
   .summary-grid{grid-template-columns:repeat(2,1fr);}
   .panel-grid{grid-template-columns:1fr;}
-  .form-grid{grid-template-columns:repeat(2,1fr);}
+  .filter-grid{grid-template-columns:repeat(2,1fr);}
 }
 
 @media(max-width:700px){
@@ -276,7 +310,7 @@ textarea{min-height:120px;resize:vertical;}
   .hero-row{display:block;}
   .hero h1{font-size:30px;}
   .hero-actions{justify-content:flex-start;margin-top:16px;}
-  .summary-grid,.form-grid{grid-template-columns:1fr;}
+  .summary-grid,.form-grid,.filter-grid{grid-template-columns:1fr;}
   .chart{height:210px;gap:5px;}
 }
 </style>
@@ -292,13 +326,14 @@ textarea{min-height:120px;resize:vertical;}
       <div><h2>Website Dashboard</h2></div>
     </div>
 
-    <p>Your website command center. View performance, leads, billing, SEO, and requests.</p>
+    <p>Your website command center. View performance, leads, billing, SEO, support, and requests.</p>
 
     <div class="nav">
       <button class="active" onclick="showDashPage('overview', this)">🏠 Overview</button>
       <button onclick="showDashPage('analytics', this)">📊 Analytics</button>
       <button onclick="showDashPage('leads', this)">🔥 Leads</button>
-      <button onclick="showDashPage('requests', this)">💬 Requests</button>
+      <button onclick="showDashPage('requests', this)">💬 Change Requests</button>
+      <button onclick="showDashPage('support', this)">🎧 Support Tickets</button>
       <button onclick="showDashPage('billing', this)">💳 Billing</button>
       <button onclick="showDashPage('seo', this)">🔎 SEO</button>
       <a id="sideLiveBtn" href="#" target="_blank">🌐 View Website</a>
@@ -319,7 +354,8 @@ textarea{min-height:120px;resize:vertical;}
         <button class="active" onclick="showDashPage('overview', this);toggleMobileMenu()">🏠 Overview</button>
         <button onclick="showDashPage('analytics', this);toggleMobileMenu()">📊 Analytics</button>
         <button onclick="showDashPage('leads', this);toggleMobileMenu()">🔥 Leads</button>
-        <button onclick="showDashPage('requests', this);toggleMobileMenu()">💬 Requests</button>
+        <button onclick="showDashPage('requests', this);toggleMobileMenu()">💬 Change Requests</button>
+        <button onclick="showDashPage('support', this);toggleMobileMenu()">🎧 Support Tickets</button>
         <button onclick="showDashPage('billing', this);toggleMobileMenu()">💳 Billing</button>
         <button onclick="showDashPage('seo', this);toggleMobileMenu()">🔎 SEO</button>
         <a id="mobileLiveBtn" href="#" target="_blank">🌐 View Website</a>
@@ -350,15 +386,16 @@ textarea{min-height:120px;resize:vertical;}
     <section class="summary-grid">
       <div class="card stat"><span>Views this month</span><strong id="sumViewsMonth">0</strong><p id="viewsNote">Last 30 days</p></div>
       <div class="card stat"><span>Leads this month</span><strong id="sumLeadsMonth">0</strong><p id="leadsNote">Form submissions</p></div>
-      <div class="card stat"><span>Open requests</span><strong id="sumOpenRequests">0</strong><p>Requests not marked done</p></div>
-      <div class="card stat"><span>Estimated value</span><strong id="sumEstimatedRevenue">$0</strong><p>Based on lead estimate</p></div>
+      <div class="card stat"><span>Open requests</span><strong id="sumOpenRequests">0</strong><p>Change requests not done</p></div>
+      <div class="card stat"><span>Open support</span><strong id="sumOpenTickets">0</strong><p>Support tickets not closed</p></div>
     </section>
 
     <div class="tabs">
       <button class="active" onclick="showDashPage('overview', this)">Overview</button>
       <button onclick="showDashPage('analytics', this)">Analytics</button>
       <button onclick="showDashPage('leads', this)">Leads</button>
-      <button onclick="showDashPage('requests', this)">Requests</button>
+      <button onclick="showDashPage('requests', this)">Change Requests</button>
+      <button onclick="showDashPage('support', this)">Support</button>
       <button onclick="showDashPage('billing', this)">Billing</button>
       <button onclick="showDashPage('seo', this)">SEO</button>
     </div>
@@ -384,15 +421,15 @@ textarea{min-height:120px;resize:vertical;}
         </div>
 
         <div class="card">
-          <div class="section-title"><h2>Top Sources</h2></div>
-          <div id="sourceBreakdown" class="source-pills"></div>
+          <div class="section-title"><h2>Open Support</h2><button class="btn btn-primary" onclick="showDashPage('support')">Support</button></div>
+          <div id="overviewTickets" class="list"></div>
         </div>
       </div>
     </section>
 
     <section id="analyticsPage" class="page">
       <div class="card">
-        <div class="section-title"><h2>Analytics Breakdown</h2><span class="badge">Filterable</span></div>
+        <div class="section-title"><h2>Analytics Breakdown</h2><span class="badge">All Visits</span></div>
 
         <div class="summary-grid">
           <div class="stat"><span>Total Views</span><strong id="analyticsTotal">0</strong></div>
@@ -406,11 +443,11 @@ textarea{min-height:120px;resize:vertical;}
 
       <div class="card">
         <div class="section-title">
-          <h2>Visit History</h2>
+          <h2>All Visit History</h2>
           <span class="badge" id="visitCountBadge">0 Visits</span>
         </div>
 
-        <div class="form-grid" style="margin-bottom:18px;">
+        <div class="filter-grid">
           <div><label>Month</label><select id="visitMonthFilter" onchange="renderVisitsList()"></select></div>
           <div><label>Source</label><select id="visitSourceFilter" onchange="renderVisitsList()"></select></div>
           <div><label>Device</label><select id="visitDeviceFilter" onchange="renderVisitsList()"></select></div>
@@ -456,6 +493,61 @@ textarea{min-height:120px;resize:vertical;}
       </div>
     </section>
 
+    <section id="supportPage" class="page">
+      <div class="panel-grid">
+        <div class="card">
+          <div class="section-title"><h2>Open a Support Ticket</h2><span class="badge warn">For Issues</span></div>
+          <p class="small" style="margin-bottom:16px;">Use this for broken pages, login issues, billing problems, forms not working, or urgent website problems.</p>
+
+          <div class="form-grid">
+            <div>
+              <label>Issue Type</label>
+              <select id="ticketType">
+                <option value="Website Issue">Website Issue</option>
+                <option value="Editor Issue">Editor Issue</option>
+                <option value="Billing Issue">Billing Issue</option>
+                <option value="Login Issue">Login Issue</option>
+                <option value="Form Issue">Form Issue</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div>
+              <label>Priority</label>
+              <select id="ticketPriority">
+                <option value="normal">Normal</option>
+                <option value="high">High</option>
+                <option value="urgent">Urgent</option>
+              </select>
+            </div>
+
+            <div class="full">
+              <label>Subject</label>
+              <input id="ticketSubject" placeholder="Example: My contact form is not working">
+            </div>
+
+            <div class="full">
+              <label>Describe the issue</label>
+              <textarea id="ticketMessage" placeholder="Tell us what is happening, what page it is on, and what you tried."></textarea>
+            </div>
+          </div>
+
+          <button class="btn btn-primary" style="margin-top:14px;" onclick="submitSupportTicket()">Submit Support Ticket</button>
+          <p id="ticketMessageStatus" class="small" style="margin-top:10px;"></p>
+        </div>
+
+        <div class="card">
+          <div class="section-title"><h2>Support Status</h2></div>
+          <div id="supportSummary" class="list"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title"><h2>Support Ticket History</h2><span id="ticketCountBadge" class="badge">0 Tickets</span></div>
+        <div id="supportList" class="list"></div>
+      </div>
+    </section>
+
     <section id="billingPage" class="page">
       <div class="panel-grid">
         <div class="card"><div class="section-title"><h2>Billing Overview</h2><span id="billingMiniBadge" class="badge">Loading</span></div><div id="billingDetails" class="list"></div></div>
@@ -487,7 +579,7 @@ textarea{min-height:120px;resize:vertical;}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="app.js"></script>
-<script src="dashboard.js?v=300"></script>
+<script src="dashboard.js?v=500"></script>
 
 </body>
 </html>
