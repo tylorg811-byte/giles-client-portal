@@ -1193,17 +1193,67 @@ textarea{min-height:110px;resize:vertical;}
   </section>
 
   <section id="analyticsPage" class="page-section">
-    <section class="card">
-      <h2>Analytics Dashboard</h2>
-      <div id="analyticsOverview"></div>
+  <section class="card">
+    <h2>Admin Analytics Dashboard</h2>
+    <p style="color:#64748b;margin-top:6px;">View all client traffic, filter visits, and see what is performing best.</p>
 
-      <div style="margin-top:22px;">
-        <label>Select Client</label>
-        <select id="analyticsClientSelect" onchange="loadClientAnalyticsView()"></select>
+    <div id="analyticsOverview"></div>
+
+    <div class="analytics-filter-grid">
+      <div>
+        <label>Client</label>
+        <select id="adminAnalyticsClientFilter" onchange="renderAdminVisitsList()"></select>
       </div>
 
-      <div id="analyticsClientView" style="margin-top:22px;"></div>
-    </section>
+      <div>
+        <label>Month</label>
+        <select id="adminAnalyticsMonthFilter" onchange="renderAdminVisitsList()"></select>
+      </div>
+
+      <div>
+        <label>Source</label>
+        <select id="adminAnalyticsSourceFilter" onchange="renderAdminVisitsList()"></select>
+      </div>
+
+      <div>
+        <label>Device</label>
+        <select id="adminAnalyticsDeviceFilter" onchange="renderAdminVisitsList()"></select>
+      </div>
+
+      <div>
+        <label>Page</label>
+        <select id="adminAnalyticsPageFilter" onchange="renderAdminVisitsList()"></select>
+      </div>
+
+      <div>
+        <label>Quick</label>
+        <button class="secondary" onclick="clearAdminAnalyticsFilters()">Clear Filters</button>
+      </div>
+    </div>
+
+    <div id="adminAnalyticsFilteredStats"></div>
+  </section>
+
+  <section class="card">
+    <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;">
+      <h2>All Visit History</h2>
+      <span class="badge" id="adminVisitCountBadge">0 Visits</span>
+    </div>
+
+    <div id="adminVisitsList" class="visit-list"></div>
+  </section>
+
+  <section class="card">
+    <h2>Client Drilldown</h2>
+
+    <div style="margin-top:18px;">
+      <label>Select Client</label>
+      <select id="analyticsClientSelect" onchange="loadClientAnalyticsView()"></select>
+    </div>
+
+    <div id="analyticsClientView" style="margin-top:22px;"></div>
+  </section>
+</section>
   </section>
 
   <section id="requestsPage" class="page-section">
