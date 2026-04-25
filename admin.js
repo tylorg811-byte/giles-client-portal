@@ -961,6 +961,72 @@ function renderBillingOverview(){
   `;
 }
 
+// ===== GLOBAL STATE =====
+let adminUser = null;
+let clientSites = [];
+let analyticsEvents = [];
+let leadEvents = [];
+let supportTickets = [];
+let changeRequests = [];
+let clientPayments = [];
+
+document.addEventListener("DOMContentLoaded", loadAdminDashboard);
+
+// ===== LOAD =====
+async function loadAdminDashboard(){
+  adminUser = await checkUser();
+  if(!adminUser) return;
+
+  setText("adminEmail", adminUser.email);
+
+  await refreshAdminData();
+}
+
+// ===== REFRESH =====
+async function refreshAdminData(){
+  await loadClientSites();
+  await loadAnalytics();
+  await loadLeads();
+  await loadSupport();
+  await loadRequests();
+  await loadPayments();
+
+  renderAnalyticsOverviewFull();
+  populateAnalyticsClientDropdown();
+}
+
+// ===== LOAD DATA =====
+async function loadClientSites(){
+  const { data } = await db.from("client_sites").select("*");
+  clientSites = data || [];
+}
+
+async function loadAnalytics(){
+  const { data } = await db.from("site_analytics_events").select("*");
+  analyticsEvents = data || [];
+}
+
+async function loadLeads(){
+  const { data } = await db.from("site_leads").select("*");
+  leadEvents = data || [];
+}
+
+async function loadSupport(){
+  const { data } = await db.from("support_tickets").select("*");
+  supportTickets = data || [];
+}
+
+async function loadRequests(){
+  const { data } = await db.from("change_requests").select("*");
+  changeRequests = data || [];
+}
+
+async function loadPayments(){
+  const { data } = await db.from("client_payments").select("*");
+  clientPayments = data || [];
+}
+
+// ===== ANALYTICS OVERVIEW =====
 function renderAnalyticsOverviewFull(){
   const el = document.getElementById("analyticsOverview");
   if(!el) return;
@@ -968,25 +1034,130 @@ function renderAnalyticsOverviewFull(){
   const total = analyticsEvents.length;
   const today = analyticsEvents.filter(e=>isToday(e.created_at)).length;
   const week = analyticsEvents.filter(e=>isWithinDays(e.created_at,7)).length;
-  const leads = leadEvents.length;
-  const topSource = getTopReferrer(analyticsEvents);
-  const topPage = getTopValue(analyticsEvents,"page") || "—";
-  const topDevice = getTopValue(analyticsEvents,"device") || "—";
 
   el.innerHTML = `
-    <div class="analytics-header-grid">
+    <div class="grid">
       <div class="stat"><span>Total Views</span><strong>${total}</strong></div>
       <div class="stat"><span>Today</span><strong>${today}</strong></div>
       <div class="stat"><span>7 Days</span><strong>${week}</strong></div>
-      <div class="stat"><span>Leads</span><strong>${leads}</strong></div>
-    </div>
-
-    <div class="source-grid">
-      <div class="source-card"><span>Top Source</span><strong>${escapeHtml(topSource)}</strong></div>
-      <div class="source-card"><span>Top Page</span><strong>${escapeHtml(topPage)}</strong></div>
-      <div class="source-card"><span>Top Device</span><strong>${escapeHtml(topDevice)}</strong></div>
+      <div class="stat"><span>Leads</span><strong>${leadEvents.length}</strong></div>
     </div>
   `;
+
+  setupAdminFilters();
+  renderAdminVisits();
+}
+
+// ===== FILTER SETUP =====
+function setupAdminFilters(){
+  fillSelect("adminAnalyticsClientFilter", clientSites.map(c=>({
+    value:c.client_user_id,
+    label:c.business_name || c.client_email
+  })), "All Clients");
+
+  fillSelect("adminAnalyticsMonthFilter", getMonths(), "All Months");
+  fillSelect("adminAnalyticsSourceFilter", getSources(), "All Sources");
+  fillSelect("adminAnalyticsDeviceFilter", getValues("device"), "All Devices");
+  fillSelect("adminAnalyticsPageFilter", getValues("page"), "All Pages");
+}
+
+// ===== RENDER VISITS =====
+function renderAdminVisits(){
+  const list = document.getElementById("adminVisitsList");
+  if(!list) return;
+
+  let filtered = analyticsEvents.filter(e=>{
+    return (
+      match("adminAnalyticsClientFilter", e.client_user_id) &&
+      match("adminAnalyticsMonthFilter", getMonth(e.created_at)) &&
+      match("adminAnalyticsSourceFilter", cleanRef(e.referrer)) &&
+      match("adminAnalyticsDeviceFilter", e.device) &&
+      match("adminAnalyticsPageFilter", e.page)
+    );
+  });
+
+  setText("adminVisitCountBadge", `${filtered.length} Visits`);
+
+  if(!filtered.length){
+    list.innerHTML = `<div class="empty-state">No visits</div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.slice(0,100).map(e=>`
+    <div class="analytics-client-card">
+      <p><strong>${getClientName(e.client_user_id)}</strong></p>
+      <p>${e.page || "Visit"}</p>
+      <p>${cleanRef(e.referrer)}</p>
+      <p>${e.device || "Unknown"}</p>
+      <p>${timeAgo(e.created_at)}</p>
+    </div>
+  `).join("");
+}
+
+// ===== HELPERS =====
+function match(id,val){
+  const v = getVal(id);
+  return v === "all" || v === val;
+}
+
+function fillSelect(id, options, label){
+  const el = document.getElementById(id);
+  if(!el) return;
+
+  el.innerHTML = `<option value="all">${label}</option>` +
+    options.map(o=>`<option value="${o.value}">${o.label}</option>`).join("");
+}
+
+function getMonths(){
+  return [...new Set(analyticsEvents.map(e=>getMonth(e.created_at)))];
+}
+
+function getSources(){
+  return [...new Set(analyticsEvents.map(e=>cleanRef(e.referrer)))];
+}
+
+function getValues(field){
+  return [...new Set(analyticsEvents.map(e=>e[field]))];
+}
+
+function getMonth(date){
+  return date ? new Date(date).toISOString().slice(0,7) : "";
+}
+
+function cleanRef(r){
+  if(!r) return "direct";
+  try{return new URL(r).hostname}catch{return r}
+}
+
+function getClientName(id){
+  const c = clientSites.find(s=>s.client_user_id === id);
+  return c?.business_name || "Client";
+}
+
+function getVal(id){
+  return document.getElementById(id)?.value || "all";
+}
+
+function setText(id,val){
+  const el = document.getElementById(id);
+  if(el) el.textContent = val;
+}
+
+function timeAgo(d){
+  const s = (Date.now()-new Date(d))/1000;
+  if(s<60) return "now";
+  if(s<3600) return Math.floor(s/60)+"m ago";
+  if(s<86400) return Math.floor(s/3600)+"h ago";
+  return Math.floor(s/86400)+"d ago";
+}
+
+function isToday(d){
+  const a=new Date(d), b=new Date();
+  return a.toDateString()===b.toDateString();
+}
+
+function isWithinDays(d,days){
+  return (Date.now()-new Date(d)) < days*86400000;
 }
 
 function populateAnalyticsClientDropdown(){
