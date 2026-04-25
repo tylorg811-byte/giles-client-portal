@@ -961,72 +961,7 @@ function renderBillingOverview(){
   `;
 }
 
-// ===== GLOBAL STATE =====
-let adminUser = null;
-let clientSites = [];
-let analyticsEvents = [];
-let leadEvents = [];
-let supportTickets = [];
-let changeRequests = [];
-let clientPayments = [];
 
-document.addEventListener("DOMContentLoaded", loadAdminDashboard);
-
-// ===== LOAD =====
-async function loadAdminDashboard(){
-  adminUser = await checkUser();
-  if(!adminUser) return;
-
-  setText("adminEmail", adminUser.email);
-
-  await refreshAdminData();
-}
-
-// ===== REFRESH =====
-async function refreshAdminData(){
-  await loadClientSites();
-  await loadAnalytics();
-  await loadLeads();
-  await loadSupport();
-  await loadRequests();
-  await loadPayments();
-
-  renderAnalyticsOverviewFull();
-  populateAnalyticsClientDropdown();
-}
-
-// ===== LOAD DATA =====
-async function loadClientSites(){
-  const { data } = await db.from("client_sites").select("*");
-  clientSites = data || [];
-}
-
-async function loadAnalytics(){
-  const { data } = await db.from("site_analytics_events").select("*");
-  analyticsEvents = data || [];
-}
-
-async function loadLeads(){
-  const { data } = await db.from("site_leads").select("*");
-  leadEvents = data || [];
-}
-
-async function loadSupport(){
-  const { data } = await db.from("support_tickets").select("*");
-  supportTickets = data || [];
-}
-
-async function loadRequests(){
-  const { data } = await db.from("change_requests").select("*");
-  changeRequests = data || [];
-}
-
-async function loadPayments(){
-  const { data } = await db.from("client_payments").select("*");
-  clientPayments = data || [];
-}
-
-// ===== ANALYTICS OVERVIEW =====
 function renderAnalyticsOverviewFull(){
   const el = document.getElementById("analyticsOverview");
   if(!el) return;
@@ -1034,131 +969,218 @@ function renderAnalyticsOverviewFull(){
   const total = analyticsEvents.length;
   const today = analyticsEvents.filter(e=>isToday(e.created_at)).length;
   const week = analyticsEvents.filter(e=>isWithinDays(e.created_at,7)).length;
+  const leads = leadEvents.length;
+
+  const topClientId = getTopValue(analyticsEvents,"client_user_id");
+  const topClient = getClientNameById(topClientId);
+  const topSource = getTopReferrer(analyticsEvents);
+  const topPage = getTopValue(analyticsEvents,"page") || "—";
+  const topDevice = getTopValue(analyticsEvents,"device") || "—";
 
   el.innerHTML = `
-    <div class="grid">
+    <div class="analytics-header-grid">
       <div class="stat"><span>Total Views</span><strong>${total}</strong></div>
       <div class="stat"><span>Today</span><strong>${today}</strong></div>
       <div class="stat"><span>7 Days</span><strong>${week}</strong></div>
-      <div class="stat"><span>Leads</span><strong>${leadEvents.length}</strong></div>
+      <div class="stat"><span>Total Leads</span><strong>${leads}</strong></div>
+    </div>
+
+    <div class="source-grid">
+      <div class="source-card"><span>Top Client</span><strong>${escapeHtml(topClient)}</strong></div>
+      <div class="source-card"><span>Top Source</span><strong>${escapeHtml(topSource)}</strong></div>
+      <div class="source-card"><span>Top Page</span><strong>${escapeHtml(topPage)}</strong></div>
+      <div class="source-card"><span>Top Device</span><strong>${escapeHtml(topDevice)}</strong></div>
     </div>
   `;
 
-  setupAdminFilters();
-  renderAdminVisits();
+  setupAdminAnalyticsFilters();
+  renderAdminVisitsList();
 }
 
-// ===== FILTER SETUP =====
-function setupAdminFilters(){
-  fillSelect("adminAnalyticsClientFilter", clientSites.map(c=>({
-    value:c.client_user_id,
-    label:c.business_name || c.client_email
-  })), "All Clients");
+function setupAdminAnalyticsFilters(){
+  fillAdminFilter(
+    "adminAnalyticsClientFilter",
+    clientSites
+      .filter(site=>site.client_user_id)
+      .map(site=>({
+        value:site.client_user_id,
+        label:site.business_name || site.client_email || site.client_user_id
+      })),
+    "All Clients"
+  );
 
-  fillSelect("adminAnalyticsMonthFilter", getMonths(), "All Months");
-  fillSelect("adminAnalyticsSourceFilter", getSources(), "All Sources");
-  fillSelect("adminAnalyticsDeviceFilter", getValues("device"), "All Devices");
-  fillSelect("adminAnalyticsPageFilter", getValues("page"), "All Pages");
+  fillAdminFilter(
+    "adminAnalyticsMonthFilter",
+    getAdminAnalyticsMonths().map(month=>({value:month,label:formatAnalyticsMonth(month)})),
+    "All Months"
+  );
+
+  fillAdminFilter(
+    "adminAnalyticsSourceFilter",
+    getAdminUniqueSources().map(source=>({value:source,label:source})),
+    "All Sources"
+  );
+
+  fillAdminFilter(
+    "adminAnalyticsDeviceFilter",
+    getAdminUniqueFieldValues("device").map(device=>({value:device,label:device})),
+    "All Devices"
+  );
+
+  fillAdminFilter(
+    "adminAnalyticsPageFilter",
+    getAdminUniqueFieldValues("page").map(page=>({value:page,label:page})),
+    "All Pages"
+  );
 }
 
-// ===== RENDER VISITS =====
-function renderAdminVisits(){
+function fillAdminFilter(id, options, allLabel){
+  const select = document.getElementById(id);
+  if(!select) return;
+
+  const current = select.value || "all";
+  select.innerHTML = `<option value="all">${allLabel}</option>`;
+
+  options.forEach(option=>{
+    select.innerHTML += `
+      <option value="${escapeAttribute(option.value)}">${escapeHtml(option.label)}</option>
+    `;
+  });
+
+  if([...select.options].some(opt=>opt.value === current)){
+    select.value = current;
+  }
+}
+
+function renderAdminVisitsList(){
   const list = document.getElementById("adminVisitsList");
   if(!list) return;
 
-  let filtered = analyticsEvents.filter(e=>{
+  const client = getAdminFilterValue("adminAnalyticsClientFilter");
+  const month = getAdminFilterValue("adminAnalyticsMonthFilter");
+  const source = getAdminFilterValue("adminAnalyticsSourceFilter");
+  const device = getAdminFilterValue("adminAnalyticsDeviceFilter");
+  const page = getAdminFilterValue("adminAnalyticsPageFilter");
+
+  let filtered = [...analyticsEvents];
+
+  filtered = filtered.filter(event=>{
+    const eventMonth = event.created_at
+      ? new Date(event.created_at).toISOString().slice(0,7)
+      : "";
+
+    const eventSource = cleanReferrer(event.referrer);
+    const eventDevice = event.device || "unknown";
+    const eventPage = event.page || "unknown";
+
     return (
-      match("adminAnalyticsClientFilter", e.client_user_id) &&
-      match("adminAnalyticsMonthFilter", getMonth(e.created_at)) &&
-      match("adminAnalyticsSourceFilter", cleanRef(e.referrer)) &&
-      match("adminAnalyticsDeviceFilter", e.device) &&
-      match("adminAnalyticsPageFilter", e.page)
+      (client === "all" || event.client_user_id === client) &&
+      (month === "all" || eventMonth === month) &&
+      (source === "all" || eventSource === source) &&
+      (device === "all" || eventDevice === device) &&
+      (page === "all" || eventPage === page)
     );
   });
 
-  setText("adminVisitCountBadge", `${filtered.length} Visits`);
+  setText("adminVisitCountBadge", `${filtered.length} Visit${filtered.length === 1 ? "" : "s"}`);
+  renderFilteredAnalyticsStats(filtered);
 
   if(!filtered.length){
-    list.innerHTML = `<div class="empty-state">No visits</div>`;
+    list.innerHTML = `<div class="empty-state">No visits match these filters.</div>`;
     return;
   }
 
-  list.innerHTML = filtered.slice(0,100).map(e=>`
+  list.innerHTML = filtered.slice(0,100).map(event=>`
     <div class="analytics-client-card">
-      <p><strong>${getClientName(e.client_user_id)}</strong></p>
-      <p>${e.page || "Visit"}</p>
-      <p>${cleanRef(e.referrer)}</p>
-      <p>${e.device || "Unknown"}</p>
-      <p>${timeAgo(e.created_at)}</p>
+      <p><strong>${escapeHtml(getClientNameById(event.client_user_id))}</strong></p>
+      <p><strong>Page:</strong> ${escapeHtml(event.page || "Website Visit")}</p>
+      <p><strong>Source:</strong> ${escapeHtml(cleanReferrer(event.referrer))}</p>
+      <p><strong>Device:</strong> ${escapeHtml(event.device || "Unknown")} • ${escapeHtml(event.browser || "Unknown")}</p>
+      <p><strong>Path:</strong> ${escapeHtml(event.path || "—")}</p>
+      <p style="color:#64748b;font-size:13px;">${timeAgo(event.created_at)}</p>
     </div>
   `).join("");
 }
 
-// ===== HELPERS =====
-function match(id,val){
-  const v = getVal(id);
-  return v === "all" || v === val;
+function renderFilteredAnalyticsStats(events){
+  const box = document.getElementById("adminAnalyticsFilteredStats");
+  if(!box) return;
+
+  const topClient = getClientNameById(getTopValue(events,"client_user_id"));
+  const topSource = getTopReferrer(events);
+  const topDevice = getTopValue(events,"device") || "—";
+  const topPage = getTopValue(events,"page") || "—";
+
+  box.innerHTML = `
+    <div class="grid">
+      <div class="stat"><span>Filtered Views</span><strong>${events.length}</strong></div>
+      <div class="stat"><span>Top Client</span><strong style="font-size:22px;">${escapeHtml(topClient)}</strong></div>
+      <div class="stat"><span>Top Source</span><strong style="font-size:22px;">${escapeHtml(topSource)}</strong></div>
+      <div class="stat"><span>Top Page</span><strong style="font-size:22px;">${escapeHtml(topPage)}</strong></div>
+    </div>
+
+    <div class="source-grid">
+      <div class="source-card"><span>Top Device</span><strong>${escapeHtml(topDevice)}</strong></div>
+      <div class="source-card"><span>Mobile Views</span><strong>${events.filter(e=>e.device === "mobile").length}</strong></div>
+      <div class="source-card"><span>Desktop Views</span><strong>${events.filter(e=>e.device === "desktop").length}</strong></div>
+    </div>
+  `;
 }
 
-function fillSelect(id, options, label){
+function clearAdminAnalyticsFilters(){
+  setValue("adminAnalyticsClientFilter","all");
+  setValue("adminAnalyticsMonthFilter","all");
+  setValue("adminAnalyticsSourceFilter","all");
+  setValue("adminAnalyticsDeviceFilter","all");
+  setValue("adminAnalyticsPageFilter","all");
+  renderAdminVisitsList();
+}
+
+function getAdminAnalyticsMonths(){
+  return [...new Set(analyticsEvents.map(event=>{
+    if(!event.created_at) return null;
+    return new Date(event.created_at).toISOString().slice(0,7);
+  }).filter(Boolean))].sort().reverse();
+}
+
+function formatAnalyticsMonth(key){
+  const [year,month] = key.split("-");
+  const date = new Date(Number(year), Number(month)-1, 1);
+
+  return date.toLocaleDateString(undefined,{
+    month:"long",
+    year:"numeric"
+  });
+}
+
+function getAdminUniqueSources(){
+  return [...new Set(analyticsEvents.map(event=>cleanReferrer(event.referrer)))].filter(Boolean).sort();
+}
+
+function getAdminUniqueFieldValues(field){
+  return [...new Set(analyticsEvents.map(event=>event[field] || "unknown"))].filter(Boolean).sort();
+}
+
+function getClientNameById(clientUserId){
+  if(!clientUserId) return "Unknown Client";
+
+  const site = clientSites.find(site=>site.client_user_id === clientUserId);
+  return site?.business_name || site?.client_email || clientUserId || "Unknown Client";
+}
+
+function getAdminFilterValue(id){
   const el = document.getElementById(id);
-  if(!el) return;
-
-  el.innerHTML = `<option value="all">${label}</option>` +
-    options.map(o=>`<option value="${o.value}">${o.label}</option>`).join("");
+  return el ? el.value : "all";
 }
 
-function getMonths(){
-  return [...new Set(analyticsEvents.map(e=>getMonth(e.created_at)))];
+function escapeAttribute(value){
+  return String(value || "")
+    .replaceAll("&","&amp;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;");
 }
 
-function getSources(){
-  return [...new Set(analyticsEvents.map(e=>cleanRef(e.referrer)))];
-}
-
-function getValues(field){
-  return [...new Set(analyticsEvents.map(e=>e[field]))];
-}
-
-function getMonth(date){
-  return date ? new Date(date).toISOString().slice(0,7) : "";
-}
-
-function cleanRef(r){
-  if(!r) return "direct";
-  try{return new URL(r).hostname}catch{return r}
-}
-
-function getClientName(id){
-  const c = clientSites.find(s=>s.client_user_id === id);
-  return c?.business_name || "Client";
-}
-
-function getVal(id){
-  return document.getElementById(id)?.value || "all";
-}
-
-function setText(id,val){
-  const el = document.getElementById(id);
-  if(el) el.textContent = val;
-}
-
-function timeAgo(d){
-  const s = (Date.now()-new Date(d))/1000;
-  if(s<60) return "now";
-  if(s<3600) return Math.floor(s/60)+"m ago";
-  if(s<86400) return Math.floor(s/3600)+"h ago";
-  return Math.floor(s/86400)+"d ago";
-}
-
-function isToday(d){
-  const a=new Date(d), b=new Date();
-  return a.toDateString()===b.toDateString();
-}
-
-function isWithinDays(d,days){
-  return (Date.now()-new Date(d)) < days*86400000;
-}
 
 function populateAnalyticsClientDropdown(){
   const select = document.getElementById("analyticsClientSelect");
