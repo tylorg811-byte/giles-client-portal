@@ -1,15 +1,6 @@
-function escapeHtml(value){
-  return String(value || "")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
-}
-
 function setText(id,value){
   const el = document.getElementById(id);
-  if(el) el.textContent = value;
+  if(el) el.textContent = value ?? "";
 }
 
 function setValue(id,value){
@@ -22,63 +13,103 @@ function cleanValue(id){
   return el ? el.value.trim() : "";
 }
 
-function getBillingStatus(site){
-  if(site.billing_override) return { text:"Covered by Giles", class:"full" };
-  if(site.billing_status === "past due") return { text:"Past Due", class:"danger" };
-  if(site.billing_status === "free") return { text:"Free", class:"safe" };
-  if(site.billing_status === "manual paid") return { text:"Manual Paid", class:"full" };
-  if(site.billing_status === "trial") return { text:"Trial", class:"safe" };
-  if(site.billing_status === "paused") return { text:"Paused", class:"dark" };
-
-  const today = new Date();
-  today.setHours(0,0,0,0);
-
-  const next = site.next_payment_date
-    ? new Date(site.next_payment_date + "T00:00:00")
-    : null;
-
-  if(next && next < today){
-    return { text:"Past Due", class:"danger" };
-  }
-
-  return { text:"Active", class:"full" };
+function escapeHtml(value){
+  return String(value || "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
 }
 
-function renderChangeRequests(){
-  const list = document.getElementById("changeRequestList");
-  if(!list) return;
+function capitalize(text){
+  return String(text || "").charAt(0).toUpperCase() + String(text || "").slice(1);
+}
 
-  list.innerHTML = "";
+function toDateInput(date){
+  return date.toISOString().split("T")[0];
+}
 
-  if(!changeRequests || !changeRequests.length){
-    list.innerHTML = `<div class="empty-state">No change requests yet.</div>`;
-    return;
-  }
+function formatDate(dateString){
+  if(!dateString) return "—";
+  return new Date(dateString + "T00:00:00").toLocaleDateString();
+}
 
-  changeRequests.forEach(req=>{
-    const card = document.createElement("div");
-    card.className = "request-card";
+function timeAgo(dateString){
+  if(!dateString) return "—";
 
-    card.innerHTML = `
-      <div>
-        <h3>${escapeHtml(req.business_name || req.client_email || "Client Request")}</h3>
-        <p>${escapeHtml(req.client_email || "")}</p>
-        <span class="badge">${escapeHtml(req.status || "new")}</span>
-      </div>
+  const date = new Date(dateString);
+  const seconds = Math.floor((new Date() - date) / 1000);
 
-      <div>
-        <p><strong>${escapeHtml(req.request_type || "Request")}</strong></p>
-        <p>${escapeHtml(req.message || "")}</p>
-      </div>
+  if(seconds < 60) return "just now";
 
-      <div class="actions">
-        <button onclick="completeRequest('${req.id}', '${req.client_user_id || ""}')">Complete</button>
-        <button class="danger" onclick="deleteChangeRequest('${req.id}')">Delete</button>
-      </div>
-    `;
+  const minutes = Math.floor(seconds / 60);
+  if(minutes < 60) return `${minutes} min ago`;
 
-    list.appendChild(card);
+  const hours = Math.floor(minutes / 60);
+  if(hours < 24) return `${hours} hr ago`;
+
+  const days = Math.floor(hours / 24);
+  if(days < 7) return `${days} day${days === 1 ? "" : "s"} ago`;
+
+  return date.toLocaleDateString();
+}
+
+function isToday(dateString){
+  const date = new Date(dateString);
+  const today = new Date();
+
+  return date.getFullYear() === today.getFullYear() &&
+    date.getMonth() === today.getMonth() &&
+    date.getDate() === today.getDate();
+}
+
+function isWithinDays(dateString,days){
+  const date = new Date(dateString);
+  const now = new Date();
+  return now - date <= days * 24 * 60 * 60 * 1000;
+}
+
+function getTopValue(items,key){
+  const counts = {};
+
+  items.forEach(item=>{
+    const value = item[key] || "unknown";
+    counts[value] = (counts[value] || 0) + 1;
   });
+
+  return Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0] || null;
+}
+
+function cleanReferrer(ref){
+  if(!ref || ref === "direct") return "direct";
+
+  try{
+    return new URL(ref).hostname;
+  }catch(e){
+    return ref;
+  }
+}
+
+function getTopReferrer(events){
+  const counts = {};
+
+  events.forEach(event=>{
+    const source = cleanReferrer(event.referrer);
+    counts[source] = (counts[source] || 0) + 1;
+  });
+
+  return Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0] || "direct";
+}
+
+function getInitials(text){
+  return String(text || "C")
+    .split(" ")
+    .filter(Boolean)
+    .slice(0,2)
+    .map(word=>word[0])
+    .join("")
+    .toUpperCase();
 }
 
 let adminUser = null;
@@ -91,9 +122,6 @@ const LIVE_BASE_URL = "https://giles-sites.netlify.app";
 
 document.addEventListener("DOMContentLoaded", loadAdminDashboard);
 
-/* =========================
-   INIT
-========================= */
 async function loadAdminDashboard(){
   adminUser = await checkUser();
   if(!adminUser) return;
@@ -113,69 +141,11 @@ async function loadAdminDashboard(){
   }
 
   await refreshAdminData();
-
   populateAnalyticsClientDropdown();
   populateSEOClientDropdown();
   loadClientAnalyticsView();
 }
 
-/* =========================
-   NAVIGATION
-========================= */
-function showAdminPage(page){
-  document.querySelectorAll(".page-section").forEach(section=>{
-    section.classList.remove("active");
-  });
-
-  document.querySelectorAll(".sidebar button").forEach(button=>{
-    button.classList.remove("active-nav");
-  });
-
-  const pageEl = document.getElementById(`${page}Page`);
-  if(pageEl) pageEl.classList.add("active");
-
-  const navEl = document.getElementById(`nav${capitalize(page)}`);
-  if(navEl) navEl.classList.add("active-nav");
-
-  const titles = {
-    clients:"Client Websites",
-    clientDetail:"Client Details",
-    importer:"Website Importer",
-    seo:"SEO Panel",
-    analytics:"Analytics",
-    requests:"Change Requests",
-    billing:"Billing"
-  };
-
-  setText("pageTitle", titles[page] || "Admin Console");
-
-  if(page === "seo"){
-    populateSEOClientDropdown();
-    loadSEOClient();
-  }
-
-  if(page === "analytics"){
-    renderAnalyticsOverviewFull();
-    populateAnalyticsClientDropdown();
-    loadClientAnalyticsView();
-  }
-
-  if(page === "requests"){
-    renderChangeRequests();
-  }
-
-  if(page === "billing"){
-    renderBillingOverview();
-  }
-
-  if(window.innerWidth <= 1150){
-    document.body.classList.remove("sidebar-open");
-  }
-}
-
-/* =========================
-   AUTH
-========================= */
 async function checkAdminAccess(){
   const { data, error } = await db
     .from("admin_users")
@@ -186,9 +156,6 @@ async function checkAdminAccess(){
   return !!data && !error;
 }
 
-/* =========================
-   LOAD DATA
-========================= */
 async function refreshAdminData(){
   await loadClientSites();
   await loadChangeRequests();
@@ -267,7 +234,7 @@ async function loadLeads(){
     .order("created_at", { ascending:false });
 
   if(error){
-    console.warn("Leads not loaded. Make sure site_leads exists.", error);
+    console.warn("Leads not loaded.", error);
     leadEvents = [];
     return;
   }
@@ -275,9 +242,52 @@ async function loadLeads(){
   leadEvents = data || [];
 }
 
-/* =========================
-   STATS + ALERTS
-========================= */
+function showAdminPage(page){
+  document.querySelectorAll(".page-section").forEach(section=>{
+    section.classList.remove("active");
+  });
+
+  document.querySelectorAll(".sidebar button").forEach(button=>{
+    button.classList.remove("active-nav");
+  });
+
+  const pageEl = document.getElementById(`${page}Page`);
+  if(pageEl) pageEl.classList.add("active");
+
+  const navEl = document.getElementById(`nav${capitalize(page)}`);
+  if(navEl) navEl.classList.add("active-nav");
+
+  const titles = {
+    clients:"Client Websites",
+    clientDetail:"Client Details",
+    importer:"Website Importer",
+    seo:"SEO Panel",
+    analytics:"Analytics",
+    requests:"Change Requests",
+    billing:"Billing"
+  };
+
+  setText("pageTitle", titles[page] || "Admin Console");
+
+  if(page === "seo"){
+    populateSEOClientDropdown();
+    loadSEOClient();
+  }
+
+  if(page === "analytics"){
+    renderAnalyticsOverviewFull();
+    populateAnalyticsClientDropdown();
+    loadClientAnalyticsView();
+  }
+
+  if(page === "requests") renderChangeRequests();
+  if(page === "billing") renderBillingOverview();
+
+  if(window.innerWidth <= 1150){
+    document.body.classList.remove("sidebar-open");
+  }
+}
+
 function renderStats(){
   setText("totalClients", clientSites.length);
 
@@ -343,9 +353,6 @@ function renderSmartAlerts(){
   `;
 }
 
-/* =========================
-   FILTERS
-========================= */
 function applyClientFilters(){
   const search = cleanValue("clientSearch").toLowerCase();
   const billing = cleanValue("billingFilter") || "all";
@@ -388,9 +395,6 @@ function applyClientFilters(){
   renderClientSites(filtered);
 }
 
-/* =========================
-   CLIENT CARDS — REDESIGNED
-========================= */
 function renderClientSites(sites){
   const list = document.getElementById("clientList");
   if(!list) return;
@@ -410,7 +414,6 @@ function renderClientSites(sites){
 
     const seoScore = Number(site.seo_score || 0);
     const seoClass = seoScore >= 80 ? "full" : seoScore >= 60 ? "safe" : "danger";
-
     const initials = getInitials(site.business_name || site.client_email || "Client");
 
     const card = document.createElement("div");
@@ -491,15 +494,17 @@ function renderClientSites(sites){
         <button class="danger wide" onclick="deleteClientSite('${site.id}')">Delete Client</button>
       </div>
     `;
-/* =========================
-   QUICK ACTIONS
-========================= */
+
+    list.appendChild(card);
+  });
+}
+
 async function quickPublish(id){
-  await updateClientQuick(id, { site_status:"published" }, "Client marked as published.");
+  await updateClientQuick(id, { site_status:"published" });
 }
 
 async function quickPause(id){
-  await updateClientQuick(id, { site_status:"paused" }, "Client site paused.");
+  await updateClientQuick(id, { site_status:"paused" });
 }
 
 async function quickMarkPaid(id){
@@ -512,7 +517,7 @@ async function quickMarkPaid(id){
     billing_override:false,
     last_payment_date:toDateInput(today),
     next_payment_date:toDateInput(next)
-  }, "Payment marked as received.");
+  });
 }
 
 async function toggleSafeMode(id){
@@ -523,7 +528,7 @@ async function toggleSafeMode(id){
 
   await updateClientQuick(id, {
     editor_access:nextAccess
-  }, `Editor access changed to ${nextAccess}.`);
+  });
 }
 
 async function toggleEditorLock(id){
@@ -539,10 +544,10 @@ async function toggleEditorLock(id){
   await updateClientQuick(id, {
     editor_locked:!site.editor_locked,
     editor_locked_reason:!site.editor_locked ? reason : ""
-  }, site.editor_locked ? "Editor unlocked." : "Editor locked.");
+  });
 }
 
-async function updateClientQuick(id, updates, message){
+async function updateClientQuick(id, updates){
   const { error } = await db
     .from("client_sites")
     .update({
@@ -560,20 +565,18 @@ async function updateClientQuick(id, updates, message){
   await refreshAdminData();
 }
 
-/* =========================
-   CLIENT FORM
-========================= */
 async function saveClientSite(){
   const id = cleanValue("clientRecordId");
 
   const payload = {
+    admin_user_id: adminUser.id,
     business_name: cleanValue("businessName"),
     client_email: cleanValue("clientEmail"),
     client_user_id: cleanValue("clientUserId") || null,
     package_name: cleanValue("packageName"),
     business_type: cleanValue("businessType"),
     business_location: cleanValue("businessLocation"),
-    domain: cleanValue("domain"),
+    domain: cleanValue("domain").replace(/^https?:\/\//,"").replace(/\/$/,""),
     domain_status: cleanValue("domainStatus"),
     domain_release_status: cleanValue("domainReleaseStatus"),
     site_status: cleanValue("siteStatus"),
@@ -645,26 +648,58 @@ function editClientSite(id){
 }
 
 function clearClientForm(){
-  document.querySelectorAll("#clientFormWrap input, #clientFormWrap textarea").forEach(i=>i.value="");
+  const defaults = {
+    clientRecordId:"",
+    businessName:"",
+    clientEmail:"",
+    clientUserId:"",
+    packageName:"Starter",
+    businessType:"",
+    businessLocation:"",
+    domain:"",
+    domainStatus:"not connected",
+    domainReleaseStatus:"connected",
+    siteStatus:"draft",
+    editorAccess:"safe",
+    editorLocked:"false",
+    editorLockedReason:"",
+    billingStatus:"active",
+    billingOverride:"false",
+    billingCycle:"monthly",
+    nextPaymentDate:"",
+    lastPaymentDate:"",
+    clientTags:"",
+    billingOverrideReason:"",
+    billingNotes:"",
+    domainReleaseNotes:"",
+    notes:""
+  };
+
+  Object.entries(defaults).forEach(([id,value])=>setValue(id,value));
   setText("message","");
 }
 
 function toggleClientForm(){
   const wrap = document.getElementById("clientFormWrap");
-  wrap.style.display = wrap.style.display === "none" ? "block" : "none";
+  if(!wrap) return;
+  wrap.style.display = wrap.style.display === "block" ? "none" : "block";
 }
 
 function closeClientForm(){
-  document.getElementById("clientFormWrap").style.display = "none";
+  const wrap = document.getElementById("clientFormWrap");
+  if(wrap) wrap.style.display = "none";
 }
 
 function scrollToForm(){
-  document.getElementById("clientFormCard").scrollIntoView({behavior:"smooth"});
+  showAdminPage("clients");
+
+  const wrap = document.getElementById("clientFormWrap");
+  if(wrap) wrap.style.display = "block";
+
+  const card = document.getElementById("clientFormCard");
+  if(card) card.scrollIntoView({behavior:"smooth",block:"start"});
 }
 
-/* =========================
-   ANALYTICS
-========================= */
 function renderAnalyticsOverviewFull(){
   const el = document.getElementById("analyticsOverview");
   if(!el) return;
@@ -673,59 +708,147 @@ function renderAnalyticsOverviewFull(){
   const today = analyticsEvents.filter(e=>isToday(e.created_at)).length;
   const week = analyticsEvents.filter(e=>isWithinDays(e.created_at,7)).length;
   const leads = leadEvents.length;
+  const topSource = getTopReferrer(analyticsEvents);
+  const topPage = getTopValue(analyticsEvents,"page") || "—";
+  const topDevice = getTopValue(analyticsEvents,"device") || "—";
 
   el.innerHTML = `
     <div class="analytics-header-grid">
-      <div class="stat"><span>Total</span><strong>${total}</strong></div>
+      <div class="stat"><span>Total Views</span><strong>${total}</strong></div>
       <div class="stat"><span>Today</span><strong>${today}</strong></div>
       <div class="stat"><span>7 Days</span><strong>${week}</strong></div>
       <div class="stat"><span>Leads</span><strong>${leads}</strong></div>
     </div>
+
+    <div class="source-grid">
+      <div class="source-card"><span>Top Source</span><strong>${escapeHtml(topSource)}</strong></div>
+      <div class="source-card"><span>Top Page</span><strong>${escapeHtml(topPage)}</strong></div>
+      <div class="source-card"><span>Top Device</span><strong>${escapeHtml(topDevice)}</strong></div>
+    </div>
   `;
+}
+
+function populateAnalyticsClientDropdown(){
+  const select = document.getElementById("analyticsClientSelect");
+  if(!select) return;
+
+  const current = select.value;
+  select.innerHTML = "";
+
+  clientSites.forEach(site=>{
+    if(!site.client_user_id) return;
+
+    const option = document.createElement("option");
+    option.value = site.client_user_id;
+    option.textContent = site.business_name || site.client_email || site.client_user_id;
+    select.appendChild(option);
+  });
+
+  if(current) select.value = current;
+
+  if(!select.innerHTML){
+    select.innerHTML = `<option value="">No clients available</option>`;
+  }
 }
 
 function loadClientAnalyticsView(){
   const select = document.getElementById("analyticsClientSelect");
   const container = document.getElementById("analyticsClientView");
-
   if(!select || !container) return;
 
   const id = select.value;
 
+  if(!id){
+    container.innerHTML = `<div class="empty-state">No client selected.</div>`;
+    return;
+  }
+
+  const site = clientSites.find(s=>s.client_user_id === id);
   const events = analyticsEvents.filter(e=>e.client_user_id === id);
   const leads = leadEvents.filter(l=>l.client_user_id === id);
 
+  const recentVisits = events.slice(0,8).map(event=>`
+    <div class="analytics-client-card">
+      <p><strong>${escapeHtml(event.page || "home")}</strong></p>
+      <p>${escapeHtml(event.device || "unknown")} • ${escapeHtml(event.browser || "unknown")}</p>
+      <p><strong>Source:</strong> ${escapeHtml(cleanReferrer(event.referrer))}</p>
+      <p style="color:#64748b;font-size:13px;">${timeAgo(event.created_at)}</p>
+    </div>
+  `).join("");
+
+  const recentLeads = leads.slice(0,6).map(lead=>`
+    <div class="analytics-client-card">
+      <p><strong>${escapeHtml(lead.form_name || "Website Lead")}</strong></p>
+      <p>${escapeHtml(lead.page || "unknown page")}</p>
+      <p><strong>Source:</strong> ${escapeHtml(cleanReferrer(lead.source))}</p>
+      <p style="color:#64748b;font-size:13px;">${timeAgo(lead.created_at)}</p>
+    </div>
+  `).join("");
+
   container.innerHTML = `
+    <h2>${escapeHtml(site?.business_name || "Client Analytics")}</h2>
+
     <div class="analytics-header-grid">
       <div class="stat"><span>Views</span><strong>${events.length}</strong></div>
       <div class="stat"><span>Leads</span><strong>${leads.length}</strong></div>
-      <div class="stat"><span>Top Page</span><strong>${getTopValue(events,"page") || "—"}</strong></div>
-      <div class="stat"><span>Device</span><strong>${getTopValue(events,"device") || "—"}</strong></div>
+      <div class="stat"><span>Top Page</span><strong style="font-size:22px;">${escapeHtml(getTopValue(events,"page") || "—")}</strong></div>
+      <div class="stat"><span>Device</span><strong style="font-size:22px;">${escapeHtml(getTopValue(events,"device") || "—")}</strong></div>
+    </div>
+
+    <h3 style="margin:24px 0 12px;">Recent Leads</h3>
+    <div class="visit-list">
+      ${recentLeads || `<div class="empty-state">No leads yet.</div>`}
+    </div>
+
+    <h3 style="margin:24px 0 12px;">Recent Visits</h3>
+    <div class="visit-list">
+      ${recentVisits || `<div class="empty-state">No visits yet.</div>`}
     </div>
   `;
 }
 
-/* =========================
-   BILLING
-========================= */
 function renderBillingOverview(){
   const el = document.getElementById("billingOverview");
   if(!el) return;
 
-  const active = clientSites.filter(s=>getBillingStatus(s).text==="Active").length;
-  const past = clientSites.filter(s=>getBillingStatus(s).text==="Past Due").length;
+  const activeSites = clientSites.filter(s=>getBillingStatus(s).text === "Active");
+  const pastSites = clientSites.filter(s=>getBillingStatus(s).text === "Past Due");
+  const manualSites = clientSites.filter(s=>s.billing_status === "manual paid");
+  const coveredSites = clientSites.filter(s=>s.billing_override || s.billing_status === "free");
+
+  const lane = (title,sites,icon)=>`
+    <div class="source-card">
+      <span>${icon} ${title}</span>
+      <strong>${sites.length}</strong>
+      <div style="margin-top:14px;display:grid;gap:10px;">
+        ${
+          sites.slice(0,8).map(site=>`
+            <div style="background:white;border:1px solid #e2e8f0;border-radius:14px;padding:12px;">
+              <p><strong>${escapeHtml(site.business_name || "Unnamed")}</strong></p>
+              <p style="color:#64748b;font-size:13px;">Next: ${formatDate(site.next_payment_date)}</p>
+            </div>
+          `).join("") || `<p style="color:#64748b;font-size:13px;">None</p>`
+        }
+      </div>
+    </div>
+  `;
 
   el.innerHTML = `
     <div class="grid">
-      <div class="stat"><span>Active</span><strong>${active}</strong></div>
-      <div class="stat"><span>Past Due</span><strong>${past}</strong></div>
+      <div class="stat"><span>Active</span><strong>${activeSites.length}</strong></div>
+      <div class="stat"><span>Manual Paid</span><strong>${manualSites.length}</strong></div>
+      <div class="stat"><span>Covered</span><strong>${coveredSites.length}</strong></div>
+      <div class="stat"><span>Past Due</span><strong>${pastSites.length}</strong></div>
+    </div>
+
+    <div class="source-grid">
+      ${lane("Active",activeSites,"✅")}
+      ${lane("Manual / Covered",[...manualSites,...coveredSites],"🧾")}
+      ${lane("Past Due",pastSites,"⚠️")}
     </div>
   `;
 }
 
-     /* =========================
-   CLIENT DETAIL
-========================= */
 function openClientDetail(id){
   const site = clientSites.find(s=>s.id === id);
   if(!site) return;
@@ -779,22 +902,23 @@ function openClientDetail(id){
   `;
 }
 
-/* =========================
-   SEO PANEL
-========================= */
 function populateSEOClientDropdown(){
   const select = document.getElementById("seoClientSelect");
   if(!select) return;
 
+  const current = select.value;
   select.innerHTML = "";
 
   clientSites.forEach(site=>{
     if(!site.client_user_id) return;
+
     const option = document.createElement("option");
     option.value = site.client_user_id;
     option.textContent = site.business_name || site.client_email || site.client_user_id;
     select.appendChild(option);
   });
+
+  if(current) select.value = current;
 
   if(!select.innerHTML){
     select.innerHTML = `<option value="">No clients available</option>`;
@@ -890,13 +1014,10 @@ function calculateSEOScore(title,description,keywords,image,type,location){
 
   if(title) score += 20;
   if(title.length >= 35 && title.length <= 70) score += 10;
-
   if(description) score += 20;
   if(description.length >= 90 && description.length <= 180) score += 10;
-
   if(keywords) score += 10;
   if(keywords.split(",").filter(k=>k.trim()).length >= 4) score += 10;
-
   if(type) score += 10;
   if(location) score += 10;
   if(image) score += 10;
@@ -975,31 +1096,6 @@ async function saveSEO(){
   await refreshAdminData();
 }
 
-/* =========================
-   ANALYTICS DROPDOWN
-========================= */
-function populateAnalyticsClientDropdown(){
-  const select = document.getElementById("analyticsClientSelect");
-  if(!select) return;
-
-  select.innerHTML = "";
-
-  clientSites.forEach(site=>{
-    if(!site.client_user_id) return;
-    const option = document.createElement("option");
-    option.value = site.client_user_id;
-    option.textContent = site.business_name || site.client_email || site.client_user_id;
-    select.appendChild(option);
-  });
-
-  if(!select.innerHTML){
-    select.innerHTML = `<option value="">No clients available</option>`;
-  }
-}
-
-/* =========================
-   CHANGE REQUESTS
-========================= */
 function renderChangeRequests(){
   const list = document.getElementById("changeRequestList");
   if(!list) return;
@@ -1117,9 +1213,6 @@ async function deleteChangeRequest(id){
   await refreshAdminData();
 }
 
-/* =========================
-   STRIPE / CLIENT CREATION
-========================= */
 async function createClientAccount(){
   const email = prompt("Client Email:");
   if(!email) return;
@@ -1216,9 +1309,6 @@ async function createCheckoutForClient(clientSiteId){
   }
 }
 
-/* =========================
-   DELETE / DOMAIN
-========================= */
 async function deleteClientSite(id){
   if(!confirm("Delete this client site record?")) return;
 
@@ -1263,9 +1353,6 @@ async function releaseDomain(id){
   await refreshAdminData();
 }
 
-/* =========================
-   HELPERS
-========================= */
 function getClientAnalytics(clientUserId){
   const events = analyticsEvents.filter(e=>e.client_user_id === clientUserId);
 
@@ -1317,16 +1404,6 @@ function getBillingStatus(site){
   return { text:"Active", class:"full" };
 }
 
-function getInitials(text){
-  return String(text || "C")
-    .split(" ")
-    .filter(Boolean)
-    .slice(0,2)
-    .map(w=>w[0])
-    .join("")
-    .toUpperCase();
-}
-
 function toggleSidebar(){
   document.body.classList.toggle("sidebar-open");
 }
@@ -1334,87 +1411,4 @@ function toggleSidebar(){
 function copyText(text){
   navigator.clipboard.writeText(text);
   alert("Copied.");
-}
-
-function cleanValue(id){
-  const el = document.getElementById(id);
-  return el ? el.value.trim() : "";
-}
-
-function setValue(id,value){
-  const el = document.getElementById(id);
-  if(el) el.value = value || "";
-}
-
-function setText(id,value){
-  const el = document.getElementById(id);
-  if(el) el.textContent = value;
-}
-
-function toDateInput(date){
-  return date.toISOString().split("T")[0];
-}
-
-function getTopValue(items,key){
-  const counts = {};
-
-  items.forEach(item=>{
-    const value = item[key] || "unknown";
-    counts[value] = (counts[value] || 0) + 1;
-  });
-
-  return Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0] || null;
-}
-
-function isToday(dateString){
-  const date = new Date(dateString);
-  const today = new Date();
-
-  return date.getFullYear() === today.getFullYear() &&
-    date.getMonth() === today.getMonth() &&
-    date.getDate() === today.getDate();
-}
-
-function isWithinDays(dateString,days){
-  const date = new Date(dateString);
-  const now = new Date();
-  return now - date <= days * 24 * 60 * 60 * 1000;
-}
-
-function timeAgo(dateString){
-  if(!dateString) return "—";
-
-  const date = new Date(dateString);
-  const seconds = Math.floor((new Date() - date) / 1000);
-
-  if(seconds < 60) return "just now";
-  const minutes = Math.floor(seconds / 60);
-  if(minutes < 60) return `${minutes} min ago`;
-  const hours = Math.floor(minutes / 60);
-  if(hours < 24) return `${hours} hr ago`;
-  const days = Math.floor(hours / 24);
-  if(days < 7) return `${days} day${days === 1 ? "" : "s"} ago`;
-
-  return date.toLocaleDateString();
-}
-
-function formatDate(dateString){
-  if(!dateString) return "—";
-  return new Date(dateString + "T00:00:00").toLocaleDateString();
-}
-
-function escapeHtml(value){
-  return String(value || "")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
-}
-
-function capitalize(text){
-  return String(text || "").charAt(0).toUpperCase() + String(text || "").slice(1);
-}
-    list.appendChild(card);
-  });
 }
