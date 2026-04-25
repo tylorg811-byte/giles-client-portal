@@ -29,23 +29,15 @@ async function loadAdminDashboard(){
     return;
   }
 
-  await loadClientSites();
-  await loadChangeRequests();
-  await loadAnalytics();
-  await loadLeads();
+  await refreshAdminData();
 
-  renderStats();
-  renderSmartAlerts();
-  renderChangeRequests();
-  renderAnalyticsOverviewFull();
   populateAnalyticsClientDropdown();
   populateSEOClientDropdown();
   loadClientAnalyticsView();
-  renderBillingOverview();
 }
 
 /* =========================
-   NAV
+   NAVIGATION
 ========================= */
 function showAdminPage(page){
   document.querySelectorAll(".page-section").forEach(section=>{
@@ -72,7 +64,7 @@ function showAdminPage(page){
     billing:"Billing"
   };
 
-  setText("pageTitle", titles[page] || "Admin");
+  setText("pageTitle", titles[page] || "Admin Console");
 
   if(page === "seo"){
     populateSEOClientDropdown();
@@ -114,6 +106,22 @@ async function checkAdminAccess(){
 /* =========================
    LOAD DATA
 ========================= */
+async function refreshAdminData(){
+  await loadClientSites();
+  await loadChangeRequests();
+  await loadAnalytics();
+  await loadLeads();
+
+  renderStats();
+  renderSmartAlerts();
+  applyClientFilters();
+  renderChangeRequests();
+  renderAnalyticsOverviewFull();
+  populateAnalyticsClientDropdown();
+  populateSEOClientDropdown();
+  renderBillingOverview();
+}
+
 async function loadClientSites(){
   const { data, error } = await db
     .from("client_sites")
@@ -128,7 +136,6 @@ async function loadClientSites(){
   }
 
   clientSites = data || [];
-  applyClientFilters();
 }
 
 async function loadChangeRequests(){
@@ -177,7 +184,7 @@ async function loadLeads(){
     .order("created_at", { ascending:false });
 
   if(error){
-    console.warn("Leads not loaded. Make sure site_leads SQL was run.", error);
+    console.warn("Leads not loaded. Make sure site_leads exists.", error);
     leadEvents = [];
     return;
   }
@@ -186,7 +193,7 @@ async function loadLeads(){
 }
 
 /* =========================
-   STATS / ALERTS
+   STATS + ALERTS
 ========================= */
 function renderStats(){
   setText("totalClients", clientSites.length);
@@ -216,7 +223,7 @@ function renderSmartAlerts(){
   const newRequests = changeRequests.filter(req=>req.status === "new").length;
   const lockedEditors = clientSites.filter(site=>site.editor_locked).length;
   const leadsToday = leadEvents.filter(lead=>isToday(lead.created_at)).length;
-  const lowSeo = clientSites.filter(site=>(site.seo_score || 0) < 60).length;
+  const lowSeo = clientSites.filter(site=>Number(site.seo_score || 0) < 60).length;
 
   const alerts = [];
 
@@ -229,16 +236,26 @@ function renderSmartAlerts(){
 
   if(!alerts.length){
     box.innerHTML = `
-      <strong>✅ Command Center</strong>
-      <p style="margin-top:8px;color:#64748b;">Everything looks good right now.</p>
+      <div style="display:flex;justify-content:space-between;gap:16px;align-items:center;">
+        <div>
+          <h2 style="margin-bottom:6px;">Command Center</h2>
+          <p style="color:#64748b;">Everything looks good right now.</p>
+        </div>
+        <span class="badge full">✅ Healthy</span>
+      </div>
     `;
     return;
   }
 
   box.innerHTML = `
-    <strong>Command Center</strong>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">
-      ${alerts.join("")}
+    <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap;">
+      <div>
+        <h2 style="margin-bottom:6px;">Command Center</h2>
+        <p style="color:#64748b;">Items that need your attention.</p>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        ${alerts.join("")}
+      </div>
     </div>
   `;
 }
@@ -289,7 +306,7 @@ function applyClientFilters(){
 }
 
 /* =========================
-   CLIENT CARDS
+   CLIENT CARDS — REDESIGNED
 ========================= */
 function renderClientSites(sites){
   const list = document.getElementById("clientList");
@@ -311,24 +328,45 @@ function renderClientSites(sites){
     const seoScore = Number(site.seo_score || 0);
     const seoClass = seoScore >= 80 ? "full" : seoScore >= 60 ? "safe" : "danger";
 
+    const initials = getInitials(site.business_name || site.client_email || "Client");
+
     const card = document.createElement("div");
     card.className = "client-card";
 
     card.innerHTML = `
       <div>
-        <div class="card-group-title">Client</div>
-        <h3>${escapeHtml(site.business_name || "Unnamed Business")}</h3>
+        <div style="display:flex;gap:14px;align-items:center;margin-bottom:14px;">
+          <div style="
+            width:54px;
+            height:54px;
+            border-radius:18px;
+            background:linear-gradient(135deg,#7B5CFF,#A78BFA);
+            color:white;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-weight:900;
+            font-size:18px;
+            box-shadow:0 14px 28px rgba(123,92,255,.25);
+          ">${escapeHtml(initials)}</div>
+
+          <div>
+            <div class="card-group-title">Client</div>
+            <h3>${escapeHtml(site.business_name || "Unnamed Business")}</h3>
+          </div>
+        </div>
+
         <p>${escapeHtml(site.client_email || "No email")}</p>
         <p>${escapeHtml(site.domain || "No domain")}</p>
 
-        <div style="margin-top:10px;">
+        <div style="margin-top:12px;">
           <span class="badge">${escapeHtml(site.package_name || "Package")}</span>
           <span class="badge ${billing.class}">${billing.text}</span>
           <span class="badge ${seoClass}">SEO ${seoScore}/100</span>
           ${site.editor_locked ? `<span class="badge danger">Editor Locked</span>` : ""}
         </div>
 
-        ${site.client_tags ? `<p style="margin-top:8px;"><strong>Tags:</strong> ${escapeHtml(site.client_tags)}</p>` : ""}
+        ${site.client_tags ? `<p style="margin-top:10px;"><strong>Tags:</strong> ${escapeHtml(site.client_tags)}</p>` : ""}
       </div>
 
       <div>
@@ -336,6 +374,7 @@ function renderClientSites(sites){
         <p><strong>Status:</strong> ${escapeHtml(site.site_status || "draft")}</p>
         <p><strong>Editor:</strong> ${escapeHtml(site.editor_access || "safe")}</p>
         <p><strong>Domain:</strong> ${escapeHtml(site.domain_status || "not connected")}</p>
+        <p><strong>Type:</strong> ${escapeHtml(site.business_type || "—")}</p>
       </div>
 
       <div>
@@ -354,7 +393,7 @@ function renderClientSites(sites){
         <a href="editor.html?client=${site.client_user_id || ""}" target="_blank">Editor</a>
 
         <button onclick="openSEOForClient('${site.client_user_id || ""}')">SEO</button>
-        <button onclick="createCheckoutForClient('${site.id}')">Stripe Link</button>
+        <button onclick="createCheckoutForClient('${site.id}')">Stripe</button>
 
         <button onclick="quickPublish('${site.id}')">Publish</button>
         <button onclick="quickPause('${site.id}')">Pause</button>
@@ -369,11 +408,6 @@ function renderClientSites(sites){
         <button class="danger wide" onclick="deleteClientSite('${site.id}')">Delete Client</button>
       </div>
     `;
-
-    list.appendChild(card);
-  });
-}
-
 /* =========================
    QUICK ACTIONS
 ========================= */
@@ -406,7 +440,7 @@ async function toggleSafeMode(id){
 
   await updateClientQuick(id, {
     editor_access:nextAccess
-  }, `Editor access changed to ${nextAccess === "full" ? "Full Editor Access" : "Safe Mode"}.`);
+  }, `Editor access changed to ${nextAccess}.`);
 }
 
 async function toggleEditorLock(id){
@@ -416,7 +450,7 @@ async function toggleEditorLock(id){
   let reason = "";
 
   if(!site.editor_locked){
-    reason = prompt("Why are you locking this client out of the editor?", "Safety, non-payment, or preference") || "";
+    reason = prompt("Reason for locking editor?", "Non-payment / safety / request") || "";
   }
 
   await updateClientQuick(id, {
@@ -425,7 +459,7 @@ async function toggleEditorLock(id){
   }, site.editor_locked ? "Editor unlocked." : "Editor locked.");
 }
 
-async function updateClientQuick(id, updates, successMessage){
+async function updateClientQuick(id, updates, message){
   const { error } = await db
     .from("client_sites")
     .update({
@@ -440,78 +474,48 @@ async function updateClientQuick(id, updates, successMessage){
     return;
   }
 
-  const site = clientSites.find(item=>item.id === id);
-
-  if(site?.client_user_id){
-    await db.from("notifications").insert({
-      user_id:site.client_user_id,
-      title:"Website account updated",
-      message:successMessage,
-      type:"site"
-    });
-  }
-
   await refreshAdminData();
 }
 
 /* =========================
-   CLIENT FORM ACTIONS
+   CLIENT FORM
 ========================= */
 async function saveClientSite(){
   const id = cleanValue("clientRecordId");
 
   const payload = {
-    admin_user_id: adminUser.id,
-    client_user_id: cleanValue("clientUserId") || null,
-    client_email: cleanValue("clientEmail"),
     business_name: cleanValue("businessName"),
+    client_email: cleanValue("clientEmail"),
+    client_user_id: cleanValue("clientUserId") || null,
     package_name: cleanValue("packageName"),
     business_type: cleanValue("businessType"),
     business_location: cleanValue("businessLocation"),
-    domain: cleanValue("domain").replace(/^https?:\/\//,"").replace(/\/$/,""),
+    domain: cleanValue("domain"),
     domain_status: cleanValue("domainStatus"),
-    domain_release_status: cleanValue("domainReleaseStatus") || "connected",
-    domain_release_notes: cleanValue("domainReleaseNotes"),
+    domain_release_status: cleanValue("domainReleaseStatus"),
     site_status: cleanValue("siteStatus"),
-    editor_access: cleanValue("editorAccess") || "safe",
+    editor_access: cleanValue("editorAccess"),
     editor_locked: cleanValue("editorLocked") === "true",
     editor_locked_reason: cleanValue("editorLockedReason"),
-    client_tags: cleanValue("clientTags"),
-    billing_status: cleanValue("billingStatus") || "active",
+    billing_status: cleanValue("billingStatus"),
     billing_override: cleanValue("billingOverride") === "true",
-    billing_override_reason: cleanValue("billingOverrideReason"),
-    billing_notes: cleanValue("billingNotes"),
-    billing_cycle: cleanValue("billingCycle") || "monthly",
+    billing_cycle: cleanValue("billingCycle"),
     next_payment_date: cleanValue("nextPaymentDate") || null,
     last_payment_date: cleanValue("lastPaymentDate") || null,
+    client_tags: cleanValue("clientTags"),
+    billing_override_reason: cleanValue("billingOverrideReason"),
+    billing_notes: cleanValue("billingNotes"),
+    domain_release_notes: cleanValue("domainReleaseNotes"),
     notes: cleanValue("notes"),
     updated_at:new Date().toISOString()
   };
 
-  if(payload.domain_release_status === "released"){
-    payload.domain_status = "released";
-    payload.domain_released_at = new Date().toISOString();
-  }
-
-  if(!payload.seo_title && payload.business_name){
-    const generated = generateSEOFromValues(payload.business_name, payload.business_type, payload.business_location);
-    payload.seo_title = generated.title;
-    payload.seo_description = generated.description;
-    payload.seo_keywords = generated.keywords;
-    payload.seo_score = calculateSEOScore(generated.title, generated.description, generated.keywords, "", payload.business_type, payload.business_location);
-  }
-
   let response;
 
   if(id){
-    response = await db
-      .from("client_sites")
-      .update(payload)
-      .eq("id", id);
+    response = await db.from("client_sites").update(payload).eq("id", id);
   } else {
-    response = await db
-      .from("client_sites")
-      .insert(payload);
+    response = await db.from("client_sites").insert(payload);
   }
 
   if(response.error){
@@ -520,175 +524,176 @@ async function saveClientSite(){
     return;
   }
 
-  if(payload.client_user_id){
-    const billing = getBillingStatus(payload);
-
-    await db.from("notifications").insert({
-      user_id:payload.client_user_id,
-      title:"Website account updated",
-      message:`Your website status is "${payload.site_status}". Billing: "${billing.text}".`,
-      type:"site"
-    });
-  }
-
-  setText("message", "Client site saved.");
+  setText("message", "Client saved.");
   clearClientForm();
-
   await refreshAdminData();
 }
 
 function editClientSite(id){
-  const site = clientSites.find(item=>item.id === id);
+  const site = clientSites.find(s=>s.id === id);
   if(!site) return;
-
-  showAdminPage("clients");
 
   setValue("clientRecordId", site.id);
   setValue("businessName", site.business_name);
   setValue("clientEmail", site.client_email);
   setValue("clientUserId", site.client_user_id);
-  setValue("packageName", site.package_name || "Starter");
+  setValue("packageName", site.package_name);
   setValue("businessType", site.business_type);
   setValue("businessLocation", site.business_location);
   setValue("domain", site.domain);
-  setValue("domainStatus", site.domain_status || "not connected");
-  setValue("domainReleaseStatus", site.domain_release_status || "connected");
-  setValue("domainReleaseNotes", site.domain_release_notes);
-  setValue("siteStatus", site.site_status || "draft");
-  setValue("editorAccess", site.editor_access || "safe");
+  setValue("domainStatus", site.domain_status);
+  setValue("domainReleaseStatus", site.domain_release_status);
+  setValue("siteStatus", site.site_status);
+  setValue("editorAccess", site.editor_access);
   setValue("editorLocked", site.editor_locked ? "true" : "false");
   setValue("editorLockedReason", site.editor_locked_reason);
-  setValue("clientTags", site.client_tags);
-  setValue("billingStatus", site.billing_status || "active");
+  setValue("billingStatus", site.billing_status);
   setValue("billingOverride", site.billing_override ? "true" : "false");
-  setValue("billingOverrideReason", site.billing_override_reason);
-  setValue("billingNotes", site.billing_notes);
-  setValue("billingCycle", site.billing_cycle || "monthly");
+  setValue("billingCycle", site.billing_cycle);
   setValue("nextPaymentDate", site.next_payment_date);
   setValue("lastPaymentDate", site.last_payment_date);
+  setValue("clientTags", site.client_tags);
+  setValue("billingOverrideReason", site.billing_override_reason);
+  setValue("billingNotes", site.billing_notes);
+  setValue("domainReleaseNotes", site.domain_release_notes);
   setValue("notes", site.notes);
 
   scrollToForm();
 }
 
 function clearClientForm(){
-  const defaults = {
-    clientRecordId:"",
-    businessName:"",
-    clientEmail:"",
-    clientUserId:"",
-    packageName:"Starter",
-    businessType:"",
-    businessLocation:"",
-    domain:"",
-    domainStatus:"not connected",
-    domainReleaseStatus:"connected",
-    domainReleaseNotes:"",
-    siteStatus:"draft",
-    editorAccess:"safe",
-    editorLocked:"false",
-    editorLockedReason:"",
-    clientTags:"",
-    billingStatus:"active",
-    billingOverride:"false",
-    billingOverrideReason:"",
-    billingNotes:"",
-    billingCycle:"monthly",
-    nextPaymentDate:"",
-    lastPaymentDate:"",
-    notes:""
-  };
-
-  Object.entries(defaults).forEach(([id,value])=>{
-    setValue(id,value);
-  });
-
-  setText("message", "");
-}
-
-function closeClientForm(){
-  const wrap = document.getElementById("clientFormWrap");
-  if(wrap) wrap.style.display = "none";
+  document.querySelectorAll("#clientFormWrap input, #clientFormWrap textarea").forEach(i=>i.value="");
+  setText("message","");
 }
 
 function toggleClientForm(){
   const wrap = document.getElementById("clientFormWrap");
-  if(!wrap) return;
+  wrap.style.display = wrap.style.display === "none" ? "block" : "none";
+}
 
-  wrap.style.display = wrap.style.display === "block" ? "none" : "block";
+function closeClientForm(){
+  document.getElementById("clientFormWrap").style.display = "none";
 }
 
 function scrollToForm(){
-  showAdminPage("clients");
-
-  const wrap = document.getElementById("clientFormWrap");
-  if(wrap) wrap.style.display = "block";
-
-  const card = document.getElementById("clientFormCard");
-  if(card){
-    card.scrollIntoView({
-      behavior:"smooth",
-      block:"start"
-    });
-  }
+  document.getElementById("clientFormCard").scrollIntoView({behavior:"smooth"});
 }
 
-async function deleteClientSite(id){
-  if(!confirm("Delete this client site record?")) return;
+/* =========================
+   ANALYTICS
+========================= */
+function renderAnalyticsOverviewFull(){
+  const el = document.getElementById("analyticsOverview");
+  if(!el) return;
 
-  const { error } = await db
-    .from("client_sites")
-    .delete()
-    .eq("id", id);
+  const total = analyticsEvents.length;
+  const today = analyticsEvents.filter(e=>isToday(e.created_at)).length;
+  const week = analyticsEvents.filter(e=>isWithinDays(e.created_at,7)).length;
+  const leads = leadEvents.length;
 
-  if(error){
-    console.error(error);
-    alert("Delete failed.");
-    return;
-  }
-
-  await refreshAdminData();
+  el.innerHTML = `
+    <div class="analytics-header-grid">
+      <div class="stat"><span>Total</span><strong>${total}</strong></div>
+      <div class="stat"><span>Today</span><strong>${today}</strong></div>
+      <div class="stat"><span>7 Days</span><strong>${week}</strong></div>
+      <div class="stat"><span>Leads</span><strong>${leads}</strong></div>
+    </div>
+  `;
 }
 
-async function releaseDomain(id){
-  const site = clientSites.find(item=>item.id === id);
+function loadClientAnalyticsView(){
+  const select = document.getElementById("analyticsClientSelect");
+  const container = document.getElementById("analyticsClientView");
+
+  if(!select || !container) return;
+
+  const id = select.value;
+
+  const events = analyticsEvents.filter(e=>e.client_user_id === id);
+  const leads = leadEvents.filter(l=>l.client_user_id === id);
+
+  container.innerHTML = `
+    <div class="analytics-header-grid">
+      <div class="stat"><span>Views</span><strong>${events.length}</strong></div>
+      <div class="stat"><span>Leads</span><strong>${leads.length}</strong></div>
+      <div class="stat"><span>Top Page</span><strong>${getTopValue(events,"page") || "—"}</strong></div>
+      <div class="stat"><span>Device</span><strong>${getTopValue(events,"device") || "—"}</strong></div>
+    </div>
+  `;
+}
+
+/* =========================
+   BILLING
+========================= */
+function renderBillingOverview(){
+  const el = document.getElementById("billingOverview");
+  if(!el) return;
+
+  const active = clientSites.filter(s=>getBillingStatus(s).text==="Active").length;
+  const past = clientSites.filter(s=>getBillingStatus(s).text==="Past Due").length;
+
+  el.innerHTML = `
+    <div class="grid">
+      <div class="stat"><span>Active</span><strong>${active}</strong></div>
+      <div class="stat"><span>Past Due</span><strong>${past}</strong></div>
+    </div>
+  `;
+}
+
+     /* =========================
+   CLIENT DETAIL
+========================= */
+function openClientDetail(id){
+  const site = clientSites.find(s=>s.id === id);
   if(!site) return;
 
-  const reason = prompt(
-    `Release domain for ${site.business_name || site.client_email}?\n\nThis marks the domain as released in your portal.\n\nReason:`,
-    "Client requested domain release"
-  );
+  showAdminPage("clientDetail");
 
-  if(reason === null) return;
-  if(!confirm(`Confirm release for ${site.domain}?`)) return;
+  setText("detailBusinessName", site.business_name || "Client Details");
+  setText("detailClientEmail", site.client_email || "");
 
-  const { error } = await db
-    .from("client_sites")
-    .update({
-      domain_status:"released",
-      domain_release_status:"released",
-      domain_release_notes:reason,
-      domain_released_at:new Date().toISOString(),
-      updated_at:new Date().toISOString()
-    })
-    .eq("id", id);
+  const billing = getBillingStatus(site);
+  const analytics = site.client_user_id ? getClientAnalytics(site.client_user_id) : null;
+  const leads = site.client_user_id ? getClientLeads(site.client_user_id) : null;
 
-  if(error){
-    console.error(error);
-    alert("Domain release failed.");
-    return;
-  }
+  document.getElementById("clientDetailContent").innerHTML = `
+    <div class="detail-grid">
+      <div class="detail-card">
+        <h3>Website</h3>
+        <div class="detail-row"><span>Status</span><span>${escapeHtml(site.site_status || "draft")}</span></div>
+        <div class="detail-row"><span>Domain</span><span>${escapeHtml(site.domain || "—")}</span></div>
+        <div class="detail-row"><span>Editor</span><span>${escapeHtml(site.editor_access || "safe")}</span></div>
+        <div class="detail-row"><span>Lock</span><span>${site.editor_locked ? "Locked" : "Unlocked"}</span></div>
+        <div class="detail-row"><span>SEO</span><span>${site.seo_score || 0}/100</span></div>
 
-  if(site.client_user_id){
-    await db.from("notifications").insert({
-      user_id:site.client_user_id,
-      title:"Domain released",
-      message:`Your domain ${site.domain} has been marked as released from Giles Web Design management.`,
-      type:"domain"
-    });
-  }
+        <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
+          <a class="primary" href="${getClientLiveUrl(site)}" target="_blank">Open Site</a>
+          <a class="secondary" href="editor.html?client=${site.client_user_id || ""}" target="_blank">Editor</a>
+          <button class="secondary" onclick="openSEOForClient('${site.client_user_id || ""}')">SEO</button>
+        </div>
+      </div>
 
-  await refreshAdminData();
+      <div class="detail-card">
+        <h3>Billing</h3>
+        <div class="detail-row"><span>Status</span><span>${billing.text}</span></div>
+        <div class="detail-row"><span>Cycle</span><span>${escapeHtml(site.billing_cycle || "monthly")}</span></div>
+        <div class="detail-row"><span>Last</span><span>${formatDate(site.last_payment_date)}</span></div>
+        <div class="detail-row"><span>Next</span><span>${formatDate(site.next_payment_date)}</span></div>
+      </div>
+
+      <div class="detail-card">
+        <h3>Performance</h3>
+        <div class="detail-row"><span>Views 30d</span><span>${analytics ? analytics.month : 0}</span></div>
+        <div class="detail-row"><span>Leads 30d</span><span>${leads ? leads.month : 0}</span></div>
+        <div class="detail-row"><span>Top Page</span><span>${analytics ? escapeHtml(analytics.topPage) : "—"}</span></div>
+      </div>
+
+      <div class="detail-card">
+        <h3>Notes</h3>
+        <p>${escapeHtml(site.notes || "No notes.")}</p>
+      </div>
+    </div>
+  `;
 }
 
 /* =========================
@@ -702,7 +707,6 @@ function populateSEOClientDropdown(){
 
   clientSites.forEach(site=>{
     if(!site.client_user_id) return;
-
     const option = document.createElement("option");
     option.value = site.client_user_id;
     option.textContent = site.business_name || site.client_email || site.client_user_id;
@@ -718,23 +722,18 @@ function loadSEOClient(){
   const select = document.getElementById("seoClientSelect");
   if(!select) return;
 
-  const clientUserId = select.value;
-  const site = clientSites.find(item=>item.client_user_id === clientUserId);
+  const site = clientSites.find(s=>s.client_user_id === select.value);
+  if(!site) return;
 
-  if(!site){
-    clearSEOForm();
-    return;
-  }
-
-  setValue("seoImage", site.seo_image || "");
-  setValue("seoBusinessType", site.business_type || "");
-  setValue("seoBusinessLocation", site.business_location || "");
-  setValue("seoTitle", site.seo_title || "");
-  setValue("seoDescription", site.seo_description || "");
-  setValue("seoKeywords", site.seo_keywords || "");
+  setValue("seoImage", site.seo_image);
+  setValue("seoBusinessType", site.business_type);
+  setValue("seoBusinessLocation", site.business_location);
+  setValue("seoTitle", site.seo_title);
+  setValue("seoDescription", site.seo_description);
+  setValue("seoKeywords", site.seo_keywords);
 
   updateSEOPreview();
-  updateSEOScoreDisplay(site.seo_score || scoreSEO(false));
+  updateSEOScoreDisplay(site.seo_score || 0);
 }
 
 function openSEOForClient(clientUserId){
@@ -742,9 +741,7 @@ function openSEOForClient(clientUserId){
   populateSEOClientDropdown();
 
   const select = document.getElementById("seoClientSelect");
-  if(select && clientUserId){
-    select.value = clientUserId;
-  }
+  if(select && clientUserId) select.value = clientUserId;
 
   loadSEOClient();
 }
@@ -753,67 +750,55 @@ function autoGenerateSEO(){
   const select = document.getElementById("seoClientSelect");
   if(!select) return;
 
-  const site = clientSites.find(item=>item.client_user_id === select.value);
+  const site = clientSites.find(s=>s.client_user_id === select.value);
   if(!site){
-    setText("seoMessage", "Choose a client first.");
+    setText("seoMessage","Choose a client first.");
     return;
   }
 
-  const businessType = cleanValue("seoBusinessType") || site.business_type || "Business";
+  const type = cleanValue("seoBusinessType") || site.business_type || "Business";
   const location = cleanValue("seoBusinessLocation") || site.business_location || "";
-  const generated = generateSEOFromValues(site.business_name || "Business", businessType, location);
+  const name = site.business_name || "Business";
 
-  setValue("seoTitle", generated.title);
-  setValue("seoDescription", generated.description);
-  setValue("seoKeywords", generated.keywords);
+  const title = location
+    ? `${name} | ${type} in ${location}`
+    : `${name} | ${type} Website`;
+
+  const description = location
+    ? `${name} provides professional ${type.toLowerCase()} services in ${location}. Contact today to learn more.`
+    : `${name} provides professional ${type.toLowerCase()} services. Contact today to learn more.`;
+
+  const keywords = [
+    name,
+    type,
+    location,
+    `${type} near me`,
+    `affordable ${type}`,
+    `${name} website`
+  ].filter(Boolean).join(", ");
+
+  setValue("seoTitle", title);
+  setValue("seoDescription", description);
+  setValue("seoKeywords", keywords);
 
   scoreSEO();
   updateSEOPreview();
-
-  setText("seoMessage", "SEO generated. Review it, then save.");
+  setText("seoMessage","SEO generated. Review and save.");
 }
 
-function generateSEOFromValues(name,type,location){
-  const cleanName = name || "Business";
-  const cleanType = type || "Business";
-  const cleanLocation = location || "";
+function scoreSEO(){
+  const score = calculateSEOScore(
+    cleanValue("seoTitle"),
+    cleanValue("seoDescription"),
+    cleanValue("seoKeywords"),
+    cleanValue("seoImage"),
+    cleanValue("seoBusinessType"),
+    cleanValue("seoBusinessLocation")
+  );
 
-  const title = cleanLocation
-    ? `${cleanName} | ${cleanType} in ${cleanLocation}`
-    : `${cleanName} | ${cleanType} Website`;
-
-  const description = cleanLocation
-    ? `${cleanName} provides professional ${cleanType.toLowerCase()} services in ${cleanLocation}. Contact today to learn more.`
-    : `${cleanName} provides professional ${cleanType.toLowerCase()} services. Contact today to learn more.`;
-
-  const keywords = [
-    cleanName,
-    cleanType,
-    cleanLocation,
-    `${cleanType} near me`,
-    `affordable ${cleanType}`,
-    `${cleanName} website`
-  ].filter(Boolean).join(", ");
-
-  return { title, description, keywords };
-}
-
-function scoreSEO(showMessage = true){
-  const title = cleanValue("seoTitle");
-  const description = cleanValue("seoDescription");
-  const keywords = cleanValue("seoKeywords");
-  const image = cleanValue("seoImage");
-  const type = cleanValue("seoBusinessType");
-  const location = cleanValue("seoBusinessLocation");
-
-  const score = calculateSEOScore(title, description, keywords, image, type, location);
   updateSEOScoreDisplay(score);
   updateSEOPreview();
-
-  if(showMessage){
-    setText("seoMessage", `SEO score updated: ${score}/100`);
-  }
-
+  setText("seoMessage", `SEO score updated: ${score}/100`);
   return score;
 }
 
@@ -846,14 +831,14 @@ function updateSEOScoreDisplay(score){
 
   const degrees = Math.round((scoreNum / 100) * 360);
   let color = "#ef4444";
-  let message = "Needs work. Add stronger title, description, type, location, and image.";
+  let message = "Needs work. Add title, description, keywords, type, location, and image.";
 
   if(scoreNum >= 80){
     color = "#16a34a";
     message = "Great SEO foundation. This client is ready to publish.";
   } else if(scoreNum >= 60){
     color = "#f97316";
-    message = "Good start. Add missing details to improve it.";
+    message = "Good start. Add a few missing details.";
   }
 
   if(ring){
@@ -865,25 +850,21 @@ function updateSEOScoreDisplay(score){
 
 function updateSEOPreview(){
   const select = document.getElementById("seoClientSelect");
-  const site = clientSites.find(item=>item.client_user_id === select?.value);
+  const site = clientSites.find(s=>s.client_user_id === select?.value);
 
-  const title = cleanValue("seoTitle") || "SEO title preview";
-  const description = cleanValue("seoDescription") || "SEO description preview will show here.";
-  const url = site ? getClientLiveUrl(site) : "https://clientsite.com";
-
-  setText("seoPreviewUrl", url);
-  setText("seoPreviewTitle", title);
-  setText("seoPreviewDesc", description);
+  setText("seoPreviewUrl", site ? getClientLiveUrl(site) : "https://clientsite.com");
+  setText("seoPreviewTitle", cleanValue("seoTitle") || "SEO title preview");
+  setText("seoPreviewDesc", cleanValue("seoDescription") || "SEO description preview will show here.");
 }
 
 async function saveSEO(){
   const select = document.getElementById("seoClientSelect");
   if(!select || !select.value){
-    setText("seoMessage", "Choose a client first.");
+    setText("seoMessage","Choose a client first.");
     return;
   }
 
-  const score = scoreSEO(false);
+  const score = scoreSEO();
 
   const payload = {
     business_type: cleanValue("seoBusinessType"),
@@ -893,7 +874,7 @@ async function saveSEO(){
     seo_keywords: cleanValue("seoKeywords"),
     seo_image: cleanValue("seoImage"),
     seo_score: score,
-    updated_at: new Date().toISOString()
+    updated_at:new Date().toISOString()
   };
 
   const { error } = await db
@@ -903,146 +884,33 @@ async function saveSEO(){
 
   if(error){
     console.error(error);
-    setText("seoMessage", "SEO save failed.");
+    setText("seoMessage","SEO save failed.");
     return;
   }
 
-  setText("seoMessage", "SEO saved successfully.");
-
-  await loadClientSites();
-  populateSEOClientDropdown();
-  select.value = payload.client_user_id || select.value;
-  renderStats();
-  renderSmartAlerts();
-  applyClientFilters();
-}
-
-function clearSEOForm(){
-  setValue("seoImage", "");
-  setValue("seoBusinessType", "");
-  setValue("seoBusinessLocation", "");
-  setValue("seoTitle", "");
-  setValue("seoDescription", "");
-  setValue("seoKeywords", "");
-  updateSEOScoreDisplay(0);
-  updateSEOPreview();
-  setText("seoMessage", "");
+  setText("seoMessage","SEO saved.");
+  await refreshAdminData();
 }
 
 /* =========================
-   STRIPE / CLIENT CREATOR
+   ANALYTICS DROPDOWN
 ========================= */
-async function createClientAccount(){
-  const email = prompt("Client Email:");
-  if(!email) return;
+function populateAnalyticsClientDropdown(){
+  const select = document.getElementById("analyticsClientSelect");
+  if(!select) return;
 
-  const businessName = prompt("Business Name:");
-  if(!businessName) return;
+  select.innerHTML = "";
 
-  const passwordInput = prompt("Set a password, or leave blank to auto-generate:");
-  const password = passwordInput || generateClientPassword();
+  clientSites.forEach(site=>{
+    if(!site.client_user_id) return;
+    const option = document.createElement("option");
+    option.value = site.client_user_id;
+    option.textContent = site.business_name || site.client_email || site.client_user_id;
+    select.appendChild(option);
+  });
 
-  try{
-    const res = await fetch("https://giles-sites.netlify.app/.netlify/functions/create-client", {
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body:JSON.stringify({
-        email,
-        password,
-        businessName
-      })
-    });
-
-    const data = await res.json();
-
-    if(data.error){
-      alert("Error: " + data.error);
-      return;
-    }
-
-    alert(
-`CLIENT CREATED ✅
-
-Email: ${data.email}
-Password: ${data.password}
-User ID: ${data.userId}
-
-Copy this info before closing.`
-    );
-
-    await refreshAdminData();
-
-  }catch(error){
-    console.error(error);
-    alert("Client creation failed. Check console.");
-  }
-}
-
-function generateClientPassword(){
-  return "Site" + Math.random().toString(36).slice(2,10) + "!";
-}
-
-async function createCheckoutForClient(clientSiteId){
-  const site = clientSites.find(item=>item.id === clientSiteId);
-
-  if(!site){
-    alert("Client not found.");
-    return;
-  }
-
-  if(!site.client_user_id){
-    alert("This client needs a Supabase User ID first.");
-    return;
-  }
-
-  if(site.stripe_checkout_url){
-    const useOld = confirm("This client already has a saved Stripe checkout link. Copy existing link?");
-    if(useOld){
-      copyText(site.stripe_checkout_url);
-      return;
-    }
-  }
-
-  const priceId = prompt(
-    "Paste the Stripe recurring Price ID for this client:",
-    site.stripe_price_id || ""
-  );
-
-  if(!priceId) return;
-
-  try{
-    const response = await fetch("https://giles-sites.netlify.app/.netlify/functions/create-checkout-session", {
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body:JSON.stringify({
-        client_user_id:site.client_user_id,
-        price_id:priceId
-      })
-    });
-
-    const result = await response.json();
-
-    if(!response.ok){
-      alert(result.error || "Could not create checkout session.");
-      console.error(result);
-      return;
-    }
-
-    copyText(result.url);
-
-    alert(
-`Stripe Checkout created.
-
-Client: ${site.business_name || site.client_email}
-
-Checkout link copied to clipboard.`
-    );
-
-    await loadClientSites();
-
-  }catch(error){
-    console.error(error);
-    alert("Checkout creation failed.");
+  if(!select.innerHTML){
+    select.innerHTML = `<option value="">No clients available</option>`;
   }
 }
 
@@ -1064,13 +932,8 @@ function renderChangeRequests(){
     const card = document.createElement("div");
     card.className = "request-card";
 
-    const editorUrl = req.client_user_id
-      ? `editor.html?client=${req.client_user_id}`
-      : "editor.html";
-
-    const liveUrl = req.client_user_id
-      ? `${LIVE_BASE_URL}/?client=${req.client_user_id}`
-      : LIVE_BASE_URL;
+    const editorUrl = req.client_user_id ? `editor.html?client=${req.client_user_id}` : "editor.html";
+    const liveUrl = req.client_user_id ? `${LIVE_BASE_URL}/?client=${req.client_user_id}` : LIVE_BASE_URL;
 
     card.innerHTML = `
       <div>
@@ -1095,14 +958,14 @@ function renderChangeRequests(){
         </select>
 
         <label style="margin-top:8px;">Admin Notes</label>
-        <textarea id="notes-${req.id}" placeholder="Optional note...">${escapeHtml(req.admin_notes || "")}</textarea>
+        <textarea id="notes-${req.id}">${escapeHtml(req.admin_notes || "")}</textarea>
       </div>
 
       <div class="actions">
         <button onclick="updateChangeRequest('${req.id}', '${req.client_user_id || ""}')">Update</button>
-        <a href="${editorUrl}" target="_blank">Editor</a>
-        <a href="${liveUrl}" target="_blank">View Site</a>
         <button onclick="completeRequest('${req.id}', '${req.client_user_id || ""}')">Complete</button>
+        <a href="${editorUrl}" target="_blank">Editor</a>
+        <a href="${liveUrl}" target="_blank">Live</a>
         <button class="danger wide" onclick="deleteChangeRequest('${req.id}')">Delete</button>
       </div>
     `;
@@ -1125,24 +988,12 @@ async function updateChangeRequest(id, clientUserId){
     .eq("id", id);
 
   if(error){
-    alert("Request update failed.");
     console.error(error);
+    alert("Request update failed.");
     return;
   }
 
-  if(clientUserId){
-    await db.from("notifications").insert({
-      user_id:clientUserId,
-      title:"Request status updated",
-      message:`Your request is now marked as "${status}".${notes ? " Note: " + notes : ""}`,
-      type:"request"
-    });
-  }
-
-  await loadChangeRequests();
-  renderChangeRequests();
-  renderStats();
-  renderSmartAlerts();
+  await refreshAdminData();
 }
 
 async function completeRequest(id, clientUserId){
@@ -1158,24 +1009,12 @@ async function completeRequest(id, clientUserId){
     .eq("id", id);
 
   if(error){
-    alert("Could not complete request.");
     console.error(error);
+    alert("Could not complete request.");
     return;
   }
 
-  if(clientUserId){
-    await db.from("notifications").insert({
-      user_id:clientUserId,
-      title:"Request completed",
-      message:`Your requested change has been completed.${notes ? " Note: " + notes : ""}`,
-      type:"request"
-    });
-  }
-
-  await loadChangeRequests();
-  renderChangeRequests();
-  renderStats();
-  renderSmartAlerts();
+  await refreshAdminData();
 }
 
 async function deleteChangeRequest(id){
@@ -1187,310 +1026,181 @@ async function deleteChangeRequest(id){
     .eq("id", id);
 
   if(error){
-    alert("Delete failed.");
     console.error(error);
+    alert("Delete failed.");
     return;
   }
 
-  await loadChangeRequests();
-  renderChangeRequests();
-  renderStats();
-  renderSmartAlerts();
+  await refreshAdminData();
 }
 
 /* =========================
-   ANALYTICS + LEADS
+   STRIPE / CLIENT CREATION
 ========================= */
-function renderAnalyticsOverviewFull(){
-  const container = document.getElementById("analyticsOverview");
-  if(!container) return;
+async function createClientAccount(){
+  const email = prompt("Client Email:");
+  if(!email) return;
 
-  const total = analyticsEvents.length;
-  const today = analyticsEvents.filter(event=>isToday(event.created_at)).length;
-  const week = analyticsEvents.filter(event=>isWithinDays(event.created_at,7)).length;
-  const leads = leadEvents.length;
-  const topDevice = getTopValue(analyticsEvents,"device") || "—";
+  const businessName = prompt("Business Name:");
+  if(!businessName) return;
 
-  container.innerHTML = `
-    <div class="analytics-header-grid">
-      <div class="stat"><span>Total Views</span><strong>${total}</strong></div>
-      <div class="stat"><span>Today</span><strong>${today}</strong></div>
-      <div class="stat"><span>7 Days</span><strong>${week}</strong></div>
-      <div class="stat"><span>Leads</span><strong>${leads}</strong></div>
-    </div>
+  const passwordInput = prompt("Set a password, or leave blank to auto-generate:");
+  const password = passwordInput || generateClientPassword();
 
-    <div class="source-grid">
-      <div class="source-card">
-        <span>Top Device</span>
-        <strong>${escapeHtml(topDevice)}</strong>
-      </div>
+  try{
+    const res = await fetch("https://giles-sites.netlify.app/.netlify/functions/create-client", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify({ email, password, businessName })
+    });
 
-      <div class="source-card">
-        <span>Top Source</span>
-        <strong>${escapeHtml(getTopReferrer(analyticsEvents))}</strong>
-      </div>
+    const data = await res.json();
 
-      <div class="source-card">
-        <span>Top Page</span>
-        <strong>${escapeHtml(getTopValue(analyticsEvents,"page") || "—")}</strong>
-      </div>
-    </div>
-  `;
-}
+    if(data.error){
+      alert("Error: " + data.error);
+      return;
+    }
 
-function populateAnalyticsClientDropdown(){
-  const select = document.getElementById("analyticsClientSelect");
-  if(!select) return;
+    alert(
+`CLIENT CREATED ✅
 
-  select.innerHTML = "";
+Email: ${data.email}
+Password: ${data.password}
+User ID: ${data.userId}`
+    );
 
-  clientSites.forEach(site=>{
-    if(!site.client_user_id) return;
+    await refreshAdminData();
 
-    const option = document.createElement("option");
-    option.value = site.client_user_id;
-    option.textContent = site.business_name || site.client_email || site.client_user_id;
-    select.appendChild(option);
-  });
-
-  if(!select.innerHTML){
-    select.innerHTML = `<option value="">No clients available</option>`;
+  }catch(error){
+    console.error(error);
+    alert("Client creation failed.");
   }
 }
 
-function loadClientAnalyticsView(){
-  const select = document.getElementById("analyticsClientSelect");
-  const container = document.getElementById("analyticsClientView");
+function generateClientPassword(){
+  return "Site" + Math.random().toString(36).slice(2,10) + "!";
+}
 
-  if(!select || !container) return;
+async function createCheckoutForClient(clientSiteId){
+  const site = clientSites.find(s=>s.id === clientSiteId);
 
-  const id = select.value;
-
-  if(!id){
-    container.innerHTML = `<div class="empty-state">No client selected.</div>`;
+  if(!site){
+    alert("Client not found.");
     return;
   }
 
-  const site = clientSites.find(item=>item.client_user_id === id);
-  const events = analyticsEvents.filter(event=>event.client_user_id === id);
-  const leads = leadEvents.filter(lead=>lead.client_user_id === id);
+  if(!site.client_user_id){
+    alert("This client needs a Supabase User ID first.");
+    return;
+  }
 
-  const today = events.filter(event=>isToday(event.created_at)).length;
-  const week = events.filter(event=>isWithinDays(event.created_at,7)).length;
-  const month = events.length;
-  const leadMonth = leads.length;
+  if(site.stripe_checkout_url){
+    const useOld = confirm("This client already has a saved Stripe checkout link. Copy existing link?");
+    if(useOld){
+      copyText(site.stripe_checkout_url);
+      return;
+    }
+  }
 
-  const topPage = getTopValue(events,"page") || "—";
-  const topDevice = getTopValue(events,"device") || "—";
-  const topBrowser = getTopValue(events,"browser") || "—";
-  const topSource = getTopReferrer(events);
+  const priceId = prompt("Paste Stripe recurring Price ID:", site.stripe_price_id || "");
+  if(!priceId) return;
 
-  const recentVisits = events.slice(0,8).map(event=>`
-    <div class="analytics-client-card">
-      <p><strong>${escapeHtml(event.page || "home")}</strong></p>
-      <p>${escapeHtml(event.device || "unknown")} • ${escapeHtml(event.browser || "unknown")}</p>
-      <p><strong>Source:</strong> ${escapeHtml(cleanReferrer(event.referrer))}</p>
-      <p style="color:#64748b;font-size:13px;">${timeAgo(event.created_at)}</p>
-    </div>
-  `).join("");
+  try{
+    const res = await fetch("https://giles-sites.netlify.app/.netlify/functions/create-checkout-session", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify({
+        client_user_id:site.client_user_id,
+        price_id:priceId
+      })
+    });
 
-  const recentLeads = leads.slice(0,6).map(lead=>`
-    <div class="analytics-client-card">
-      <p><strong>${escapeHtml(lead.form_name || "Website Lead")}</strong></p>
-      <p>${escapeHtml(lead.page || "unknown page")}</p>
-      <p><strong>Source:</strong> ${escapeHtml(cleanReferrer(lead.source))}</p>
-      <p style="color:#64748b;font-size:13px;">${timeAgo(lead.created_at)}</p>
-    </div>
-  `).join("");
+    const data = await res.json();
 
-  container.innerHTML = `
-    <h2>${escapeHtml(site?.business_name || "Client Analytics")}</h2>
+    if(!res.ok){
+      alert(data.error || "Could not create checkout session.");
+      return;
+    }
 
-    <div class="analytics-header-grid">
-      <div class="stat"><span>Today</span><strong>${today}</strong></div>
-      <div class="stat"><span>7 Days</span><strong>${week}</strong></div>
-      <div class="stat"><span>30 Days</span><strong>${month}</strong></div>
-      <div class="stat"><span>Leads</span><strong>${leadMonth}</strong></div>
-    </div>
+    copyText(data.url);
+    alert("Stripe checkout link copied.");
 
-    <div class="source-grid">
-      <div class="source-card">
-        <span>Top Source</span>
-        <strong>${escapeHtml(topSource)}</strong>
-      </div>
+    await refreshAdminData();
 
-      <div class="source-card">
-        <span>Top Page</span>
-        <strong>${escapeHtml(topPage)}</strong>
-      </div>
-
-      <div class="source-card">
-        <span>Top Device</span>
-        <strong>${escapeHtml(topDevice)}</strong>
-      </div>
-
-      <div class="source-card">
-        <span>Top Browser</span>
-        <strong>${escapeHtml(topBrowser)}</strong>
-      </div>
-
-      <div class="source-card">
-        <span>Live URL</span>
-        <strong style="font-size:16px;">${escapeHtml(site ? getClientLiveUrl(site) : "—")}</strong>
-      </div>
-
-      <div class="source-card">
-        <span>Domain</span>
-        <strong>${escapeHtml(site?.domain || "No domain")}</strong>
-      </div>
-    </div>
-
-    <h3 style="margin:24px 0 12px;">Recent Leads</h3>
-    <div class="visit-list">
-      ${recentLeads || `<div class="empty-state">No leads yet.</div>`}
-    </div>
-
-    <h3 style="margin:24px 0 12px;">Recent Visits</h3>
-    <div class="visit-list">
-      ${recentVisits || `<div class="empty-state">No visits yet.</div>`}
-    </div>
-  `;
+  }catch(error){
+    console.error(error);
+    alert("Checkout creation failed.");
+  }
 }
 
 /* =========================
-   DETAIL / BILLING
+   DELETE / DOMAIN
 ========================= */
-function openClientDetail(id){
-  const site = clientSites.find(item=>item.id === id);
+async function deleteClientSite(id){
+  if(!confirm("Delete this client site record?")) return;
+
+  const { error } = await db
+    .from("client_sites")
+    .delete()
+    .eq("id", id);
+
+  if(error){
+    console.error(error);
+    alert("Delete failed.");
+    return;
+  }
+
+  await refreshAdminData();
+}
+
+async function releaseDomain(id){
+  const site = clientSites.find(s=>s.id === id);
   if(!site) return;
 
-  showAdminPage("clientDetail");
+  const reason = prompt("Reason for domain release:", "Client requested domain release");
+  if(reason === null) return;
 
-  setText("detailBusinessName", site.business_name || "Client Details");
-  setText("detailClientEmail", site.client_email || "");
+  const { error } = await db
+    .from("client_sites")
+    .update({
+      domain_status:"released",
+      domain_release_status:"released",
+      domain_release_notes:reason,
+      domain_released_at:new Date().toISOString(),
+      updated_at:new Date().toISOString()
+    })
+    .eq("id", id);
 
-  const analytics = site.client_user_id ? getClientAnalytics(site.client_user_id) : null;
-  const leads = site.client_user_id ? getClientLeads(site.client_user_id) : null;
-  const billing = getBillingStatus(site);
+  if(error){
+    console.error(error);
+    alert("Domain release failed.");
+    return;
+  }
 
-  const container = document.getElementById("clientDetailContent");
-
-  container.innerHTML = `
-    <div class="detail-grid">
-      <div class="detail-card">
-        <h3>Website</h3>
-        <div class="detail-row"><span>Status</span><span>${escapeHtml(site.site_status || "draft")}</span></div>
-        <div class="detail-row"><span>Domain</span><span>${escapeHtml(site.domain || "—")}</span></div>
-        <div class="detail-row"><span>Domain Status</span><span>${escapeHtml(site.domain_status || "—")}</span></div>
-        <div class="detail-row"><span>Editor Access</span><span>${escapeHtml(site.editor_access || "safe")}</span></div>
-        <div class="detail-row"><span>Editor Lock</span><span>${site.editor_locked ? "Locked" : "Unlocked"}</span></div>
-        <div class="detail-row"><span>SEO Score</span><span>${site.seo_score || 0}/100</span></div>
-
-        <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
-          <a class="primary" href="${getClientLiveUrl(site)}" target="_blank">Open Site</a>
-          <a class="secondary" href="editor.html?client=${site.client_user_id || ""}" target="_blank">Open Editor</a>
-          <button class="secondary" onclick="openSEOForClient('${site.client_user_id || ""}')">SEO Panel</button>
-        </div>
-      </div>
-
-      <div class="detail-card">
-        <h3>Billing</h3>
-        <div class="detail-row"><span>Status</span><span>${billing.text}</span></div>
-        <div class="detail-row"><span>Cycle</span><span>${escapeHtml(site.billing_cycle || "monthly")}</span></div>
-        <div class="detail-row"><span>Last Payment</span><span>${formatDate(site.last_payment_date)}</span></div>
-        <div class="detail-row"><span>Next Payment</span><span>${formatDate(site.next_payment_date)}</span></div>
-      </div>
-
-      <div class="detail-card">
-        <h3>Performance</h3>
-        <div class="detail-row"><span>Views Today</span><span>${analytics ? analytics.today : 0}</span></div>
-        <div class="detail-row"><span>Views 7 Days</span><span>${analytics ? analytics.week : 0}</span></div>
-        <div class="detail-row"><span>Views 30 Days</span><span>${analytics ? analytics.month : 0}</span></div>
-        <div class="detail-row"><span>Leads 30 Days</span><span>${leads ? leads.month : 0}</span></div>
-        <div class="detail-row"><span>Top Page</span><span>${analytics ? escapeHtml(analytics.topPage) : "—"}</span></div>
-      </div>
-
-      <div class="detail-card">
-        <h3>Notes</h3>
-        <p>${escapeHtml(site.notes || "No notes.")}</p>
-        ${site.client_tags ? `<p style="margin-top:12px;"><strong>Tags:</strong> ${escapeHtml(site.client_tags)}</p>` : ""}
-      </div>
-    </div>
-  `;
-}
-
-function renderBillingOverview(){
-  const box = document.getElementById("billingOverview");
-  if(!box) return;
-
-  const active = clientSites.filter(site=>getBillingStatus(site).text === "Active").length;
-  const covered = clientSites.filter(site=>getBillingStatus(site).text === "Covered by Giles").length;
-  const past = clientSites.filter(site=>getBillingStatus(site).text === "Past Due").length;
-  const manual = clientSites.filter(site=>site.billing_status === "manual paid").length;
-
-  const pastDueList = clientSites
-    .filter(site=>getBillingStatus(site).text === "Past Due")
-    .map(site=>`
-      <div class="analytics-client-card">
-        <p><strong>${escapeHtml(site.business_name || "Unnamed Business")}</strong></p>
-        <p>${escapeHtml(site.client_email || "")}</p>
-        <p>Next due: ${formatDate(site.next_payment_date)}</p>
-      </div>
-    `).join("");
-
-  box.innerHTML = `
-    <div class="grid">
-      <div class="stat"><span>Active</span><strong>${active}</strong></div>
-      <div class="stat"><span>Covered</span><strong>${covered}</strong></div>
-      <div class="stat"><span>Manual Paid</span><strong>${manual}</strong></div>
-      <div class="stat"><span>Past Due</span><strong>${past}</strong></div>
-    </div>
-
-    <h3 style="margin:20px 0 12px;">Past Due Clients</h3>
-    <div class="visit-list">
-      ${pastDueList || `<div class="empty-state">No past due clients.</div>`}
-    </div>
-  `;
+  await refreshAdminData();
 }
 
 /* =========================
    HELPERS
 ========================= */
-async function refreshAdminData(){
-  await loadClientSites();
-  await loadChangeRequests();
-  await loadAnalytics();
-  await loadLeads();
-
-  renderStats();
-  renderSmartAlerts();
-  renderChangeRequests();
-  renderAnalyticsOverviewFull();
-  populateAnalyticsClientDropdown();
-  populateSEOClientDropdown();
-  renderBillingOverview();
-}
-
 function getClientAnalytics(clientUserId){
-  const events = analyticsEvents.filter(event=>event.client_user_id === clientUserId);
+  const events = analyticsEvents.filter(e=>e.client_user_id === clientUserId);
 
   return {
-    today:events.filter(event=>isToday(event.created_at)).length,
-    week:events.filter(event=>isWithinDays(event.created_at,7)).length,
+    today:events.filter(e=>isToday(e.created_at)).length,
+    week:events.filter(e=>isWithinDays(e.created_at,7)).length,
     month:events.length,
-    topPage:getTopValue(events,"page") || "—",
-    topSource:getTopReferrer(events)
+    topPage:getTopValue(events,"page") || "—"
   };
 }
 
 function getClientLeads(clientUserId){
-  const leads = leadEvents.filter(lead=>lead.client_user_id === clientUserId);
+  const leads = leadEvents.filter(l=>l.client_user_id === clientUserId);
 
   return {
-    today:leads.filter(lead=>isToday(lead.created_at)).length,
-    week:leads.filter(lead=>isWithinDays(lead.created_at,7)).length,
-    month:leads.length,
-    topSource:getTopLeadSource(leads)
+    today:leads.filter(l=>isToday(l.created_at)).length,
+    week:leads.filter(l=>isWithinDays(l.created_at,7)).length,
+    month:leads.length
   };
 }
 
@@ -1522,6 +1232,16 @@ function getBillingStatus(site){
   }
 
   return { text:"Active", class:"full" };
+}
+
+function getInitials(text){
+  return String(text || "C")
+    .split(" ")
+    .filter(Boolean)
+    .slice(0,2)
+    .map(w=>w[0])
+    .join("")
+    .toUpperCase();
 }
 
 function toggleSidebar(){
@@ -1560,42 +1280,7 @@ function getTopValue(items,key){
     counts[value] = (counts[value] || 0) + 1;
   });
 
-  return Object.entries(counts)
-    .sort((a,b)=>b[1]-a[1])[0]?.[0] || null;
-}
-
-function getTopReferrer(events){
-  const counts = {};
-
-  events.forEach(event=>{
-    const source = cleanReferrer(event.referrer);
-    counts[source] = (counts[source] || 0) + 1;
-  });
-
-  return Object.entries(counts)
-    .sort((a,b)=>b[1]-a[1])[0]?.[0] || "direct";
-}
-
-function getTopLeadSource(leads){
-  const counts = {};
-
-  leads.forEach(lead=>{
-    const source = cleanReferrer(lead.source);
-    counts[source] = (counts[source] || 0) + 1;
-  });
-
-  return Object.entries(counts)
-    .sort((a,b)=>b[1]-a[1])[0]?.[0] || "direct";
-}
-
-function cleanReferrer(ref){
-  if(!ref || ref === "direct") return "direct";
-
-  try{
-    return new URL(ref).hostname;
-  }catch(e){
-    return ref;
-  }
+  return Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0] || null;
 }
 
 function isToday(dateString){
@@ -1620,13 +1305,10 @@ function timeAgo(dateString){
   const seconds = Math.floor((new Date() - date) / 1000);
 
   if(seconds < 60) return "just now";
-
   const minutes = Math.floor(seconds / 60);
   if(minutes < 60) return `${minutes} min ago`;
-
   const hours = Math.floor(minutes / 60);
   if(hours < 24) return `${hours} hr ago`;
-
   const days = Math.floor(hours / 24);
   if(days < 7) return `${days} day${days === 1 ? "" : "s"} ago`;
 
@@ -1649,4 +1331,7 @@ function escapeHtml(value){
 
 function capitalize(text){
   return String(text || "").charAt(0).toUpperCase() + String(text || "").slice(1);
+}
+    list.appendChild(card);
+  });
 }
