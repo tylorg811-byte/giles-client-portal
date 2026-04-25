@@ -1,3 +1,12 @@
+function escapeHtml(value){
+  return String(value || "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
 function setText(id,value){
   const el = document.getElementById(id);
   if(el) el.textContent = value;
