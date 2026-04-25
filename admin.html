@@ -21,7 +21,6 @@
   --muted:#64748b;
   --purple:#7B5CFF;
   --purple2:#A78BFA;
-  --blue:#38bdf8;
   --green:#16a34a;
   --red:#dc2626;
   --orange:#f97316;
@@ -313,6 +312,21 @@ button:hover{
   margin-top:18px;
 }
 
+.filter-panel{
+  display:grid;
+  grid-template-columns:1.4fr repeat(4,1fr);
+  gap:12px;
+  align-items:end;
+  margin:18px 0 22px;
+}
+
+.analytics-filter-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+  margin:18px 0;
+}
+
 label{
   display:block;
   font-size:13px;
@@ -366,16 +380,9 @@ textarea{min-height:110px;resize:vertical;}
   margin:18px 0 4px;
 }
 
-.filter-panel{
-  display:grid;
-  grid-template-columns:1.4fr repeat(4,1fr);
-  gap:12px;
-  align-items:end;
-  margin:18px 0 22px;
-}
-
 .client-list,
-.request-list{
+.request-list,
+.ticket-list{
   display:flex;
   flex-direction:column;
   gap:18px;
@@ -532,7 +539,8 @@ textarea{min-height:110px;resize:vertical;}
   text-align:right;
 }
 
-.request-card{
+.request-card,
+.ticket-card{
   background:white;
   border:1px solid var(--line);
   border-radius:26px;
@@ -586,6 +594,49 @@ textarea{min-height:110px;resize:vertical;}
   grid-template-columns:repeat(2,1fr);
   gap:12px;
   margin-top:12px;
+}
+
+.chart-card{
+  background:white;
+  border:1px solid var(--line);
+  border-radius:24px;
+  padding:20px;
+  box-shadow:var(--shadow);
+  margin:18px 0;
+}
+
+.chart-bars{
+  display:flex;
+  align-items:flex-end;
+  gap:10px;
+  height:180px;
+  padding-top:20px;
+}
+
+.chart-bar{
+  flex:1;
+  min-width:20px;
+  background:linear-gradient(180deg,var(--purple2),var(--purple));
+  border-radius:12px 12px 4px 4px;
+  position:relative;
+}
+
+.chart-bar span{
+  position:absolute;
+  bottom:-24px;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:11px;
+  color:var(--muted);
+  font-weight:800;
+}
+
+.chart-bar strong{
+  position:absolute;
+  top:-22px;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:12px;
 }
 
 .seo-score-ring{
@@ -708,12 +759,14 @@ textarea{min-height:110px;resize:vertical;}
   .filter-panel,
   .detail-grid,
   .analytics-header-grid,
-  .source-grid{
+  .source-grid,
+  .analytics-filter-grid{
     grid-template-columns:1fr 1fr;
   }
 
   .client-card,
-  .request-card{
+  .request-card,
+  .ticket-card{
     grid-template-columns:1fr;
   }
 }
@@ -730,158 +783,12 @@ textarea{min-height:110px;resize:vertical;}
   .analytics-header-grid,
   .source-grid,
   .visit-list,
-  .import-page-row{
+  .import-page-row,
+  .analytics-filter-grid{
     grid-template-columns:1fr;
   }
 
   .actions{grid-template-columns:1fr;}
-}
-
-  /* =========================
-   SAFE UI POLISH UPGRADE
-========================= */
-
-.card,
-.stat,
-.client-card,
-.detail-card,
-.source-card,
-.analytics-client-card,
-.request-card{
-  transition:transform .22s ease, box-shadow .22s ease, border-color .22s ease;
-}
-
-.card:hover,
-.stat:hover,
-.client-card:hover,
-.detail-card:hover,
-.source-card:hover,
-.analytics-client-card:hover,
-.request-card:hover{
-  transform:translateY(-3px);
-  box-shadow:0 24px 60px rgba(15,23,42,.12);
-}
-
-.client-card{
-  grid-template-columns:1.25fr .85fr .85fr 1.15fr;
-  position:relative;
-  overflow:hidden;
-}
-
-.client-card::before{
-  content:"";
-  position:absolute;
-  left:0;
-  top:0;
-  width:6px;
-  height:100%;
-  background:linear-gradient(180deg,#7B5CFF,#A78BFA);
-}
-
-.client-card h3{
-  font-size:24px;
-  line-height:1.1;
-}
-
-.client-card p strong{
-  color:#0f172a;
-}
-
-.actions{
-  background:#f8fafc;
-  padding:12px;
-  border-radius:20px;
-  border:1px solid #e2e8f0;
-}
-
-.actions button,
-.actions a{
-  min-height:40px;
-  border-radius:12px;
-  font-size:11px;
-  letter-spacing:.01em;
-}
-
-.actions button:nth-child(1),
-.actions button:nth-child(2),
-.actions a:nth-child(3),
-.actions a:nth-child(4){
-  background:white;
-}
-
-.badge{
-  box-shadow:0 4px 12px rgba(15,23,42,.05);
-}
-
-#smartAlerts{
-  border-left:6px solid #7B5CFF;
-}
-
-.analytics-header-grid .stat,
-.grid .stat{
-  min-height:132px;
-}
-
-.stat strong,
-.stat div{
-  letter-spacing:-1.5px;
-}
-
-.source-grid{
-  align-items:stretch;
-}
-
-.source-card{
-  min-height:130px;
-}
-
-.visit-list .analytics-client-card{
-  border-left:5px solid #7B5CFF;
-}
-
-.detail-card{
-  position:relative;
-  overflow:hidden;
-}
-
-.detail-card::after{
-  content:"";
-  position:absolute;
-  right:-40px;
-  top:-40px;
-  width:110px;
-  height:110px;
-  background:radial-gradient(circle,rgba(123,92,255,.12),transparent 70%);
-}
-
-input,
-select,
-textarea{
-  box-shadow:0 4px 12px rgba(15,23,42,.025);
-}
-
-.primary{
-  box-shadow:0 16px 34px rgba(123,92,255,.28);
-}
-
-.secondary:hover{
-  background:#f8fafc;
-}
-
-@media(max-width:1150px){
-  .client-card{
-    grid-template-columns:1fr;
-  }
-
-  .actions{
-    grid-template-columns:repeat(2,1fr);
-  }
-}
-
-@media(max-width:700px){
-  .actions{
-    grid-template-columns:1fr;
-  }
 }
 </style>
 </head>
@@ -899,7 +806,7 @@ textarea{
     <div><h2>Giles Console</h2></div>
   </div>
 
-  <p>Agency command center for clients, billing, SEO, analytics, requests, and publishing.</p>
+  <p>Agency command center for clients, billing, SEO, analytics, requests, support, and publishing.</p>
 
   <div class="nav">
     <button id="navClients" class="active-nav" onclick="showAdminPage('clients')">👥 Clients</button>
@@ -907,7 +814,8 @@ textarea{
     <button id="navSEO" onclick="showAdminPage('seo')">🔎 SEO Panel</button>
     <button id="navAnalytics" onclick="showAdminPage('analytics')">📊 Analytics</button>
     <button id="navRequests" onclick="showAdminPage('requests')">💬 Change Requests</button>
-    <button id="navBilling" onclick="showAdminPage('billing')">💳 Billing</button>
+    <button id="navSupport" onclick="showAdminPage('support')">🎧 Support Tickets</button>
+    <button id="navBilling" onclick="showAdminPage('billing')">💳 Billing & Revenue</button>
 
     <a href="dashboard.html">🖥 Client Dashboard</a>
     <a href="editor.html">✎ Open Editor</a>
@@ -939,7 +847,7 @@ textarea{
     <div class="stat"><b>Total Clients</b><div id="totalClients">0</div></div>
     <div class="stat"><b>Published</b><div id="publishedClients">0</div></div>
     <div class="stat"><b>Past Due</b><div id="pastDueClients">0</div></div>
-    <div class="stat"><b>Requests</b><div id="newRequests">0</div></div>
+    <div class="stat"><b>Open Support</b><div id="newRequests">0</div></div>
   </section>
 
   <section id="clientsPage" class="page-section active">
@@ -1305,31 +1213,88 @@ textarea{
     </section>
   </section>
 
-  <!-- Keep your current full admin.html exactly the same, but replace ONLY the billingPage section with this: -->
+  <section id="supportPage" class="page-section">
+    <section class="card">
+      <h2>Support Ticket Dashboard</h2>
+      <div id="supportOverview"></div>
+    </section>
 
-<section id="billingPage" class="page-section">
-  <section class="card">
-    <h2>Revenue Dashboard</h2>
-    <div id="revenueOverview"></div>
+    <section class="card">
+      <h2>Support Tickets</h2>
+
+      <div class="filter-panel">
+        <div>
+          <label>Search</label>
+          <input id="supportSearch" placeholder="Business, email, subject, issue..." oninput="renderSupportTickets()">
+        </div>
+
+        <div>
+          <label>Status</label>
+          <select id="supportStatusFilter" onchange="renderSupportTickets()">
+            <option value="all">All</option>
+            <option value="open">Open</option>
+            <option value="in progress">In Progress</option>
+            <option value="resolved">Resolved</option>
+            <option value="closed">Closed</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Priority</label>
+          <select id="supportPriorityFilter" onchange="renderSupportTickets()">
+            <option value="all">All</option>
+            <option value="normal">Normal</option>
+            <option value="high">High</option>
+            <option value="urgent">Urgent</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Type</label>
+          <select id="supportTypeFilter" onchange="renderSupportTickets()">
+            <option value="all">All</option>
+            <option value="Website Issue">Website Issue</option>
+            <option value="Editor Issue">Editor Issue</option>
+            <option value="Billing Issue">Billing Issue</option>
+            <option value="Login Issue">Login Issue</option>
+            <option value="Form Issue">Form Issue</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Quick</label>
+          <button class="secondary" onclick="clearSupportFilters()">Clear</button>
+        </div>
+      </div>
+
+      <div id="supportTicketList" class="ticket-list">Loading support tickets...</div>
+    </section>
   </section>
 
-  <section class="card">
-    <h2>Billing Overview</h2>
-    <div id="billingOverview"></div>
-  </section>
+  <section id="billingPage" class="page-section">
+    <section class="card">
+      <h2>Revenue Dashboard</h2>
+      <div id="revenueOverview"></div>
+    </section>
 
-  <section class="card">
-    <h2>Payment History</h2>
-    <div id="paymentHistory"></div>
+    <section class="card">
+      <h2>Billing Overview</h2>
+      <div id="billingOverview"></div>
+    </section>
+
+    <section class="card">
+      <h2>Payment History</h2>
+      <div id="paymentHistory"></div>
+    </section>
   </section>
-</section>
 
 </main>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="app.js"></script>
-<script src="admin.js?v=101"></script>
+<script src="admin.js?v=600"></script>
 <script src="admin-importer.js?v=5"></script>
 
 </body>
