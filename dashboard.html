@@ -668,12 +668,36 @@ input:focus,select:focus,textarea:focus{
         <div id="analyticsChart" class="chart"></div>
       </div>
 
-      <div class="card">
-        <div class="section-title">
-          <h2>Recent Visits</h2>
-        </div>
-        <div id="visitsList" class="list"></div>
-      </div>
+     <div class="card">
+  <div class="section-title">
+    <h2>Visit History</h2>
+    <span class="badge" id="visitCountBadge">0 Visits</span>
+  </div>
+
+  <div class="form-grid" style="margin-bottom:18px;">
+    <div>
+      <label>Month</label>
+      <select id="visitMonthFilter" onchange="renderVisitsList()"></select>
+    </div>
+
+    <div>
+      <label>Platform / Source</label>
+      <select id="visitSourceFilter" onchange="renderVisitsList()"></select>
+    </div>
+
+    <div>
+      <label>Device</label>
+      <select id="visitDeviceFilter" onchange="renderVisitsList()"></select>
+    </div>
+
+    <div>
+      <label>Page</label>
+      <select id="visitPageFilter" onchange="renderVisitsList()"></select>
+    </div>
+  </div>
+
+  <div id="visitsList" class="list"></div>
+</div>
     </section>
 
     <section id="leadsPage" class="page">
