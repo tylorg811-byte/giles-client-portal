@@ -1,3 +1,18 @@
+function setText(id,value){
+  const el = document.getElementById(id);
+  if(el) el.textContent = value;
+}
+
+function setValue(id,value){
+  const el = document.getElementById(id);
+  if(el) el.value = value || "";
+}
+
+function cleanValue(id){
+  const el = document.getElementById(id);
+  return el ? el.value.trim() : "";
+}
+
 let adminUser = null;
 let clientSites = [];
 let changeRequests = [];
