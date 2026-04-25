@@ -1,122 +1,9 @@
-function setText(id,value){
-  const el = document.getElementById(id);
-  if(el) el.textContent = value ?? "";
-}
-
-function setValue(id,value){
-  const el = document.getElementById(id);
-  if(el) el.value = value || "";
-}
-
-function cleanValue(id){
-  const el = document.getElementById(id);
-  return el ? el.value.trim() : "";
-}
-
-function escapeHtml(value){
-  return String(value || "")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
-}
-
-function capitalize(text){
-  return String(text || "").charAt(0).toUpperCase() + String(text || "").slice(1);
-}
-
-function toDateInput(date){
-  return date.toISOString().split("T")[0];
-}
-
-function formatDate(dateString){
-  if(!dateString) return "—";
-  return new Date(dateString + "T00:00:00").toLocaleDateString();
-}
-
-function timeAgo(dateString){
-  if(!dateString) return "—";
-
-  const date = new Date(dateString);
-  const seconds = Math.floor((new Date() - date) / 1000);
-
-  if(seconds < 60) return "just now";
-
-  const minutes = Math.floor(seconds / 60);
-  if(minutes < 60) return `${minutes} min ago`;
-
-  const hours = Math.floor(minutes / 60);
-  if(hours < 24) return `${hours} hr ago`;
-
-  const days = Math.floor(hours / 24);
-  if(days < 7) return `${days} day${days === 1 ? "" : "s"} ago`;
-
-  return date.toLocaleDateString();
-}
-
-function isToday(dateString){
-  const date = new Date(dateString);
-  const today = new Date();
-
-  return date.getFullYear() === today.getFullYear() &&
-    date.getMonth() === today.getMonth() &&
-    date.getDate() === today.getDate();
-}
-
-function isWithinDays(dateString,days){
-  const date = new Date(dateString);
-  const now = new Date();
-  return now - date <= days * 24 * 60 * 60 * 1000;
-}
-
-function getTopValue(items,key){
-  const counts = {};
-
-  items.forEach(item=>{
-    const value = item[key] || "unknown";
-    counts[value] = (counts[value] || 0) + 1;
-  });
-
-  return Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0] || null;
-}
-
-function cleanReferrer(ref){
-  if(!ref || ref === "direct") return "direct";
-
-  try{
-    return new URL(ref).hostname;
-  }catch(e){
-    return ref;
-  }
-}
-
-function getTopReferrer(events){
-  const counts = {};
-
-  events.forEach(event=>{
-    const source = cleanReferrer(event.referrer);
-    counts[source] = (counts[source] || 0) + 1;
-  });
-
-  return Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0] || "direct";
-}
-
-function getInitials(text){
-  return String(text || "C")
-    .split(" ")
-    .filter(Boolean)
-    .slice(0,2)
-    .map(word=>word[0])
-    .join("")
-    .toUpperCase();
-}
-
 let adminUser = null;
 let clientSites = [];
 let changeRequests = [];
 let analyticsEvents = [];
 let leadEvents = [];
+let clientPayments = [];
 
 const LIVE_BASE_URL = "https://giles-sites.netlify.app";
 
@@ -141,9 +28,6 @@ async function loadAdminDashboard(){
   }
 
   await refreshAdminData();
-  populateAnalyticsClientDropdown();
-  populateSEOClientDropdown();
-  loadClientAnalyticsView();
 }
 
 async function checkAdminAccess(){
@@ -161,6 +45,7 @@ async function refreshAdminData(){
   await loadChangeRequests();
   await loadAnalytics();
   await loadLeads();
+  await loadPayments();
 
   renderStats();
   renderSmartAlerts();
@@ -170,6 +55,8 @@ async function refreshAdminData(){
   populateAnalyticsClientDropdown();
   populateSEOClientDropdown();
   renderBillingOverview();
+  renderRevenueDashboard();
+  renderPaymentHistory();
 }
 
 async function loadClientSites(){
@@ -180,8 +67,7 @@ async function loadClientSites(){
 
   if(error){
     console.error(error);
-    const list = document.getElementById("clientList");
-    if(list) list.innerHTML = `<div class="empty-state">Could not load clients.</div>`;
+    clientSites = [];
     return;
   }
 
@@ -196,8 +82,7 @@ async function loadChangeRequests(){
 
   if(error){
     console.error(error);
-    const list = document.getElementById("changeRequestList");
-    if(list) list.innerHTML = `<div class="empty-state">Could not load change requests.</div>`;
+    changeRequests = [];
     return;
   }
 
@@ -242,6 +127,21 @@ async function loadLeads(){
   leadEvents = data || [];
 }
 
+async function loadPayments(){
+  const { data, error } = await db
+    .from("client_payments")
+    .select("*")
+    .order("paid_at", { ascending:false });
+
+  if(error){
+    console.error("Payments not loaded:", error);
+    clientPayments = [];
+    return;
+  }
+
+  clientPayments = data || [];
+}
+
 function showAdminPage(page){
   document.querySelectorAll(".page-section").forEach(section=>{
     section.classList.remove("active");
@@ -264,7 +164,7 @@ function showAdminPage(page){
     seo:"SEO Panel",
     analytics:"Analytics",
     requests:"Change Requests",
-    billing:"Billing"
+    billing:"Billing & Revenue"
   };
 
   setText("pageTitle", titles[page] || "Admin Console");
@@ -280,8 +180,15 @@ function showAdminPage(page){
     loadClientAnalyticsView();
   }
 
-  if(page === "requests") renderChangeRequests();
-  if(page === "billing") renderBillingOverview();
+  if(page === "requests"){
+    renderChangeRequests();
+  }
+
+  if(page === "billing"){
+    renderBillingOverview();
+    renderRevenueDashboard();
+    renderPaymentHistory();
+  }
 
   if(window.innerWidth <= 1150){
     document.body.classList.remove("sidebar-open");
@@ -290,21 +197,9 @@ function showAdminPage(page){
 
 function renderStats(){
   setText("totalClients", clientSites.length);
-
-  setText(
-    "publishedClients",
-    clientSites.filter(site=>site.site_status === "published").length
-  );
-
-  setText(
-    "pastDueClients",
-    clientSites.filter(site=>getBillingStatus(site).text === "Past Due").length
-  );
-
-  setText(
-    "newRequests",
-    changeRequests.filter(req=>req.status === "new").length
-  );
+  setText("publishedClients", clientSites.filter(site=>site.site_status === "published").length);
+  setText("pastDueClients", clientSites.filter(site=>getBillingStatus(site).text === "Past Due").length);
+  setText("newRequests", changeRequests.filter(req=>req.status === "new").length);
 }
 
 function renderSmartAlerts(){
@@ -411,6 +306,7 @@ function renderClientSites(sites){
     const liveUrl = getClientLiveUrl(site);
     const analytics = site.client_user_id ? getClientAnalytics(site.client_user_id) : null;
     const leads = site.client_user_id ? getClientLeads(site.client_user_id) : null;
+    const payments = getClientPaymentTotal(site.client_user_id);
 
     const seoScore = Number(site.seo_score || 0);
     const seoClass = seoScore >= 80 ? "full" : seoScore >= 60 ? "safe" : "danger";
@@ -467,7 +363,7 @@ function renderClientSites(sites){
         <div class="card-group-title">Performance</div>
         <p><strong>Views:</strong> ${analytics ? analytics.month : 0} / 30d</p>
         <p><strong>Leads:</strong> ${leads ? leads.month : 0} / 30d</p>
-        <p><strong>Top Page:</strong> ${analytics ? escapeHtml(analytics.topPage) : "—"}</p>
+        <p><strong>Revenue:</strong> ${money(payments)}</p>
         <p><strong>Next:</strong> ${formatDate(site.next_payment_date)}</p>
       </div>
 
@@ -508,9 +404,28 @@ async function quickPause(id){
 }
 
 async function quickMarkPaid(id){
+  const site = clientSites.find(item=>item.id === id);
+  if(!site) return;
+
+  const amountRaw = prompt("Payment amount received? Example: 25 or 250", "");
+  const amount = Number(amountRaw || 0);
+
   const today = new Date();
   const next = new Date();
   next.setMonth(next.getMonth() + 1);
+
+  if(amount > 0){
+    await db.from("client_payments").insert({
+      client_user_id: site.client_user_id || null,
+      client_email: site.client_email || null,
+      business_name: site.business_name || null,
+      amount,
+      source: "manual",
+      payment_type: "manual payment",
+      notes: "Marked paid from admin console",
+      paid_at: new Date().toISOString()
+    });
+  }
 
   await updateClientQuick(id, {
     billing_status:"active",
@@ -700,6 +615,139 @@ function scrollToForm(){
   if(card) card.scrollIntoView({behavior:"smooth",block:"start"});
 }
 
+function renderRevenueDashboard(){
+  const box = document.getElementById("revenueOverview");
+  if(!box) return;
+
+  const total = clientPayments.reduce((sum,p)=>sum + Number(p.amount || 0),0);
+
+  const last30 = clientPayments
+    .filter(p=>isWithinDays(p.paid_at,30))
+    .reduce((sum,p)=>sum + Number(p.amount || 0),0);
+
+  const thisMonth = clientPayments
+    .filter(p=>isCurrentMonth(p.paid_at))
+    .reduce((sum,p)=>sum + Number(p.amount || 0),0);
+
+  const monthly = getMonthlyRevenue();
+
+  box.innerHTML = `
+    <div class="grid">
+      <div class="stat"><span>Total Revenue</span><strong>${money(total)}</strong></div>
+      <div class="stat"><span>Last 30 Days</span><strong>${money(last30)}</strong></div>
+      <div class="stat"><span>This Month</span><strong>${money(thisMonth)}</strong></div>
+      <div class="stat"><span>Payments</span><strong>${clientPayments.length}</strong></div>
+    </div>
+
+    <h3 style="margin:24px 0 12px;">Monthly Revenue</h3>
+    <div class="source-grid">
+      ${
+        monthly.length
+          ? monthly.map(row=>`
+            <div class="source-card">
+              <span>${row.month}</span>
+              <strong>${money(row.total)}</strong>
+            </div>
+          `).join("")
+          : `<div class="empty-state">No payments logged yet.</div>`
+      }
+    </div>
+  `;
+}
+
+function renderPaymentHistory(){
+  const box = document.getElementById("paymentHistory");
+  if(!box) return;
+
+  if(!clientPayments.length){
+    box.innerHTML = `<div class="empty-state">No payments logged yet.</div>`;
+    return;
+  }
+
+  box.innerHTML = `
+    <div class="visit-list">
+      ${clientPayments.slice(0,50).map(payment=>`
+        <div class="analytics-client-card">
+          <p><strong>${escapeHtml(payment.business_name || payment.client_email || "Payment")}</strong></p>
+          <p>${money(payment.amount || 0)} • ${escapeHtml(payment.source || "manual")}</p>
+          <p>${escapeHtml(payment.payment_type || "payment")}</p>
+          <p style="color:#64748b;font-size:13px;">${formatDateTime(payment.paid_at)}</p>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+function getMonthlyRevenue(){
+  const groups = {};
+
+  clientPayments.forEach(payment=>{
+    if(!payment.paid_at) return;
+
+    const date = new Date(payment.paid_at);
+    const key = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}`;
+
+    groups[key] = (groups[key] || 0) + Number(payment.amount || 0);
+  });
+
+  return Object.entries(groups)
+    .sort((a,b)=>b[0].localeCompare(a[0]))
+    .map(([month,total])=>({
+      month:formatMonth(month),
+      total
+    }));
+}
+
+function getClientPaymentTotal(clientUserId){
+  if(!clientUserId) return 0;
+
+  return clientPayments
+    .filter(payment=>payment.client_user_id === clientUserId)
+    .reduce((sum,payment)=>sum + Number(payment.amount || 0),0);
+}
+
+function renderBillingOverview(){
+  const box = document.getElementById("billingOverview");
+  if(!box) return;
+
+  const activeSites = clientSites.filter(s=>getBillingStatus(s).text === "Active");
+  const pastSites = clientSites.filter(s=>getBillingStatus(s).text === "Past Due");
+  const manualSites = clientSites.filter(s=>s.billing_status === "manual paid");
+  const coveredSites = clientSites.filter(s=>s.billing_override || s.billing_status === "free");
+
+  const lane = (title,sites,icon)=>`
+    <div class="source-card">
+      <span>${icon} ${title}</span>
+      <strong>${sites.length}</strong>
+      <div style="margin-top:14px;display:grid;gap:10px;">
+        ${
+          sites.slice(0,8).map(site=>`
+            <div style="background:white;border:1px solid #e2e8f0;border-radius:14px;padding:12px;">
+              <p><strong>${escapeHtml(site.business_name || "Unnamed")}</strong></p>
+              <p style="color:#64748b;font-size:13px;">Next: ${formatDate(site.next_payment_date)}</p>
+            </div>
+          `).join("") || `<p style="color:#64748b;font-size:13px;">None</p>`
+        }
+      </div>
+    </div>
+  `;
+
+  box.innerHTML = `
+    <div class="grid">
+      <div class="stat"><span>Active</span><strong>${activeSites.length}</strong></div>
+      <div class="stat"><span>Manual Paid</span><strong>${manualSites.length}</strong></div>
+      <div class="stat"><span>Covered</span><strong>${coveredSites.length}</strong></div>
+      <div class="stat"><span>Past Due</span><strong>${pastSites.length}</strong></div>
+    </div>
+
+    <div class="source-grid">
+      ${lane("Active",activeSites,"✅")}
+      ${lane("Manual / Covered",[...manualSites,...coveredSites],"🧾")}
+      ${lane("Past Due",pastSites,"⚠️")}
+    </div>
+  `;
+}
+
 function renderAnalyticsOverviewFull(){
   const el = document.getElementById("analyticsOverview");
   if(!el) return;
@@ -767,24 +815,6 @@ function loadClientAnalyticsView(){
   const events = analyticsEvents.filter(e=>e.client_user_id === id);
   const leads = leadEvents.filter(l=>l.client_user_id === id);
 
-  const recentVisits = events.slice(0,8).map(event=>`
-    <div class="analytics-client-card">
-      <p><strong>${escapeHtml(event.page || "home")}</strong></p>
-      <p>${escapeHtml(event.device || "unknown")} • ${escapeHtml(event.browser || "unknown")}</p>
-      <p><strong>Source:</strong> ${escapeHtml(cleanReferrer(event.referrer))}</p>
-      <p style="color:#64748b;font-size:13px;">${timeAgo(event.created_at)}</p>
-    </div>
-  `).join("");
-
-  const recentLeads = leads.slice(0,6).map(lead=>`
-    <div class="analytics-client-card">
-      <p><strong>${escapeHtml(lead.form_name || "Website Lead")}</strong></p>
-      <p>${escapeHtml(lead.page || "unknown page")}</p>
-      <p><strong>Source:</strong> ${escapeHtml(cleanReferrer(lead.source))}</p>
-      <p style="color:#64748b;font-size:13px;">${timeAgo(lead.created_at)}</p>
-    </div>
-  `).join("");
-
   container.innerHTML = `
     <h2>${escapeHtml(site?.business_name || "Client Analytics")}</h2>
 
@@ -793,58 +823,6 @@ function loadClientAnalyticsView(){
       <div class="stat"><span>Leads</span><strong>${leads.length}</strong></div>
       <div class="stat"><span>Top Page</span><strong style="font-size:22px;">${escapeHtml(getTopValue(events,"page") || "—")}</strong></div>
       <div class="stat"><span>Device</span><strong style="font-size:22px;">${escapeHtml(getTopValue(events,"device") || "—")}</strong></div>
-    </div>
-
-    <h3 style="margin:24px 0 12px;">Recent Leads</h3>
-    <div class="visit-list">
-      ${recentLeads || `<div class="empty-state">No leads yet.</div>`}
-    </div>
-
-    <h3 style="margin:24px 0 12px;">Recent Visits</h3>
-    <div class="visit-list">
-      ${recentVisits || `<div class="empty-state">No visits yet.</div>`}
-    </div>
-  `;
-}
-
-function renderBillingOverview(){
-  const el = document.getElementById("billingOverview");
-  if(!el) return;
-
-  const activeSites = clientSites.filter(s=>getBillingStatus(s).text === "Active");
-  const pastSites = clientSites.filter(s=>getBillingStatus(s).text === "Past Due");
-  const manualSites = clientSites.filter(s=>s.billing_status === "manual paid");
-  const coveredSites = clientSites.filter(s=>s.billing_override || s.billing_status === "free");
-
-  const lane = (title,sites,icon)=>`
-    <div class="source-card">
-      <span>${icon} ${title}</span>
-      <strong>${sites.length}</strong>
-      <div style="margin-top:14px;display:grid;gap:10px;">
-        ${
-          sites.slice(0,8).map(site=>`
-            <div style="background:white;border:1px solid #e2e8f0;border-radius:14px;padding:12px;">
-              <p><strong>${escapeHtml(site.business_name || "Unnamed")}</strong></p>
-              <p style="color:#64748b;font-size:13px;">Next: ${formatDate(site.next_payment_date)}</p>
-            </div>
-          `).join("") || `<p style="color:#64748b;font-size:13px;">None</p>`
-        }
-      </div>
-    </div>
-  `;
-
-  el.innerHTML = `
-    <div class="grid">
-      <div class="stat"><span>Active</span><strong>${activeSites.length}</strong></div>
-      <div class="stat"><span>Manual Paid</span><strong>${manualSites.length}</strong></div>
-      <div class="stat"><span>Covered</span><strong>${coveredSites.length}</strong></div>
-      <div class="stat"><span>Past Due</span><strong>${pastSites.length}</strong></div>
-    </div>
-
-    <div class="source-grid">
-      ${lane("Active",activeSites,"✅")}
-      ${lane("Manual / Covered",[...manualSites,...coveredSites],"🧾")}
-      ${lane("Past Due",pastSites,"⚠️")}
     </div>
   `;
 }
@@ -861,6 +839,7 @@ function openClientDetail(id){
   const billing = getBillingStatus(site);
   const analytics = site.client_user_id ? getClientAnalytics(site.client_user_id) : null;
   const leads = site.client_user_id ? getClientLeads(site.client_user_id) : null;
+  const revenue = getClientPaymentTotal(site.client_user_id);
 
   document.getElementById("clientDetailContent").innerHTML = `
     <div class="detail-grid">
@@ -882,6 +861,7 @@ function openClientDetail(id){
       <div class="detail-card">
         <h3>Billing</h3>
         <div class="detail-row"><span>Status</span><span>${billing.text}</span></div>
+        <div class="detail-row"><span>Revenue</span><span>${money(revenue)}</span></div>
         <div class="detail-row"><span>Cycle</span><span>${escapeHtml(site.billing_cycle || "monthly")}</span></div>
         <div class="detail-row"><span>Last</span><span>${formatDate(site.last_payment_date)}</span></div>
         <div class="detail-row"><span>Next</span><span>${formatDate(site.next_payment_date)}</span></div>
@@ -975,14 +955,7 @@ function autoGenerateSEO(){
     ? `${name} provides professional ${type.toLowerCase()} services in ${location}. Contact today to learn more.`
     : `${name} provides professional ${type.toLowerCase()} services. Contact today to learn more.`;
 
-  const keywords = [
-    name,
-    type,
-    location,
-    `${type} near me`,
-    `affordable ${type}`,
-    `${name} website`
-  ].filter(Boolean).join(", ");
+  const keywords = [name,type,location,`${type} near me`,`affordable ${type}`,`${name} website`].filter(Boolean).join(", ");
 
   setValue("seoTitle", title);
   setValue("seoDescription", description);
@@ -1011,7 +984,6 @@ function scoreSEO(){
 
 function calculateSEOScore(title,description,keywords,image,type,location){
   let score = 0;
-
   if(title) score += 20;
   if(title.length >= 35 && title.length <= 70) score += 10;
   if(description) score += 20;
@@ -1021,7 +993,6 @@ function calculateSEOScore(title,description,keywords,image,type,location){
   if(type) score += 10;
   if(location) score += 10;
   if(image) score += 10;
-
   return Math.min(score,100);
 }
 
@@ -1404,11 +1375,154 @@ function getBillingStatus(site){
   return { text:"Active", class:"full" };
 }
 
-function toggleSidebar(){
-  document.body.classList.toggle("sidebar-open");
+function setText(id,value){
+  const el = document.getElementById(id);
+  if(el) el.textContent = value ?? "";
+}
+
+function setValue(id,value){
+  const el = document.getElementById(id);
+  if(el) el.value = value || "";
+}
+
+function cleanValue(id){
+  const el = document.getElementById(id);
+  return el ? el.value.trim() : "";
 }
 
 function copyText(text){
   navigator.clipboard.writeText(text);
   alert("Copied.");
+}
+
+function toggleSidebar(){
+  document.body.classList.toggle("sidebar-open");
+}
+
+function toDateInput(date){
+  return date.toISOString().split("T")[0];
+}
+
+function formatDate(dateString){
+  if(!dateString) return "—";
+  return new Date(dateString + "T00:00:00").toLocaleDateString();
+}
+
+function formatDateTime(dateString){
+  if(!dateString) return "—";
+  return new Date(dateString).toLocaleString();
+}
+
+function timeAgo(dateString){
+  if(!dateString) return "—";
+
+  const date = new Date(dateString);
+  const seconds = Math.floor((new Date() - date) / 1000);
+
+  if(seconds < 60) return "just now";
+  const minutes = Math.floor(seconds / 60);
+  if(minutes < 60) return `${minutes} min ago`;
+  const hours = Math.floor(minutes / 60);
+  if(hours < 24) return `${hours} hr ago`;
+  const days = Math.floor(hours / 24);
+  if(days < 7) return `${days} day${days === 1 ? "" : "s"} ago`;
+
+  return date.toLocaleDateString();
+}
+
+function isToday(dateString){
+  const date = new Date(dateString);
+  const today = new Date();
+
+  return date.getFullYear() === today.getFullYear() &&
+    date.getMonth() === today.getMonth() &&
+    date.getDate() === today.getDate();
+}
+
+function isWithinDays(dateString,days){
+  const date = new Date(dateString);
+  const now = new Date();
+  return now - date <= days * 24 * 60 * 60 * 1000;
+}
+
+function isCurrentMonth(dateString){
+  if(!dateString) return false;
+
+  const date = new Date(dateString);
+  const now = new Date();
+
+  return date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth();
+}
+
+function getTopValue(items,key){
+  const counts = {};
+
+  items.forEach(item=>{
+    const value = item[key] || "unknown";
+    counts[value] = (counts[value] || 0) + 1;
+  });
+
+  return Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0] || null;
+}
+
+function cleanReferrer(ref){
+  if(!ref || ref === "direct") return "direct";
+
+  try{
+    return new URL(ref).hostname;
+  }catch(e){
+    return ref;
+  }
+}
+
+function getTopReferrer(events){
+  const counts = {};
+
+  events.forEach(event=>{
+    const source = cleanReferrer(event.referrer);
+    counts[source] = (counts[source] || 0) + 1;
+  });
+
+  return Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0] || "direct";
+}
+
+function getInitials(text){
+  return String(text || "C")
+    .split(" ")
+    .filter(Boolean)
+    .slice(0,2)
+    .map(word=>word[0])
+    .join("")
+    .toUpperCase();
+}
+
+function formatMonth(key){
+  const [year,month] = key.split("-");
+  const date = new Date(Number(year), Number(month)-1, 1);
+
+  return date.toLocaleDateString(undefined,{
+    month:"long",
+    year:"numeric"
+  });
+}
+
+function money(amount){
+  return "$" + Number(amount || 0).toLocaleString(undefined,{
+    minimumFractionDigits:2,
+    maximumFractionDigits:2
+  });
+}
+
+function escapeHtml(value){
+  return String(value || "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+function capitalize(text){
+  return String(text || "").charAt(0).toUpperCase() + String(text || "").slice(1);
 }
