@@ -736,6 +736,153 @@ textarea{min-height:110px;resize:vertical;}
 
   .actions{grid-template-columns:1fr;}
 }
+
+  /* =========================
+   SAFE UI POLISH UPGRADE
+========================= */
+
+.card,
+.stat,
+.client-card,
+.detail-card,
+.source-card,
+.analytics-client-card,
+.request-card{
+  transition:transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+}
+
+.card:hover,
+.stat:hover,
+.client-card:hover,
+.detail-card:hover,
+.source-card:hover,
+.analytics-client-card:hover,
+.request-card:hover{
+  transform:translateY(-3px);
+  box-shadow:0 24px 60px rgba(15,23,42,.12);
+}
+
+.client-card{
+  grid-template-columns:1.25fr .85fr .85fr 1.15fr;
+  position:relative;
+  overflow:hidden;
+}
+
+.client-card::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:0;
+  width:6px;
+  height:100%;
+  background:linear-gradient(180deg,#7B5CFF,#A78BFA);
+}
+
+.client-card h3{
+  font-size:24px;
+  line-height:1.1;
+}
+
+.client-card p strong{
+  color:#0f172a;
+}
+
+.actions{
+  background:#f8fafc;
+  padding:12px;
+  border-radius:20px;
+  border:1px solid #e2e8f0;
+}
+
+.actions button,
+.actions a{
+  min-height:40px;
+  border-radius:12px;
+  font-size:11px;
+  letter-spacing:.01em;
+}
+
+.actions button:nth-child(1),
+.actions button:nth-child(2),
+.actions a:nth-child(3),
+.actions a:nth-child(4){
+  background:white;
+}
+
+.badge{
+  box-shadow:0 4px 12px rgba(15,23,42,.05);
+}
+
+#smartAlerts{
+  border-left:6px solid #7B5CFF;
+}
+
+.analytics-header-grid .stat,
+.grid .stat{
+  min-height:132px;
+}
+
+.stat strong,
+.stat div{
+  letter-spacing:-1.5px;
+}
+
+.source-grid{
+  align-items:stretch;
+}
+
+.source-card{
+  min-height:130px;
+}
+
+.visit-list .analytics-client-card{
+  border-left:5px solid #7B5CFF;
+}
+
+.detail-card{
+  position:relative;
+  overflow:hidden;
+}
+
+.detail-card::after{
+  content:"";
+  position:absolute;
+  right:-40px;
+  top:-40px;
+  width:110px;
+  height:110px;
+  background:radial-gradient(circle,rgba(123,92,255,.12),transparent 70%);
+}
+
+input,
+select,
+textarea{
+  box-shadow:0 4px 12px rgba(15,23,42,.025);
+}
+
+.primary{
+  box-shadow:0 16px 34px rgba(123,92,255,.28);
+}
+
+.secondary:hover{
+  background:#f8fafc;
+}
+
+@media(max-width:1150px){
+  .client-card{
+    grid-template-columns:1fr;
+  }
+
+  .actions{
+    grid-template-columns:repeat(2,1fr);
+  }
+}
+
+@media(max-width:700px){
+  .actions{
+    grid-template-columns:1fr;
+  }
+}
 </style>
 </head>
 
