@@ -35,6 +35,43 @@ function getBillingStatus(site){
   return { text:"Active", class:"full" };
 }
 
+function renderChangeRequests(){
+  const list = document.getElementById("changeRequestList");
+  if(!list) return;
+
+  list.innerHTML = "";
+
+  if(!changeRequests || !changeRequests.length){
+    list.innerHTML = `<div class="empty-state">No change requests yet.</div>`;
+    return;
+  }
+
+  changeRequests.forEach(req=>{
+    const card = document.createElement("div");
+    card.className = "request-card";
+
+    card.innerHTML = `
+      <div>
+        <h3>${escapeHtml(req.business_name || req.client_email || "Client Request")}</h3>
+        <p>${escapeHtml(req.client_email || "")}</p>
+        <span class="badge">${escapeHtml(req.status || "new")}</span>
+      </div>
+
+      <div>
+        <p><strong>${escapeHtml(req.request_type || "Request")}</strong></p>
+        <p>${escapeHtml(req.message || "")}</p>
+      </div>
+
+      <div class="actions">
+        <button onclick="completeRequest('${req.id}', '${req.client_user_id || ""}')">Complete</button>
+        <button class="danger" onclick="deleteChangeRequest('${req.id}')">Delete</button>
+      </div>
+    `;
+
+    list.appendChild(card);
+  });
+}
+
 let adminUser = null;
 let clientSites = [];
 let changeRequests = [];
