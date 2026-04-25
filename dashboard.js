@@ -1,60 +1,43 @@
-let dashboardUser = null;
-let dashboardSite = null;
-let clientSiteRecord = null;
+let currentUser = null;
+let clientSite = null;
 let analyticsEvents = [];
+let leadEvents = [];
+let changeRequests = [];
+let notifications = [];
 
-const BASE_URL = "https://tylorg811-byte.github.io/giles-client-portal";
+const LIVE_BASE_URL = "https://giles-sites.netlify.app";
 
-document.addEventListener("DOMContentLoaded", loadClientDashboard);
+document.addEventListener("DOMContentLoaded", initDashboard);
 
-async function loadClientDashboard(){
-  dashboardUser = await checkUser();
-  if(!dashboardUser) return;
+async function initDashboard(){
+  currentUser = await checkUser();
+  if(!currentUser) return;
 
-  document.getElementById("userEmail").textContent = dashboardUser.email;
-  document.getElementById("welcomeName").textContent = dashboardUser.email;
+  await loadDashboardData();
+  renderDashboard();
+}
 
-  await loadClientSiteRecord();
-  await loadClientSiteInfo();
+async function loadDashboardData(){
+  await loadClientSite();
   await loadAnalytics();
+  await loadLeads();
   await loadChangeRequests();
   await loadNotifications();
-
-  updateLiveSiteLinks();
-  renderBillingCard();
-  renderAnalyticsCard();
 }
 
-async function loadClientSiteRecord(){
-  const { data } = await db
+async function loadClientSite(){
+  const { data, error } = await db
     .from("client_sites")
     .select("*")
-    .eq("client_user_id", dashboardUser.id)
-    .single();
+    .eq("client_user_id", currentUser.id)
+    .maybeSingle();
 
-  clientSiteRecord = data || null;
-}
-
-async function loadClientSiteInfo(){
-  const { data, error } = await db
-    .from("visual_pages")
-    .select("*")
-    .eq("user_id", dashboardUser.id)
-    .single();
-
-  if(error || !data){
-    document.getElementById("siteStatus").textContent = "Draft";
-    document.getElementById("lastUpdated").textContent = "—";
+  if(error){
+    console.error(error);
     return;
   }
 
-  dashboardSite = data;
-
-  document.getElementById("siteStatus").textContent = data.status || "Draft";
-
-  document.getElementById("lastUpdated").textContent = data.updated_at
-    ? timeAgo(data.updated_at)
-    : "—";
+  clientSite = data || null;
 }
 
 async function loadAnalytics(){
@@ -64,386 +47,313 @@ async function loadAnalytics(){
   const { data, error } = await db
     .from("site_analytics_events")
     .select("*")
-    .eq("client_user_id", dashboardUser.id)
+    .eq("client_user_id", currentUser.id)
     .gte("created_at", since.toISOString())
     .order("created_at", { ascending:false });
 
-  if(error){
-    console.error(error);
-    analyticsEvents = [];
-    return;
-  }
-
-  analyticsEvents = data || [];
+  analyticsEvents = error ? [] : data || [];
 }
 
-function renderAnalyticsCard(){
-  let panel = document.getElementById("analyticsCard");
+async function loadLeads(){
+  const since = new Date();
+  since.setDate(since.getDate() - 30);
 
-  if(!panel){
-    const main = document.querySelector(".main");
-    const card = document.createElement("section");
-    card.className = "card";
-    card.id = "analyticsCard";
-    main.insertBefore(card, main.children[2]);
-    panel = card;
-  }
+  const { data, error } = await db
+    .from("site_leads")
+    .select("*")
+    .eq("client_user_id", currentUser.id)
+    .gte("created_at", since.toISOString())
+    .order("created_at", { ascending:false });
 
-  const todayCount = analyticsEvents.filter(event=>isToday(event.created_at)).length;
-  const weekCount = analyticsEvents.filter(event=>isWithinDays(event.created_at,7)).length;
-  const totalCount = analyticsEvents.length;
-  const topPage = getTopValue(analyticsEvents,"page") || "—";
-  const topDevice = getTopValue(analyticsEvents,"device") || "—";
-
-  const recentRows = analyticsEvents.slice(0,6).map(event=>`
-    <div class="request-item">
-      <h3>${escapeHtml(event.page || "home")}</h3>
-      <p>${escapeHtml(event.device || "unknown")} • ${escapeHtml(event.browser || "unknown")} • ${timeAgo(event.created_at)}</p>
-      <p>Referrer: ${escapeHtml(cleanReferrer(event.referrer))}</p>
-    </div>
-  `).join("");
-
-  panel.innerHTML = `
-    <h2>Website Analytics</h2>
-    <p>Performance from the last 30 days.</p>
-
-    <div class="grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:18px;">
-      <div class="stat">
-        <span>Today</span>
-        <strong>${todayCount}</strong>
-      </div>
-
-      <div class="stat">
-        <span>7 Days</span>
-        <strong>${weekCount}</strong>
-      </div>
-
-      <div class="stat">
-        <span>30 Days</span>
-        <strong>${totalCount}</strong>
-      </div>
-
-      <div class="stat">
-        <span>Top Page</span>
-        <strong style="font-size:20px;">${escapeHtml(topPage)}</strong>
-      </div>
-    </div>
-
-    <div class="request-item">
-      <h3>Top Device</h3>
-      <p>${escapeHtml(topDevice)}</p>
-    </div>
-
-    <h3 style="margin:18px 0 10px;">Recent Visits</h3>
-    <div class="request-list">
-      ${recentRows || "<p>No analytics yet. Visits will appear after the live site is viewed.</p>"}
-    </div>
-  `;
-}
-
-function getClientBillingStatus(){
-  const site = clientSiteRecord || {};
-
-  if(site.billing_override){
-    return {
-      text:"Covered by Giles",
-      class:"full",
-      description:"Your website is manually covered by Giles Web Design."
-    };
-  }
-
-  if(site.billing_status === "free"){
-    return {
-      text:"Covered by Giles",
-      class:"full",
-      description:"Your website is currently covered at no charge."
-    };
-  }
-
-  if(site.billing_status === "manual paid"){
-    return {
-      text:"Paid",
-      class:"full",
-      description:"Your payment was received outside the automatic billing system."
-    };
-  }
-
-  if(site.billing_status === "trial"){
-    return {
-      text:"Trial",
-      class:"safe",
-      description:"Your website is currently in a trial period."
-    };
-  }
-
-  if(site.billing_status === "paused"){
-    return {
-      text:"Paused",
-      class:"dark",
-      description:"Your website service is currently paused."
-    };
-  }
-
-  if(site.billing_status === "past due"){
-    return {
-      text:"Past Due",
-      class:"danger",
-      description:"Your website payment is past due. Please contact Giles Web Design."
-    };
-  }
-
-  const today = new Date();
-  today.setHours(0,0,0,0);
-
-  const next = site.next_payment_date ? new Date(site.next_payment_date + "T00:00:00") : null;
-
-  if(next && next < today){
-    return {
-      text:"Past Due",
-      class:"danger",
-      description:"Your website payment is past due. Please contact Giles Web Design."
-    };
-  }
-
-  return {
-    text:"Active",
-    class:"full",
-    description:"Your website plan is active."
-  };
-}
-
-function renderBillingCard(){
-  let panel = document.getElementById("billingCard");
-
-  if(!panel){
-    const main = document.querySelector(".main");
-    const card = document.createElement("section");
-    card.className = "card";
-    card.id = "billingCard";
-    main.insertBefore(card, main.children[3]);
-    panel = card;
-  }
-
-  const billing = getClientBillingStatus();
-  const site = clientSiteRecord || {};
-
-  panel.innerHTML = `
-    <h2>Billing & Package</h2>
-    <p>${billing.description}</p>
-
-    <div class="request-item">
-      <h3>${escapeHtml(site.package_name || "Website Plan")}</h3>
-      <p><strong>Status:</strong> <span class="badge">${billing.text}</span></p>
-      <p><strong>Billing Cycle:</strong> ${escapeHtml(site.billing_cycle || "monthly")}</p>
-      ${site.last_payment_date ? `<p><strong>Last Payment:</strong> ${formatDate(site.last_payment_date)}</p>` : ""}
-      ${site.next_payment_date ? `<p><strong>Next Payment:</strong> ${formatDate(site.next_payment_date)}</p>` : ""}
-      ${site.billing_notes ? `<p><strong>Notes:</strong> ${escapeHtml(site.billing_notes)}</p>` : ""}
-    </div>
-  `;
-}
-
-function getLiveUrl(){
-  if(
-    clientSiteRecord &&
-    clientSiteRecord.domain &&
-    clientSiteRecord.domain_status === "live" &&
-    clientSiteRecord.domain_release_status !== "released"
-  ){
-    return `https://${clientSiteRecord.domain}`;
-  }
-
-  return `${BASE_URL}/index.html?client=${dashboardUser.id}`;
-}
-
-function updateLiveSiteLinks(){
-  const liveUrl = getLiveUrl();
-
-  document.querySelectorAll(".sidebar a").forEach(link=>{
-    if(link.textContent.trim().toLowerCase().includes("view live")){
-      link.href = liveUrl;
-    }
-  });
-}
-
-async function submitChangeRequest(){
-  const type = document.getElementById("requestType").value;
-  const message = document.getElementById("requestText").value.trim();
-  const statusBox = document.getElementById("requestMessage");
-
-  if(!message){
-    statusBox.textContent = "Please describe what you need changed.";
-    return;
-  }
-
-  statusBox.textContent = "Submitting request...";
-
-  const businessName =
-    dashboardSite?.site_settings?.businessName ||
-    clientSiteRecord?.business_name ||
-    "";
-
-  const { error } = await db
-    .from("change_requests")
-    .insert({
-      client_user_id: dashboardUser.id,
-      client_email: dashboardUser.email,
-      business_name: businessName,
-      request_type: type,
-      message: message,
-      status: "new"
-    });
-
-  if(error){
-    console.error(error);
-    statusBox.textContent = "Request failed. Try again.";
-    return;
-  }
-
-  await db.from("notifications").insert({
-    user_id: dashboardUser.id,
-    title: "Change request submitted",
-    message: "Your request was sent to Giles Web Design.",
-    type: "request"
-  });
-
-  document.getElementById("requestText").value = "";
-  statusBox.textContent = "Request submitted.";
-
-  await loadChangeRequests();
-  await loadNotifications();
+  leadEvents = error ? [] : data || [];
 }
 
 async function loadChangeRequests(){
   const { data, error } = await db
     .from("change_requests")
     .select("*")
-    .eq("client_user_id", dashboardUser.id)
+    .eq("client_user_id", currentUser.id)
     .order("created_at", { ascending:false });
 
-  const list = document.getElementById("requestList");
-
-  if(error){
-    list.innerHTML = "<p>Could not load requests.</p>";
-    console.error(error);
-    return;
-  }
-
-  const requests = data || [];
-
-  document.getElementById("openRequests").textContent =
-    requests.filter(req => req.status !== "done").length;
-
-  if(!requests.length){
-    list.innerHTML = "<p>No requests yet.</p>";
-    return;
-  }
-
-  list.innerHTML = "";
-
-  requests.forEach(req=>{
-    const item = document.createElement("div");
-    item.className = "request-item";
-
-    item.innerHTML = `
-      <h3>${escapeHtml(req.request_type || "Request")}</h3>
-      <p>${escapeHtml(req.message || "")}</p>
-      <span class="badge">${escapeHtml(req.status || "new")}</span>
-      <p style="margin-top:8px;font-size:13px;color:#667085;">Submitted ${timeAgo(req.created_at)}</p>
-      ${req.admin_notes ? `<p style="margin-top:10px;"><strong>Admin note:</strong> ${escapeHtml(req.admin_notes)}</p>` : ""}
-    `;
-
-    list.appendChild(item);
-  });
+  changeRequests = error ? [] : data || [];
 }
 
 async function loadNotifications(){
-  let panel = document.getElementById("notificationList");
-
-  if(!panel){
-    const main = document.querySelector(".main");
-    const notificationCard = document.createElement("section");
-    notificationCard.className = "card";
-    notificationCard.innerHTML = `
-      <h2>Notifications</h2>
-      <div id="notificationList" class="request-list">Loading notifications...</div>
-    `;
-    main.insertBefore(notificationCard, main.children[4]);
-    panel = document.getElementById("notificationList");
-  }
-
   const { data, error } = await db
     .from("notifications")
     .select("*")
-    .eq("user_id", dashboardUser.id)
+    .eq("user_id", currentUser.id)
     .order("created_at", { ascending:false })
     .limit(8);
 
-  if(error){
-    panel.innerHTML = "<p>Could not load notifications.</p>";
-    console.error(error);
+  notifications = error ? [] : data || [];
+}
+
+function renderDashboard(){
+  const businessName = clientSite?.business_name || "Your Website";
+  const liveUrl = getLiveUrl();
+
+  setText("welcomeTitle", `Welcome back, ${businessName}`);
+  setText("welcomeSubtitle", buildSubtitle());
+
+  setLink("openLiveBtn", liveUrl);
+  setLink("heroLiveBtn", liveUrl);
+
+  setLink("openEditorBtn", "editor.html");
+  setLink("heroEditorBtn", "editor.html");
+
+  renderStatusBadges();
+  renderStats();
+  renderActivity();
+  renderSEO();
+  renderBilling();
+  renderRequests();
+  renderNotifications();
+}
+
+function buildSubtitle(){
+  if(!clientSite){
+    return "Your website account is being prepared.";
+  }
+
+  if(clientSite.site_status === "published"){
+    return "Your website is live and working. Track visitors, leads, requests, billing, and SEO from here.";
+  }
+
+  return "Your website is currently being prepared. You can still submit requests and review your account.";
+}
+
+function renderStatusBadges(){
+  const siteBadge = document.getElementById("siteStatusBadge");
+  const billingBadge = document.getElementById("billingStatusBadge");
+
+  const siteStatus = clientSite?.site_status || "setup";
+  const billing = getBillingStatus(clientSite || {});
+
+  siteBadge.textContent = siteStatus === "published" ? "🌐 Website Live" : `🛠 ${siteStatus}`;
+  siteBadge.className = siteStatus === "published" ? "badge good" : "badge warn";
+
+  billingBadge.textContent = `💳 ${billing.text}`;
+  billingBadge.className = `badge ${billing.class}`;
+}
+
+function renderStats(){
+  const month = analyticsEvents.length;
+  const week = analyticsEvents.filter(e=>isWithinDays(e.created_at,7)).length;
+  const leadsMonth = leadEvents.length;
+  const openReqs = changeRequests.filter(r=>r.status !== "done").length;
+
+  setText("viewsMonth", month);
+  setText("viewsWeek", week);
+  setText("leadsMonth", leadsMonth);
+  setText("openRequests", openReqs);
+}
+
+function renderActivity(){
+  const topPage = getTopValue(analyticsEvents,"page") || "your site";
+  const topSource = getTopReferrer(analyticsEvents);
+  const leadsMonth = leadEvents.length;
+
+  setText(
+    "activitySummary",
+    `Your website has received ${analyticsEvents.length} visits in the last 30 days. Top page: ${topPage}. Top source: ${topSource}. You received ${leadsMonth} lead${leadsMonth === 1 ? "" : "s"}.`
+  );
+
+  const box = document.getElementById("recentLeads");
+
+  if(!leadEvents.length){
+    box.innerHTML = `<div class="empty">No leads yet. Once someone submits a form, it will appear here.</div>`;
     return;
   }
 
-  const notifications = data || [];
+  box.innerHTML = leadEvents.slice(0,6).map(lead=>`
+    <div class="lead-card">
+      <strong>${escapeHtml(lead.form_name || "Website Lead")}</strong>
+      <p class="small">Page: ${escapeHtml(lead.page || "Unknown")}</p>
+      <p class="small">Source: ${escapeHtml(cleanReferrer(lead.source))}</p>
+      <p class="small">${timeAgo(lead.created_at)}</p>
+    </div>
+  `).join("");
+}
+
+function renderSEO(){
+  const score = Number(clientSite?.seo_score || 0);
+  const badge = document.getElementById("seoBadge");
+  const progress = document.getElementById("seoProgress");
+
+  badge.textContent = `${score}/100`;
+  progress.style.width = `${score}%`;
+
+  if(score >= 80){
+    badge.className = "badge good";
+    setText("seoText", "Your website has a strong SEO foundation. Keep posting links and adding content to help ranking.");
+  } else if(score >= 60){
+    badge.className = "badge warn";
+    setText("seoText", "Your SEO is off to a good start. A few improvements can make your site stronger.");
+  } else {
+    badge.className = "badge bad";
+    setText("seoText", "Your SEO needs more information. We can improve your title, description, location, and preview image.");
+  }
+}
+
+function renderBilling(){
+  const billing = getBillingStatus(clientSite || {});
+  const mini = document.getElementById("billingMiniBadge");
+  mini.textContent = billing.text;
+  mini.className = `badge ${billing.class}`;
+
+  document.getElementById("billingDetails").innerHTML = `
+    <div class="lead-card">
+      <strong>Status</strong>
+      <p class="small">${billing.text}</p>
+    </div>
+
+    <div class="lead-card">
+      <strong>Next Payment</strong>
+      <p class="small">${formatDate(clientSite?.next_payment_date)}</p>
+    </div>
+
+    <div class="lead-card">
+      <strong>Last Payment</strong>
+      <p class="small">${formatDate(clientSite?.last_payment_date)}</p>
+    </div>
+
+    <div class="lead-card">
+      <strong>Plan</strong>
+      <p class="small">${escapeHtml(clientSite?.package_name || "Website Plan")}</p>
+    </div>
+  `;
+}
+
+function renderRequests(){
+  const box = document.getElementById("recentRequests");
+
+  if(!changeRequests.length){
+    box.innerHTML = `<div class="empty">No requests yet.</div>`;
+    return;
+  }
+
+  box.innerHTML = changeRequests.slice(0,5).map(req=>`
+    <div class="request-card">
+      <strong>${escapeHtml(req.request_type || "Request")}</strong>
+      <p class="small">${escapeHtml(req.message || "")}</p>
+      <span class="badge ${req.status === "done" ? "good" : "warn"}">${escapeHtml(req.status || "new")}</span>
+    </div>
+  `).join("");
+}
+
+function renderNotifications(){
+  const box = document.getElementById("notificationsList");
 
   if(!notifications.length){
-    panel.innerHTML = "<p>No notifications yet.</p>";
+    box.innerHTML = `<div class="empty">No notifications yet.</div>`;
     return;
   }
 
-  panel.innerHTML = "";
-
-  notifications.forEach(note=>{
-    const item = document.createElement("div");
-    item.className = "request-item";
-
-    item.innerHTML = `
-      <h3>${escapeHtml(note.title || "Notification")}</h3>
-      <p>${escapeHtml(note.message || "")}</p>
-      <span class="badge">${note.is_read ? "read" : "new"}</span>
-      <p style="margin-top:8px;font-size:13px;color:#667085;">${timeAgo(note.created_at)}</p>
-      ${!note.is_read ? `<button class="primary" style="margin-top:8px;padding:9px 12px;font-size:12px;" onclick="markNotificationRead('${note.id}')">Mark Read</button>` : ""}
-    `;
-
-    panel.appendChild(item);
-  });
+  box.innerHTML = notifications.map(note=>`
+    <div class="notification-card">
+      <strong>${escapeHtml(note.title || "Update")}</strong>
+      <p class="small">${escapeHtml(note.message || "")}</p>
+      <p class="small">${timeAgo(note.created_at)}</p>
+    </div>
+  `).join("");
 }
 
-async function markNotificationRead(id){
-  await db
-    .from("notifications")
-    .update({ is_read:true })
-    .eq("id", id);
+async function submitChangeRequest(){
+  const type = cleanValue("requestType");
+  const page = cleanValue("requestPage");
+  const message = cleanValue("requestMessage");
 
-  await loadNotifications();
+  if(!message){
+    setText("requestMessageStatus","Please describe what you need changed.");
+    return;
+  }
+
+  const payload = {
+    client_user_id:currentUser.id,
+    client_email:currentUser.email,
+    business_name:clientSite?.business_name || "",
+    request_type:type,
+    page,
+    message,
+    status:"new",
+    created_at:new Date().toISOString()
+  };
+
+  const { error } = await db.from("change_requests").insert(payload);
+
+  if(error){
+    console.error(error);
+    setText("requestMessageStatus","Request failed. Please try again.");
+    return;
+  }
+
+  setText("requestMessageStatus","Request submitted successfully.");
+  setValue("requestPage","");
+  setValue("requestMessage","");
+
+  await loadChangeRequests();
+  renderRequests();
+  renderStats();
 }
 
-function getTopValue(items,key){
-  const counts = {};
+function getLiveUrl(){
+  if(clientSite?.domain && clientSite?.domain_status === "live" && clientSite?.domain_release_status !== "released"){
+    return `https://${clientSite.domain}`;
+  }
 
-  items.forEach(item=>{
-    const value = item[key] || "unknown";
-    counts[value] = (counts[value] || 0) + 1;
-  });
-
-  return Object.entries(counts)
-    .sort((a,b)=>b[1]-a[1])[0]?.[0] || null;
+  return `${LIVE_BASE_URL}/?client=${currentUser.id}`;
 }
 
-function isToday(dateString){
-  const date = new Date(dateString);
+function getBillingStatus(site){
+  if(site.billing_override) return { text:"Covered", class:"good" };
+  if(site.billing_status === "past due") return { text:"Past Due", class:"bad" };
+  if(site.billing_status === "paused") return { text:"Paused", class:"dark" };
+  if(site.billing_status === "free") return { text:"Free", class:"good" };
+  if(site.billing_status === "manual paid") return { text:"Manual Paid", class:"good" };
+  if(site.billing_status === "trial") return { text:"Trial", class:"warn" };
+
   const today = new Date();
+  today.setHours(0,0,0,0);
 
-  return date.getFullYear() === today.getFullYear() &&
-    date.getMonth() === today.getMonth() &&
-    date.getDate() === today.getDate();
+  const next = site.next_payment_date
+    ? new Date(site.next_payment_date + "T00:00:00")
+    : null;
+
+  if(next && next < today){
+    return { text:"Past Due", class:"bad" };
+  }
+
+  return { text:"Active", class:"good" };
 }
 
-function isWithinDays(dateString,days){
-  const date = new Date(dateString);
-  const now = new Date();
-  const diff = now - date;
-  return diff <= days * 24 * 60 * 60 * 1000;
+function setText(id,value){
+  const el = document.getElementById(id);
+  if(el) el.textContent = value ?? "";
+}
+
+function setValue(id,value){
+  const el = document.getElementById(id);
+  if(el) el.value = value || "";
+}
+
+function setLink(id,url){
+  const el = document.getElementById(id);
+  if(el) el.href = url;
+}
+
+function cleanValue(id){
+  const el = document.getElementById(id);
+  return el ? el.value.trim() : "";
+}
+
+function escapeHtml(value){
+  return String(value || "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
 }
 
 function cleanReferrer(ref){
@@ -454,6 +364,34 @@ function cleanReferrer(ref){
   }catch(e){
     return ref;
   }
+}
+
+function getTopReferrer(events){
+  const counts = {};
+
+  events.forEach(event=>{
+    const source = cleanReferrer(event.referrer);
+    counts[source] = (counts[source] || 0) + 1;
+  });
+
+  return Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0] || "direct";
+}
+
+function getTopValue(items,key){
+  const counts = {};
+
+  items.forEach(item=>{
+    const value = item[key] || "unknown";
+    counts[value] = (counts[value] || 0) + 1;
+  });
+
+  return Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0] || null;
+}
+
+function isWithinDays(dateString,days){
+  const date = new Date(dateString);
+  const now = new Date();
+  return now - date <= days * 24 * 60 * 60 * 1000;
 }
 
 function timeAgo(dateString){
@@ -479,13 +417,4 @@ function timeAgo(dateString){
 function formatDate(dateString){
   if(!dateString) return "—";
   return new Date(dateString + "T00:00:00").toLocaleDateString();
-}
-
-function escapeHtml(value){
-  return String(value || "")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
 }
