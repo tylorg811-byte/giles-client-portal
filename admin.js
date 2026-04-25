@@ -13,6 +13,28 @@ function cleanValue(id){
   return el ? el.value.trim() : "";
 }
 
+function getBillingStatus(site){
+  if(site.billing_override) return { text:"Covered by Giles", class:"full" };
+  if(site.billing_status === "past due") return { text:"Past Due", class:"danger" };
+  if(site.billing_status === "free") return { text:"Free", class:"safe" };
+  if(site.billing_status === "manual paid") return { text:"Manual Paid", class:"full" };
+  if(site.billing_status === "trial") return { text:"Trial", class:"safe" };
+  if(site.billing_status === "paused") return { text:"Paused", class:"dark" };
+
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  const next = site.next_payment_date
+    ? new Date(site.next_payment_date + "T00:00:00")
+    : null;
+
+  if(next && next < today){
+    return { text:"Past Due", class:"danger" };
+  }
+
+  return { text:"Active", class:"full" };
+}
+
 let adminUser = null;
 let clientSites = [];
 let changeRequests = [];
