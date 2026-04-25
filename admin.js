@@ -1,6 +1,7 @@
 let adminUser = null;
 let clientSites = [];
 let changeRequests = [];
+let supportTickets = [];
 let analyticsEvents = [];
 let leadEvents = [];
 let clientPayments = [];
@@ -43,6 +44,7 @@ async function checkAdminAccess(){
 async function refreshAdminData(){
   await loadClientSites();
   await loadChangeRequests();
+  await loadSupportTickets();
   await loadAnalytics();
   await loadLeads();
   await loadPayments();
@@ -51,6 +53,8 @@ async function refreshAdminData(){
   renderSmartAlerts();
   applyClientFilters();
   renderChangeRequests();
+  renderSupportOverview();
+  renderSupportTickets();
   renderAnalyticsOverviewFull();
   populateAnalyticsClientDropdown();
   populateSEOClientDropdown();
@@ -89,14 +93,25 @@ async function loadChangeRequests(){
   changeRequests = data || [];
 }
 
-async function loadAnalytics(){
-  const since = new Date();
-  since.setDate(since.getDate() - 30);
+async function loadSupportTickets(){
+  const { data, error } = await db
+    .from("support_tickets")
+    .select("*")
+    .order("created_at", { ascending:false });
 
+  if(error){
+    console.error("Support tickets not loaded:", error);
+    supportTickets = [];
+    return;
+  }
+
+  supportTickets = data || [];
+}
+
+async function loadAnalytics(){
   const { data, error } = await db
     .from("site_analytics_events")
     .select("*")
-    .gte("created_at", since.toISOString())
     .order("created_at", { ascending:false });
 
   if(error){
@@ -109,13 +124,9 @@ async function loadAnalytics(){
 }
 
 async function loadLeads(){
-  const since = new Date();
-  since.setDate(since.getDate() - 30);
-
   const { data, error } = await db
     .from("site_leads")
     .select("*")
-    .gte("created_at", since.toISOString())
     .order("created_at", { ascending:false });
 
   if(error){
@@ -164,6 +175,7 @@ function showAdminPage(page){
     seo:"SEO Panel",
     analytics:"Analytics",
     requests:"Change Requests",
+    support:"Support Tickets",
     billing:"Billing & Revenue"
   };
 
@@ -184,6 +196,11 @@ function showAdminPage(page){
     renderChangeRequests();
   }
 
+  if(page === "support"){
+    renderSupportOverview();
+    renderSupportTickets();
+  }
+
   if(page === "billing"){
     renderBillingOverview();
     renderRevenueDashboard();
@@ -196,10 +213,12 @@ function showAdminPage(page){
 }
 
 function renderStats(){
+  const openSupport = supportTickets.filter(ticket=>!["closed","resolved"].includes(String(ticket.status || "").toLowerCase())).length;
+
   setText("totalClients", clientSites.length);
   setText("publishedClients", clientSites.filter(site=>site.site_status === "published").length);
   setText("pastDueClients", clientSites.filter(site=>getBillingStatus(site).text === "Past Due").length);
-  setText("newRequests", changeRequests.filter(req=>req.status === "new").length);
+  setText("newRequests", openSupport);
 }
 
 function renderSmartAlerts(){
@@ -209,15 +228,19 @@ function renderSmartAlerts(){
   const pastDue = clientSites.filter(site=>getBillingStatus(site).text === "Past Due").length;
   const pendingDomains = clientSites.filter(site=>site.domain_status === "pending").length;
   const newRequests = changeRequests.filter(req=>req.status === "new").length;
+  const openSupport = supportTickets.filter(ticket=>!["closed","resolved"].includes(String(ticket.status || "").toLowerCase())).length;
+  const urgentSupport = supportTickets.filter(ticket=>String(ticket.priority || "").toLowerCase() === "urgent" && !["closed","resolved"].includes(String(ticket.status || "").toLowerCase())).length;
   const lockedEditors = clientSites.filter(site=>site.editor_locked).length;
   const leadsToday = leadEvents.filter(lead=>isToday(lead.created_at)).length;
   const lowSeo = clientSites.filter(site=>Number(site.seo_score || 0) < 60).length;
 
   const alerts = [];
 
+  if(urgentSupport) alerts.push(`<span class="badge danger">🚨 ${urgentSupport} Urgent Support</span>`);
+  if(openSupport) alerts.push(`<span class="badge danger">🎧 ${openSupport} Open Support</span>`);
   if(pastDue) alerts.push(`<span class="badge danger">⚠️ ${pastDue} Past Due</span>`);
   if(pendingDomains) alerts.push(`<span class="badge safe">🌐 ${pendingDomains} Domains Pending</span>`);
-  if(newRequests) alerts.push(`<span class="badge safe">💬 ${newRequests} New Requests</span>`);
+  if(newRequests) alerts.push(`<span class="badge safe">💬 ${newRequests} Change Requests</span>`);
   if(lockedEditors) alerts.push(`<span class="badge danger">🔒 ${lockedEditors} Editor Locks</span>`);
   if(leadsToday) alerts.push(`<span class="badge full">🔥 ${leadsToday} Leads Today</span>`);
   if(lowSeo) alerts.push(`<span class="badge safe">🔎 ${lowSeo} SEO Needs Review</span>`);
@@ -307,6 +330,7 @@ function renderClientSites(sites){
     const analytics = site.client_user_id ? getClientAnalytics(site.client_user_id) : null;
     const leads = site.client_user_id ? getClientLeads(site.client_user_id) : null;
     const payments = getClientPaymentTotal(site.client_user_id);
+    const openSupport = site.client_user_id ? supportTickets.filter(t=>t.client_user_id === site.client_user_id && !["closed","resolved"].includes(String(t.status || "").toLowerCase())).length : 0;
 
     const seoScore = Number(site.seo_score || 0);
     const seoClass = seoScore >= 80 ? "full" : seoScore >= 60 ? "safe" : "danger";
@@ -346,6 +370,7 @@ function renderClientSites(sites){
           <span class="badge ${billing.class}">${billing.text}</span>
           <span class="badge ${seoClass}">SEO ${seoScore}/100</span>
           ${site.editor_locked ? `<span class="badge danger">Editor Locked</span>` : ""}
+          ${openSupport ? `<span class="badge danger">${openSupport} Support</span>` : ""}
         </div>
 
         ${site.client_tags ? `<p style="margin-top:10px;"><strong>Tags:</strong> ${escapeHtml(site.client_tags)}</p>` : ""}
@@ -615,6 +640,194 @@ function scrollToForm(){
   if(card) card.scrollIntoView({behavior:"smooth",block:"start"});
 }
 
+function renderSupportOverview(){
+  const box = document.getElementById("supportOverview");
+  if(!box) return;
+
+  const open = supportTickets.filter(t=>String(t.status || "").toLowerCase() === "open").length;
+  const progress = supportTickets.filter(t=>String(t.status || "").toLowerCase() === "in progress").length;
+  const urgent = supportTickets.filter(t=>String(t.priority || "").toLowerCase() === "urgent" && !["closed","resolved"].includes(String(t.status || "").toLowerCase())).length;
+  const resolved = supportTickets.filter(t=>["closed","resolved"].includes(String(t.status || "").toLowerCase())).length;
+
+  box.innerHTML = `
+    <div class="grid">
+      <div class="stat"><span>Open</span><strong>${open}</strong></div>
+      <div class="stat"><span>In Progress</span><strong>${progress}</strong></div>
+      <div class="stat"><span>Urgent</span><strong>${urgent}</strong></div>
+      <div class="stat"><span>Resolved</span><strong>${resolved}</strong></div>
+    </div>
+  `;
+}
+
+function renderSupportTickets(){
+  const list = document.getElementById("supportTicketList");
+  if(!list) return;
+
+  const search = cleanValue("supportSearch").toLowerCase();
+  const statusFilter = cleanValue("supportStatusFilter") || "all";
+  const priorityFilter = cleanValue("supportPriorityFilter") || "all";
+  const typeFilter = cleanValue("supportTypeFilter") || "all";
+
+  let filtered = [...supportTickets];
+
+  filtered = filtered.filter(ticket=>{
+    const searchable = [
+      ticket.business_name,
+      ticket.client_email,
+      ticket.ticket_type,
+      ticket.priority,
+      ticket.subject,
+      ticket.message,
+      ticket.status,
+      ticket.admin_notes
+    ].join(" ").toLowerCase();
+
+    const status = String(ticket.status || "").toLowerCase();
+    const priority = String(ticket.priority || "").toLowerCase();
+    const type = String(ticket.ticket_type || "");
+
+    return (
+      searchable.includes(search) &&
+      (statusFilter === "all" || status === statusFilter) &&
+      (priorityFilter === "all" || priority === priorityFilter) &&
+      (typeFilter === "all" || type === typeFilter)
+    );
+  });
+
+  list.innerHTML = "";
+
+  if(!filtered.length){
+    list.innerHTML = `<div class="empty-state">No support tickets found.</div>`;
+    return;
+  }
+
+  filtered.forEach(ticket=>{
+    const card = document.createElement("div");
+    card.className = "ticket-card";
+
+    const editorUrl = ticket.client_user_id ? `editor.html?client=${ticket.client_user_id}` : "editor.html";
+    const site = clientSites.find(s=>s.client_user_id === ticket.client_user_id);
+    const liveUrl = site ? getClientLiveUrl(site) : LIVE_BASE_URL;
+
+    card.innerHTML = `
+      <div>
+        <h3>${escapeHtml(ticket.subject || ticket.ticket_type || "Support Ticket")}</h3>
+        <p>${escapeHtml(ticket.business_name || ticket.client_email || "")}</p>
+        <p>${escapeHtml(ticket.client_email || "")}</p>
+        <span class="badge ${getTicketBadgeClass(ticket.status)}">${escapeHtml(ticket.status || "open")}</span>
+        <span class="badge ${getPriorityBadgeClass(ticket.priority)}">${escapeHtml(ticket.priority || "normal")}</span>
+        <p>${timeAgo(ticket.created_at)}</p>
+      </div>
+
+      <div>
+        <p><strong>${escapeHtml(ticket.ticket_type || "Support Issue")}</strong></p>
+        <p>${escapeHtml(ticket.message || "")}</p>
+        ${ticket.admin_notes ? `<p><strong>Admin Note:</strong> ${escapeHtml(ticket.admin_notes)}</p>` : ""}
+      </div>
+
+      <div>
+        <label>Status</label>
+        <select id="ticket-status-${ticket.id}">
+          <option value="open" ${ticket.status === "open" ? "selected" : ""}>Open</option>
+          <option value="in progress" ${ticket.status === "in progress" ? "selected" : ""}>In Progress</option>
+          <option value="resolved" ${ticket.status === "resolved" ? "selected" : ""}>Resolved</option>
+          <option value="closed" ${ticket.status === "closed" ? "selected" : ""}>Closed</option>
+        </select>
+
+        <label style="margin-top:8px;">Priority</label>
+        <select id="ticket-priority-${ticket.id}">
+          <option value="normal" ${ticket.priority === "normal" ? "selected" : ""}>Normal</option>
+          <option value="high" ${ticket.priority === "high" ? "selected" : ""}>High</option>
+          <option value="urgent" ${ticket.priority === "urgent" ? "selected" : ""}>Urgent</option>
+        </select>
+
+        <label style="margin-top:8px;">Admin Notes</label>
+        <textarea id="ticket-notes-${ticket.id}">${escapeHtml(ticket.admin_notes || "")}</textarea>
+      </div>
+
+      <div class="actions">
+        <button onclick="updateSupportTicket('${ticket.id}')">Update</button>
+        <button onclick="resolveSupportTicket('${ticket.id}')">Resolve</button>
+        <a href="${editorUrl}" target="_blank">Editor</a>
+        <a href="${liveUrl}" target="_blank">Live</a>
+        <button class="danger wide" onclick="deleteSupportTicket('${ticket.id}')">Delete</button>
+      </div>
+    `;
+
+    list.appendChild(card);
+  });
+}
+
+function clearSupportFilters(){
+  setValue("supportSearch","");
+  setValue("supportStatusFilter","all");
+  setValue("supportPriorityFilter","all");
+  setValue("supportTypeFilter","all");
+  renderSupportTickets();
+}
+
+async function updateSupportTicket(id){
+  const status = cleanValue(`ticket-status-${id}`);
+  const priority = cleanValue(`ticket-priority-${id}`);
+  const notes = cleanValue(`ticket-notes-${id}`);
+
+  const { error } = await db
+    .from("support_tickets")
+    .update({
+      status,
+      priority,
+      admin_notes:notes,
+      updated_at:new Date().toISOString()
+    })
+    .eq("id", id);
+
+  if(error){
+    console.error(error);
+    alert("Support ticket update failed.");
+    return;
+  }
+
+  await refreshAdminData();
+}
+
+async function resolveSupportTicket(id){
+  const notes = cleanValue(`ticket-notes-${id}`) || "Resolved by Giles Web Design.";
+
+  const { error } = await db
+    .from("support_tickets")
+    .update({
+      status:"resolved",
+      admin_notes:notes,
+      updated_at:new Date().toISOString()
+    })
+    .eq("id", id);
+
+  if(error){
+    console.error(error);
+    alert("Could not resolve support ticket.");
+    return;
+  }
+
+  await refreshAdminData();
+}
+
+async function deleteSupportTicket(id){
+  if(!confirm("Delete this support ticket?")) return;
+
+  const { error } = await db
+    .from("support_tickets")
+    .delete()
+    .eq("id", id);
+
+  if(error){
+    console.error(error);
+    alert("Delete failed.");
+    return;
+  }
+
+  await refreshAdminData();
+}
+
 function renderRevenueDashboard(){
   const box = document.getElementById("revenueOverview");
   if(!box) return;
@@ -824,6 +1037,22 @@ function loadClientAnalyticsView(){
       <div class="stat"><span>Top Page</span><strong style="font-size:22px;">${escapeHtml(getTopValue(events,"page") || "—")}</strong></div>
       <div class="stat"><span>Device</span><strong style="font-size:22px;">${escapeHtml(getTopValue(events,"device") || "—")}</strong></div>
     </div>
+
+    <h3 style="margin:24px 0 12px;">All Recent Visits</h3>
+    <div class="visit-list">
+      ${
+        events.length
+          ? events.slice(0,50).map(event=>`
+            <div class="analytics-client-card">
+              <p><strong>${escapeHtml(event.page || "Website Visit")}</strong></p>
+              <p>Source: ${escapeHtml(cleanReferrer(event.referrer))}</p>
+              <p>${escapeHtml(event.device || "Unknown")} • ${escapeHtml(event.browser || "Unknown")}</p>
+              <p style="color:#64748b;font-size:13px;">${timeAgo(event.created_at)}</p>
+            </div>
+          `).join("")
+          : `<div class="empty-state">No visits for this client yet.</div>`
+      }
+    </div>
   `;
 }
 
@@ -840,6 +1069,7 @@ function openClientDetail(id){
   const analytics = site.client_user_id ? getClientAnalytics(site.client_user_id) : null;
   const leads = site.client_user_id ? getClientLeads(site.client_user_id) : null;
   const revenue = getClientPaymentTotal(site.client_user_id);
+  const openSupport = site.client_user_id ? supportTickets.filter(t=>t.client_user_id === site.client_user_id && !["closed","resolved"].includes(String(t.status || "").toLowerCase())).length : 0;
 
   document.getElementById("clientDetailContent").innerHTML = `
     <div class="detail-grid">
@@ -871,6 +1101,7 @@ function openClientDetail(id){
         <h3>Performance</h3>
         <div class="detail-row"><span>Views 30d</span><span>${analytics ? analytics.month : 0}</span></div>
         <div class="detail-row"><span>Leads 30d</span><span>${leads ? leads.month : 0}</span></div>
+        <div class="detail-row"><span>Support Open</span><span>${openSupport}</span></div>
         <div class="detail-row"><span>Top Page</span><span>${analytics ? escapeHtml(analytics.topPage) : "—"}</span></div>
       </div>
 
@@ -1083,7 +1314,8 @@ function renderChangeRequests(){
     card.className = "request-card";
 
     const editorUrl = req.client_user_id ? `editor.html?client=${req.client_user_id}` : "editor.html";
-    const liveUrl = req.client_user_id ? `${LIVE_BASE_URL}/?client=${req.client_user_id}` : LIVE_BASE_URL;
+    const site = clientSites.find(s=>s.client_user_id === req.client_user_id);
+    const liveUrl = site ? getClientLiveUrl(site) : LIVE_BASE_URL;
 
     card.innerHTML = `
       <div>
@@ -1241,14 +1473,6 @@ async function createCheckoutForClient(clientSiteId){
     return;
   }
 
-  if(site.stripe_checkout_url){
-    const useOld = confirm("This client already has a saved Stripe checkout link. Copy existing link?");
-    if(useOld){
-      copyText(site.stripe_checkout_url);
-      return;
-    }
-  }
-
   const priceId = prompt("Paste Stripe recurring Price ID:", site.stripe_price_id || "");
   if(!priceId) return;
 
@@ -1330,7 +1554,7 @@ function getClientAnalytics(clientUserId){
   return {
     today:events.filter(e=>isToday(e.created_at)).length,
     week:events.filter(e=>isWithinDays(e.created_at,7)).length,
-    month:events.length,
+    month:events.filter(e=>isWithinDays(e.created_at,30)).length,
     topPage:getTopValue(events,"page") || "—"
   };
 }
@@ -1341,7 +1565,7 @@ function getClientLeads(clientUserId){
   return {
     today:leads.filter(l=>isToday(l.created_at)).length,
     week:leads.filter(l=>isWithinDays(l.created_at,7)).length,
-    month:leads.length
+    month:leads.filter(l=>isWithinDays(l.created_at,30)).length
   };
 }
 
@@ -1349,6 +1573,10 @@ function getClientLiveUrl(site){
   if(site.domain && site.domain_status === "live" && site.domain_release_status !== "released"){
     return `https://${site.domain}`;
   }
+
+  if(site.site_url) return site.site_url;
+  if(site.live_url) return site.live_url;
+  if(site.published_url) return site.published_url;
 
   return `${LIVE_BASE_URL}/?client=${site.client_user_id}`;
 }
@@ -1373,6 +1601,20 @@ function getBillingStatus(site){
   }
 
   return { text:"Active", class:"full" };
+}
+
+function getTicketBadgeClass(status){
+  const s = String(status || "").toLowerCase();
+  if(s === "closed" || s === "resolved") return "full";
+  if(s === "in progress") return "safe";
+  return "danger";
+}
+
+function getPriorityBadgeClass(priority){
+  const p = String(priority || "").toLowerCase();
+  if(p === "urgent") return "danger";
+  if(p === "high") return "safe";
+  return "";
 }
 
 function setText(id,value){
