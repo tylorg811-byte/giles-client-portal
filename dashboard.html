@@ -13,7 +13,6 @@
 :root{
   --bg:#f3f6fb;
   --dark:#07111f;
-  --dark2:#101827;
   --card:#ffffff;
   --text:#0f172a;
   --muted:#64748b;
@@ -28,10 +27,7 @@
 
 body{
   font-family:'Inter',Arial,sans-serif;
-  background:
-    radial-gradient(circle at top left,rgba(123,92,255,.14),transparent 30%),
-    radial-gradient(circle at top right,rgba(56,189,248,.10),transparent 28%),
-    var(--bg);
+  background:var(--bg);
   color:var(--text);
   min-height:100vh;
 }
@@ -71,10 +67,7 @@ body{
   font-size:23px;
 }
 
-.brand h2{
-  font-size:20px;
-  line-height:1.05;
-}
+.brand h2{font-size:20px;line-height:1.05;}
 
 .sidebar p{
   color:#cbd5e1;
@@ -89,8 +82,7 @@ body{
   gap:10px;
 }
 
-.nav button,
-.nav a{
+.nav button,.nav a{
   width:100%;
   border:none;
   background:rgba(255,255,255,.06);
@@ -101,42 +93,26 @@ body{
   font-weight:900;
   text-align:left;
   cursor:pointer;
-  transition:.2s;
 }
 
-.nav button:hover,
-.nav button.active,
-.nav a:hover{
+.nav button:hover,.nav button.active,.nav a:hover{
   background:linear-gradient(135deg,var(--purple),var(--purple2));
   color:white;
-  transform:translateX(3px);
 }
 
-.main{
-  padding:26px;
-  min-width:0;
-}
+.main{padding:26px;min-width:0;}
 
-.mobile-top{
-  display:none;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:14px;
-}
-
+.mobile-top{display:none;justify-content:space-between;align-items:center;margin-bottom:14px;}
 .mobile-top button{
-  border:none;
-  background:linear-gradient(135deg,var(--purple),var(--purple2));
-  color:white;
-  padding:12px 14px;
-  border-radius:14px;
-  font-weight:900;
+  border:none;background:linear-gradient(135deg,var(--purple),var(--purple2));
+  color:white;padding:12px 14px;border-radius:14px;font-weight:900;
 }
+
+.mobile-drawer{display:none;background:#07111f;color:white;padding:18px;border-radius:20px;margin-bottom:16px;}
+.mobile-drawer.open{display:block;}
 
 .hero{
-  background:
-    linear-gradient(135deg,rgba(7,17,31,.97),rgba(15,23,42,.94)),
-    radial-gradient(circle at top right,rgba(123,92,255,.45),transparent 38%);
+  background:linear-gradient(135deg,rgba(7,17,31,.97),rgba(15,23,42,.94));
   color:white;
   border-radius:30px;
   padding:30px;
@@ -144,74 +120,23 @@ body{
   margin-bottom:22px;
 }
 
-.hero-row{
-  display:flex;
-  justify-content:space-between;
-  gap:18px;
-  align-items:flex-start;
-}
+.hero-row{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;}
+.hero h1{font-size:40px;line-height:1.02;letter-spacing:-1.3px;margin-bottom:10px;}
+.hero p{color:#cbd5e1;line-height:1.55;max-width:760px;}
 
-.hero h1{
-  font-size:40px;
-  line-height:1.02;
-  letter-spacing:-1.3px;
-  margin-bottom:10px;
-}
-
-.hero p{
-  color:#cbd5e1;
-  line-height:1.55;
-  max-width:760px;
-}
-
-.hero-actions{
-  display:flex;
-  flex-wrap:wrap;
-  gap:10px;
-  justify-content:flex-end;
-}
+.hero-actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;}
 
 .btn{
-  border:none;
-  border-radius:15px;
-  padding:13px 17px;
-  font-weight:900;
-  text-decoration:none;
-  cursor:pointer;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  transition:.2s;
-  white-space:nowrap;
+  border:none;border-radius:15px;padding:13px 17px;font-weight:900;
+  text-decoration:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;
 }
-
-.btn-primary{
-  background:linear-gradient(135deg,var(--purple),var(--purple2));
-  color:white;
-}
-
-.btn-light{
-  background:white;
-  color:#111827;
-}
-
-.btn:hover{
-  transform:translateY(-2px);
-}
+.btn-primary{background:linear-gradient(135deg,var(--purple),var(--purple2));color:white;}
+.btn-light{background:white;color:#111827;}
 
 .badge{
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  padding:8px 11px;
-  border-radius:999px;
-  font-size:12px;
-  font-weight:900;
-  background:#f3f2ff;
-  color:#5a4cff;
-  margin:4px 6px 0 0;
+  display:inline-flex;align-items:center;gap:6px;padding:8px 11px;border-radius:999px;
+  font-size:12px;font-weight:900;background:#f3f2ff;color:#5a4cff;margin:4px 6px 0 0;
 }
-
 .badge.good{background:#dcfce7;color:#166534;}
 .badge.warn{background:#ffedd5;color:#9a3412;}
 .badge.bad{background:#fee2e2;color:#991b1b;}
@@ -225,42 +150,19 @@ body{
 }
 
 .card{
-  background:rgba(255,255,255,.94);
+  background:rgba(255,255,255,.96);
   border:1px solid rgba(226,232,240,.94);
   border-radius:24px;
   padding:22px;
   box-shadow:var(--shadow);
-  transition:.22s ease;
-}
-
-.card:hover{
-  transform:translateY(-2px);
-  box-shadow:0 24px 55px rgba(15,23,42,.11);
 }
 
 .stat span{
-  display:block;
-  color:var(--muted);
-  font-size:12px;
-  font-weight:900;
-  text-transform:uppercase;
-  letter-spacing:.06em;
-  margin-bottom:10px;
+  display:block;color:var(--muted);font-size:12px;font-weight:900;
+  text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;
 }
-
-.stat strong{
-  font-size:34px;
-  line-height:1;
-  letter-spacing:-1px;
-  display:block;
-}
-
-.stat p{
-  color:var(--muted);
-  font-size:13px;
-  margin-top:10px;
-  line-height:1.4;
-}
+.stat strong{font-size:34px;line-height:1;letter-spacing:-1px;display:block;}
+.stat p{color:var(--muted);font-size:13px;margin-top:10px;line-height:1.4;}
 
 .panel-grid{
   display:grid;
@@ -270,57 +172,23 @@ body{
 }
 
 .section-title{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:12px;
-  margin-bottom:16px;
+  display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px;
 }
-
-.section-title h2{
-  font-size:22px;
-  letter-spacing:-.5px;
-}
+.section-title h2{font-size:22px;letter-spacing:-.5px;}
 
 .tabs{
-  display:flex;
-  gap:10px;
-  overflow:auto;
-  margin:6px 0 20px;
-  padding-bottom:4px;
+  display:flex;gap:10px;overflow:auto;margin:6px 0 20px;padding-bottom:4px;
 }
-
 .tabs button{
-  border:none;
-  background:white;
-  border:1px solid var(--line);
-  padding:12px 15px;
-  border-radius:999px;
-  font-weight:900;
-  cursor:pointer;
-  color:#334155;
-  white-space:nowrap;
+  border:none;background:white;border:1px solid var(--line);padding:12px 15px;
+  border-radius:999px;font-weight:900;cursor:pointer;color:#334155;white-space:nowrap;
 }
+.tabs button.active{background:linear-gradient(135deg,var(--purple),var(--purple2));color:white;border-color:transparent;}
 
-.tabs button.active{
-  background:linear-gradient(135deg,var(--purple),var(--purple2));
-  color:white;
-  border-color:transparent;
-}
+.page{display:none;}
+.page.active{display:block;}
 
-.page{
-  display:none;
-}
-
-.page.active{
-  display:block;
-  animation:fadeUp .35s ease both;
-}
-
-.list{
-  display:grid;
-  gap:12px;
-}
+.list{display:grid;gap:12px;}
 
 .item{
   background:#f8fafc;
@@ -329,16 +197,8 @@ body{
   padding:16px;
 }
 
-.item strong{
-  display:block;
-  margin-bottom:5px;
-}
-
-.small{
-  color:var(--muted);
-  font-size:13px;
-  line-height:1.45;
-}
+.item strong{display:block;margin-bottom:5px;}
+.small{color:var(--muted);font-size:13px;line-height:1.45;}
 
 .chart{
   height:240px;
@@ -349,166 +209,75 @@ body{
 }
 
 .bar-wrap{
-  flex:1;
-  text-align:center;
-  position:relative;
-  height:100%;
-  display:flex;
-  flex-direction:column;
-  justify-content:flex-end;
+  flex:1;text-align:center;position:relative;height:100%;
+  display:flex;flex-direction:column;justify-content:flex-end;
 }
-
 .bar{
-  width:100%;
-  min-height:8px;
-  border-radius:12px 12px 5px 5px;
+  width:100%;min-height:8px;border-radius:12px 12px 5px 5px;
   background:linear-gradient(180deg,var(--purple2),var(--purple));
-  transition:.8s ease;
 }
-
 .bar-label{
-  position:absolute;
-  bottom:-26px;
-  left:50%;
-  transform:translateX(-50%);
-  font-size:11px;
-  color:var(--muted);
-  font-weight:800;
+  position:absolute;bottom:-26px;left:50%;transform:translateX(-50%);
+  font-size:11px;color:var(--muted);font-weight:800;
 }
-
-.bar-value{
-  font-size:12px;
-  font-weight:900;
-  margin-bottom:6px;
-}
+.bar-value{font-size:12px;font-weight:900;margin-bottom:6px;}
 
 .form-grid{
   display:grid;
-  grid-template-columns:1fr 1fr;
+  grid-template-columns:repeat(4,1fr);
   gap:14px;
 }
 
-label{
-  display:block;
-  font-size:13px;
-  font-weight:900;
-  color:#334155;
-  margin-bottom:7px;
-}
+label{display:block;font-size:13px;font-weight:900;color:#334155;margin-bottom:7px;}
 
 input,select,textarea{
-  width:100%;
-  border:1px solid #dce1ec;
-  border-radius:15px;
-  padding:14px;
-  font-size:14px;
-  background:#fbfcff;
-  outline:none;
+  width:100%;border:1px solid #dce1ec;border-radius:15px;padding:14px;
+  font-size:14px;background:#fbfcff;outline:none;
 }
 
-textarea{
-  min-height:120px;
-  resize:vertical;
-}
+textarea{min-height:120px;resize:vertical;}
+.full{grid-column:1/-1;}
 
-.full{
-  grid-column:1/-1;
-}
-
-input:focus,select:focus,textarea:focus{
-  border-color:var(--purple);
-  box-shadow:0 0 0 5px rgba(123,92,255,.12);
-}
-
-.progress{
-  height:12px;
-  background:#e5e7eb;
-  border-radius:999px;
-  overflow:hidden;
-  margin-top:14px;
-}
-
-.progress div{
-  height:100%;
-  width:0;
-  background:linear-gradient(135deg,var(--purple),var(--purple2));
-  transition:.8s ease;
-}
+.progress{height:12px;background:#e5e7eb;border-radius:999px;overflow:hidden;margin-top:14px;}
+.progress div{height:100%;width:0;background:linear-gradient(135deg,var(--purple),var(--purple2));}
 
 .empty{
+  background:#f8fafc;border:1px dashed #cbd5e1;border-radius:18px;
+  padding:22px;text-align:center;color:var(--muted);font-weight:900;
+}
+
+.source-pills{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+}
+
+.source-pill{
   background:#f8fafc;
-  border:1px dashed #cbd5e1;
-  border-radius:18px;
-  padding:22px;
-  text-align:center;
-  color:var(--muted);
+  border:1px solid var(--line);
+  border-radius:999px;
+  padding:10px 13px;
+  font-size:13px;
   font-weight:900;
-}
-
-.mobile-drawer{
-  display:none;
-}
-
-@keyframes fadeUp{
-  from{opacity:0;transform:translateY(10px);}
-  to{opacity:1;transform:translateY(0);}
 }
 
 @media(max-width:1050px){
   .app{display:block;}
-  .sidebar{
-    display:none;
-  }
-  .mobile-top{
-    display:flex;
-  }
-  .mobile-drawer{
-    display:none;
-    background:#07111f;
-    color:white;
-    padding:18px;
-    border-radius:20px;
-    margin-bottom:16px;
-  }
-  .mobile-drawer.open{
-    display:block;
-  }
-  .summary-grid{
-    grid-template-columns:repeat(2,1fr);
-  }
-  .panel-grid{
-    grid-template-columns:1fr;
-  }
+  .sidebar{display:none;}
+  .mobile-top{display:flex;}
+  .summary-grid{grid-template-columns:repeat(2,1fr);}
+  .panel-grid{grid-template-columns:1fr;}
+  .form-grid{grid-template-columns:repeat(2,1fr);}
 }
 
 @media(max-width:700px){
-  .main{
-    padding:16px;
-  }
-  .hero{
-    padding:22px;
-    border-radius:24px;
-  }
-  .hero-row{
-    display:block;
-  }
-  .hero h1{
-    font-size:30px;
-  }
-  .hero-actions{
-    justify-content:flex-start;
-    margin-top:16px;
-  }
-  .summary-grid{
-    grid-template-columns:1fr;
-  }
-  .form-grid{
-    grid-template-columns:1fr;
-  }
-  .chart{
-    height:210px;
-    gap:5px;
-  }
+  .main{padding:16px;}
+  .hero{padding:22px;border-radius:24px;}
+  .hero-row{display:block;}
+  .hero h1{font-size:30px;}
+  .hero-actions{justify-content:flex-start;margin-top:16px;}
+  .summary-grid,.form-grid{grid-template-columns:1fr;}
+  .chart{height:210px;gap:5px;}
 }
 </style>
 </head>
@@ -520,9 +289,7 @@ input:focus,select:focus,textarea:focus{
   <aside class="sidebar">
     <div class="brand">
       <div class="logo">G</div>
-      <div>
-        <h2>Website Dashboard</h2>
-      </div>
+      <div><h2>Website Dashboard</h2></div>
     </div>
 
     <p>Your website command center. View performance, leads, billing, SEO, and requests.</p>
@@ -535,7 +302,7 @@ input:focus,select:focus,textarea:focus{
       <button onclick="showDashPage('billing', this)">💳 Billing</button>
       <button onclick="showDashPage('seo', this)">🔎 SEO</button>
       <a id="sideLiveBtn" href="#" target="_blank">🌐 View Website</a>
-      <a id="sideEditorBtn" href="editor.html">✎ Open Editor</a>
+      <a href="editor.html">✎ Open Editor</a>
       <button onclick="logout()">↪ Logout</button>
     </div>
   </aside>
@@ -575,35 +342,16 @@ input:focus,select:focus,textarea:focus{
 
         <div class="hero-actions">
           <a id="heroLiveBtn" href="#" target="_blank" class="btn btn-light">View Website</a>
-          <a id="heroEditorBtn" href="editor.html" class="btn btn-primary">Open Editor</a>
+          <a href="editor.html" class="btn btn-primary">Open Editor</a>
         </div>
       </div>
     </section>
 
     <section class="summary-grid">
-      <div class="card stat">
-        <span>Views this month</span>
-        <strong id="sumViewsMonth">0</strong>
-        <p id="viewsNote">Last 30 days</p>
-      </div>
-
-      <div class="card stat">
-        <span>Leads this month</span>
-        <strong id="sumLeadsMonth">0</strong>
-        <p id="leadsNote">Form submissions</p>
-      </div>
-
-      <div class="card stat">
-        <span>Open requests</span>
-        <strong id="sumOpenRequests">0</strong>
-        <p>Requests not marked done</p>
-      </div>
-
-      <div class="card stat">
-        <span>SEO score</span>
-        <strong id="sumSeoScore">0</strong>
-        <p id="seoNote">Website SEO health</p>
-      </div>
+      <div class="card stat"><span>Views this month</span><strong id="sumViewsMonth">0</strong><p id="viewsNote">Last 30 days</p></div>
+      <div class="card stat"><span>Leads this month</span><strong id="sumLeadsMonth">0</strong><p id="leadsNote">Form submissions</p></div>
+      <div class="card stat"><span>Open requests</span><strong id="sumOpenRequests">0</strong><p>Requests not marked done</p></div>
+      <div class="card stat"><span>Estimated value</span><strong id="sumEstimatedRevenue">$0</strong><p>Based on lead estimate</p></div>
     </section>
 
     <div class="tabs">
@@ -618,94 +366,64 @@ input:focus,select:focus,textarea:focus{
     <section id="overviewPage" class="page active">
       <div class="panel-grid">
         <div class="card">
-          <div class="section-title">
-            <h2>Website Summary</h2>
-            <span class="badge good">Live Data</span>
-          </div>
+          <div class="section-title"><h2>Website Summary</h2><span class="badge good">Live Data</span></div>
           <p id="summaryText" class="small">Loading summary...</p>
           <div id="overviewChart" class="chart"></div>
         </div>
 
         <div class="card">
-          <div class="section-title">
-            <h2>Account Health</h2>
-          </div>
+          <div class="section-title"><h2>Account Health</h2></div>
           <div id="healthList" class="list"></div>
         </div>
       </div>
 
       <div class="panel-grid">
         <div class="card">
-          <div class="section-title">
-            <h2>Latest Leads</h2>
-            <button class="btn btn-primary" onclick="showDashPage('leads')">View All</button>
-          </div>
+          <div class="section-title"><h2>Latest Leads</h2><button class="btn btn-primary" onclick="showDashPage('leads')">View All</button></div>
           <div id="overviewLeads" class="list"></div>
         </div>
 
         <div class="card">
-          <div class="section-title">
-            <h2>Recent Requests</h2>
-            <button class="btn btn-primary" onclick="showDashPage('requests')">Manage</button>
-          </div>
-          <div id="overviewRequests" class="list"></div>
+          <div class="section-title"><h2>Top Sources</h2></div>
+          <div id="sourceBreakdown" class="source-pills"></div>
         </div>
       </div>
     </section>
 
     <section id="analyticsPage" class="page">
       <div class="card">
-        <div class="section-title">
-          <h2>Analytics Breakdown</h2>
-          <span class="badge">Last 30 Days</span>
-        </div>
+        <div class="section-title"><h2>Analytics Breakdown</h2><span class="badge">Filterable</span></div>
+
         <div class="summary-grid">
           <div class="stat"><span>Total Views</span><strong id="analyticsTotal">0</strong></div>
           <div class="stat"><span>7 Day Views</span><strong id="analyticsWeek">0</strong></div>
           <div class="stat"><span>Top Source</span><strong id="analyticsSource" style="font-size:22px;">—</strong></div>
           <div class="stat"><span>Top Device</span><strong id="analyticsDevice" style="font-size:22px;">—</strong></div>
         </div>
+
         <div id="analyticsChart" class="chart"></div>
       </div>
 
-     <div class="card">
-  <div class="section-title">
-    <h2>Visit History</h2>
-    <span class="badge" id="visitCountBadge">0 Visits</span>
-  </div>
+      <div class="card">
+        <div class="section-title">
+          <h2>Visit History</h2>
+          <span class="badge" id="visitCountBadge">0 Visits</span>
+        </div>
 
-  <div class="form-grid" style="margin-bottom:18px;">
-    <div>
-      <label>Month</label>
-      <select id="visitMonthFilter" onchange="renderVisitsList()"></select>
-    </div>
+        <div class="form-grid" style="margin-bottom:18px;">
+          <div><label>Month</label><select id="visitMonthFilter" onchange="renderVisitsList()"></select></div>
+          <div><label>Source</label><select id="visitSourceFilter" onchange="renderVisitsList()"></select></div>
+          <div><label>Device</label><select id="visitDeviceFilter" onchange="renderVisitsList()"></select></div>
+          <div><label>Page</label><select id="visitPageFilter" onchange="renderVisitsList()"></select></div>
+        </div>
 
-    <div>
-      <label>Platform / Source</label>
-      <select id="visitSourceFilter" onchange="renderVisitsList()"></select>
-    </div>
-
-    <div>
-      <label>Device</label>
-      <select id="visitDeviceFilter" onchange="renderVisitsList()"></select>
-    </div>
-
-    <div>
-      <label>Page</label>
-      <select id="visitPageFilter" onchange="renderVisitsList()"></select>
-    </div>
-  </div>
-
-  <div id="visitsList" class="list"></div>
-</div>
+        <div id="visitsList" class="list"></div>
+      </div>
     </section>
 
     <section id="leadsPage" class="page">
       <div class="card">
-        <div class="section-title">
-          <h2>Lead Center</h2>
-          <span class="badge good" id="leadCountBadge">0 Leads</span>
-        </div>
+        <div class="section-title"><h2>Lead Center</h2><span class="badge good" id="leadCountBadge">0 Leads</span></div>
         <p class="small" style="margin-bottom:16px;">Every form submission tracked from your website will appear here.</p>
         <div id="leadsList" class="list"></div>
       </div>
@@ -714,31 +432,12 @@ input:focus,select:focus,textarea:focus{
     <section id="requestsPage" class="page">
       <div class="panel-grid">
         <div class="card">
-          <div class="section-title">
-            <h2>Submit a Change Request</h2>
-          </div>
+          <div class="section-title"><h2>Submit a Change Request</h2></div>
 
           <div class="form-grid">
-            <div>
-              <label>Request Type</label>
-              <select id="requestType">
-                <option value="Text Change">Text Change</option>
-                <option value="Image Change">Image Change</option>
-                <option value="New Section">New Section</option>
-                <option value="SEO Update">SEO Update</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-
-            <div>
-              <label>Page</label>
-              <input id="requestPage" placeholder="Home, About, Contact...">
-            </div>
-
-            <div class="full">
-              <label>What do you need changed?</label>
-              <textarea id="requestMessage" placeholder="Tell us exactly what you'd like updated..."></textarea>
-            </div>
+            <div><label>Request Type</label><select id="requestType"><option>Text Change</option><option>Image Change</option><option>New Section</option><option>SEO Update</option><option>Other</option></select></div>
+            <div><label>Page</label><input id="requestPage" placeholder="Home, About, Contact..."></div>
+            <div class="full"><label>What do you need changed?</label><textarea id="requestMessage" placeholder="Tell us exactly what you'd like updated..."></textarea></div>
           </div>
 
           <button class="btn btn-primary" style="margin-top:14px;" onclick="submitChangeRequest()">Submit Request</button>
@@ -746,55 +445,34 @@ input:focus,select:focus,textarea:focus{
         </div>
 
         <div class="card">
-          <div class="section-title">
-            <h2>Request Status</h2>
-          </div>
+          <div class="section-title"><h2>Request Status</h2></div>
           <div id="requestsSummary" class="list"></div>
         </div>
       </div>
 
       <div class="card">
-        <div class="section-title">
-          <h2>Request History</h2>
-        </div>
+        <div class="section-title"><h2>Request History</h2></div>
         <div id="requestsList" class="list"></div>
       </div>
     </section>
 
     <section id="billingPage" class="page">
       <div class="panel-grid">
-        <div class="card">
-          <div class="section-title">
-            <h2>Billing Overview</h2>
-            <span id="billingMiniBadge" class="badge">Loading</span>
-          </div>
-          <div id="billingDetails" class="list"></div>
-        </div>
-
-        <div class="card">
-          <div class="section-title">
-            <h2>Plan Details</h2>
-          </div>
-          <div id="planDetails" class="list"></div>
-        </div>
+        <div class="card"><div class="section-title"><h2>Billing Overview</h2><span id="billingMiniBadge" class="badge">Loading</span></div><div id="billingDetails" class="list"></div></div>
+        <div class="card"><div class="section-title"><h2>Plan Details</h2></div><div id="planDetails" class="list"></div></div>
       </div>
     </section>
 
     <section id="seoPage" class="page">
       <div class="panel-grid">
         <div class="card">
-          <div class="section-title">
-            <h2>SEO Health</h2>
-            <span id="seoMainBadge" class="badge">0/100</span>
-          </div>
+          <div class="section-title"><h2>SEO Health</h2><span id="seoMainBadge" class="badge">0/100</span></div>
           <p id="seoMainText" class="small"></p>
           <div class="progress"><div id="seoProgress"></div></div>
         </div>
 
         <div class="card">
-          <div class="section-title">
-            <h2>Search Preview</h2>
-          </div>
+          <div class="section-title"><h2>Search Preview</h2></div>
           <div class="item">
             <p class="small" id="seoPreviewUrl">https://clientsite.com</p>
             <strong id="seoPreviewTitle" style="color:#1a0dab;">SEO Title</strong>
@@ -809,7 +487,7 @@ input:focus,select:focus,textarea:focus{
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="app.js"></script>
-<script src="dashboard.js?v=101"></script>
+<script src="dashboard.js?v=300"></script>
 
 </body>
 </html>
