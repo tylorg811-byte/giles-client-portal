@@ -486,6 +486,87 @@ function cleanValue(id){
   return el ? el.value.trim() : "";
 }
 
+function setupVisitFilters(){
+  fillFilter("visitMonthFilter", getMonthOptions(analyticsEvents), "All Months");
+  fillFilter("visitSourceFilter", getUniqueValues(analyticsEvents.map(e=>cleanReferrer(e.referrer))), "All Sources");
+  fillFilter("visitDeviceFilter", getUniqueValues(analyticsEvents.map(e=>e.device || "unknown")), "All Devices");
+  fillFilter("visitPageFilter", getUniqueValues(analyticsEvents.map(e=>e.page || "home")), "All Pages");
+}
+
+function fillFilter(id, values, label){
+  const select = document.getElementById(id);
+  if(!select) return;
+
+  const current = select.value;
+
+  select.innerHTML = `<option value="all">${label}</option>`;
+
+  values.forEach(value=>{
+    select.innerHTML += `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`;
+  });
+
+  if(current) select.value = current;
+}
+
+function getUniqueValues(values){
+  return [...new Set(values.filter(Boolean))].sort();
+}
+
+function getMonthOptions(events){
+  const months = events.map(event=>{
+    const d = new Date(event.created_at);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2,"0")}`;
+  });
+
+  return [...new Set(months)].sort().reverse();
+}
+
+function renderVisitsList(){
+  const visitsBox = document.getElementById("visitsList");
+  if(!visitsBox) return;
+
+  const month = cleanValue("visitMonthFilter") || "all";
+  const source = cleanValue("visitSourceFilter") || "all";
+  const device = cleanValue("visitDeviceFilter") || "all";
+  const page = cleanValue("visitPageFilter") || "all";
+
+  let filtered = [...analyticsEvents];
+
+  filtered = filtered.filter(event=>{
+    const eventMonth = event.created_at
+      ? new Date(event.created_at).toISOString().slice(0,7)
+      : "";
+
+    const eventSource = cleanReferrer(event.referrer);
+    const eventDevice = event.device || "unknown";
+    const eventPage = event.page || "home";
+
+    return (
+      (month === "all" || eventMonth === month) &&
+      (source === "all" || eventSource === source) &&
+      (device === "all" || eventDevice === device) &&
+      (page === "all" || eventPage === page)
+    );
+  });
+
+  setText("visitCountBadge", `${filtered.length} Visit${filtered.length === 1 ? "" : "s"}`);
+
+  if(!filtered.length){
+    visitsBox.innerHTML = `<div class="empty">No visits match these filters.</div>`;
+    return;
+  }
+
+  visitsBox.innerHTML = filtered.map(event=>`
+    <div class="item">
+      <strong>${escapeHtml(event.page || "Website Visit")}</strong>
+      <p class="small">Source: ${escapeHtml(cleanReferrer(event.referrer))}</p>
+      <p class="small">Device: ${escapeHtml(event.device || "Unknown")} • Browser: ${escapeHtml(event.browser || "Unknown")}</p>
+      <p class="small">Path: ${escapeHtml(event.path || "—")}</p>
+      <p class="small">${timeAgo(event.created_at)}</p>
+    </div>
+  `).join("");
+}
+
 function escapeHtml(value){
   return String(value || "")
     .replaceAll("&","&amp;")
