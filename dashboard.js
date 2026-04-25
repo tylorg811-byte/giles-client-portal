@@ -3,6 +3,7 @@ let clientSite = null;
 let analyticsEvents = [];
 let leadEvents = [];
 let changeRequests = [];
+let supportTickets = [];
 
 const LIVE_BASE_URL = "https://giles-sites.netlify.app";
 
@@ -21,6 +22,7 @@ async function loadDashboardData(){
   await loadAnalytics();
   await loadLeads();
   await loadChangeRequests();
+  await loadSupportTickets();
 }
 
 async function loadClientSite(){
@@ -67,6 +69,22 @@ async function loadChangeRequests(){
   changeRequests = data || [];
 }
 
+async function loadSupportTickets(){
+  const { data, error } = await db
+    .from("support_tickets")
+    .select("*")
+    .eq("client_user_id", currentUser.id)
+    .order("created_at", { ascending:false });
+
+  if(error){
+    console.error("Support tickets not loaded:", error);
+    supportTickets = [];
+    return;
+  }
+
+  supportTickets = data || [];
+}
+
 function renderDashboard(){
   const name = clientSite?.business_name || "Your Website";
   const liveUrl = getLiveUrl();
@@ -84,6 +102,7 @@ function renderDashboard(){
   renderAnalytics();
   renderLeads();
   renderRequests();
+  renderSupport();
   renderBilling();
   renderSEO();
 }
@@ -92,10 +111,10 @@ function buildSubtitle(){
   if(!clientSite) return "Your website account is being prepared.";
 
   if(clientSite.site_status === "published"){
-    return "Your website is live and working. Here’s a clear summary of traffic, leads, billing, SEO, and requests.";
+    return "Your website is live and working. Here’s a clear summary of traffic, leads, billing, SEO, support, and requests.";
   }
 
-  return "Your website is being prepared. You can still view updates and submit change requests.";
+  return "Your website is being prepared. You can still view updates and submit requests.";
 }
 
 function renderBadges(){
@@ -114,12 +133,12 @@ function renderSummaryStats(){
   const viewsWeek = analyticsEvents.filter(e=>isWithinDays(e.created_at,7)).length;
   const leadsMonth = getLast30DayLeads().length;
   const openReqs = changeRequests.filter(r=>r.status !== "done").length;
-  const estimated = leadsMonth * 150;
+  const openTickets = supportTickets.filter(t=>!["closed","resolved"].includes(String(t.status || "").toLowerCase())).length;
 
   animateNumber("sumViewsMonth", viewsMonth);
   animateNumber("sumLeadsMonth", leadsMonth);
   animateNumber("sumOpenRequests", openReqs);
-  animateMoney("sumEstimatedRevenue", estimated);
+  animateNumber("sumOpenTickets", openTickets);
 
   setText("viewsNote", `${viewsWeek} views in the last 7 days`);
   setText("leadsNote", leadsMonth === 1 ? "1 tracked website lead" : `${leadsMonth} tracked website leads`);
@@ -139,41 +158,20 @@ function renderOverview(){
   renderChart("overviewChart", monthEvents);
   renderHealthList();
   renderMiniLeads("overviewLeads", 3);
-  renderSourceBreakdown();
+  renderMiniTickets("overviewTickets", 3);
 }
 
 function renderHealthList(){
   const billing = getBillingStatus(clientSite || {});
   const seo = Number(clientSite?.seo_score || 0);
+  const openTickets = supportTickets.filter(t=>!["closed","resolved"].includes(String(t.status || "").toLowerCase())).length;
 
   document.getElementById("healthList").innerHTML = `
     <div class="item"><strong>Website Status</strong><p class="small">${clientSite?.site_status === "published" ? "Your website is live." : "Your website is not marked published yet."}</p></div>
     <div class="item"><strong>Billing</strong><p class="small">${billing.text}. Next payment: ${formatDate(clientSite?.next_payment_date)}</p></div>
     <div class="item"><strong>SEO</strong><p class="small">SEO score is ${seo}/100.</p></div>
-    <div class="item"><strong>Requests</strong><p class="small">${changeRequests.filter(r=>r.status !== "done").length} open request(s).</p></div>
+    <div class="item"><strong>Support</strong><p class="small">${openTickets} open support ticket(s).</p></div>
   `;
-}
-
-function renderSourceBreakdown(){
-  const box = document.getElementById("sourceBreakdown");
-  if(!box) return;
-
-  const counts = {};
-  getLast30DayEvents().forEach(event=>{
-    const source = cleanReferrer(event.referrer);
-    counts[source] = (counts[source] || 0) + 1;
-  });
-
-  const entries = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
-
-  if(!entries.length){
-    box.innerHTML = `<div class="empty">No source data yet.</div>`;
-    return;
-  }
-
-  box.innerHTML = entries.slice(0,8).map(([source,count])=>`
-    <div class="source-pill">${escapeHtml(source)} — ${count}</div>
-  `).join("");
 }
 
 function renderAnalytics(){
@@ -186,7 +184,6 @@ function renderAnalytics(){
   setText("analyticsDevice", getTopValue(monthEvents,"device") || "—");
 
   renderChart("analyticsChart", monthEvents);
-
   setupVisitFilters();
   renderVisitsList();
 }
@@ -203,7 +200,6 @@ function fillFilter(id, values, label){
   if(!el) return;
 
   const current = el.value || "all";
-
   el.innerHTML = `<option value="all">${label}</option>`;
 
   values.forEach(value=>{
@@ -317,7 +313,7 @@ function renderRequests(){
   document.getElementById("requestsSummary").innerHTML = `
     <div class="item"><strong>Open Requests</strong><p class="small">${open}</p></div>
     <div class="item"><strong>Completed Requests</strong><p class="small">${done}</p></div>
-    <div class="item"><strong>Average Response</strong><p class="small">Requests are reviewed by Giles Web Design.</p></div>
+    <div class="item"><strong>Purpose</strong><p class="small">Use change requests for content updates, image swaps, new sections, or SEO changes.</p></div>
   `;
 
   const box = document.getElementById("requestsList");
@@ -336,44 +332,54 @@ function renderRequests(){
   `).join("");
 }
 
-function renderBilling(){
-  const billing = getBillingStatus(clientSite || {});
-  setBadge("billingMiniBadge", billing.text, billing.class);
+function renderSupport(){
+  const open = supportTickets.filter(t=>!["closed","resolved"].includes(String(t.status || "").toLowerCase())).length;
+  const closed = supportTickets.filter(t=>["closed","resolved"].includes(String(t.status || "").toLowerCase())).length;
+  const urgent = supportTickets.filter(t=>String(t.priority || "").toLowerCase() === "urgent").length;
 
-  document.getElementById("billingDetails").innerHTML = `
-    <div class="item"><strong>Status</strong><p class="small">${billing.text}</p></div>
-    <div class="item"><strong>Next Payment</strong><p class="small">${formatDate(clientSite?.next_payment_date)}</p></div>
-    <div class="item"><strong>Last Payment</strong><p class="small">${formatDate(clientSite?.last_payment_date)}</p></div>
-    <div class="item"><strong>Billing Cycle</strong><p class="small">${escapeHtml(clientSite?.billing_cycle || "Monthly")}</p></div>
+  setText("ticketCountBadge", `${supportTickets.length} Ticket${supportTickets.length === 1 ? "" : "s"}`);
+
+  document.getElementById("supportSummary").innerHTML = `
+    <div class="item"><strong>Open Tickets</strong><p class="small">${open}</p></div>
+    <div class="item"><strong>Resolved Tickets</strong><p class="small">${closed}</p></div>
+    <div class="item"><strong>Urgent Tickets</strong><p class="small">${urgent}</p></div>
   `;
 
-  document.getElementById("planDetails").innerHTML = `
-    <div class="item"><strong>Plan</strong><p class="small">${escapeHtml(clientSite?.package_name || "Website Plan")}</p></div>
-    <div class="item"><strong>Website Status</strong><p class="small">${escapeHtml(clientSite?.site_status || "Setup")}</p></div>
-    <div class="item"><strong>Editor Access</strong><p class="small">${escapeHtml(clientSite?.editor_access || "Safe Mode")}</p></div>
-    <div class="item"><strong>Domain</strong><p class="small">${escapeHtml(clientSite?.domain || "No domain connected")}</p></div>
-  `;
+  const box = document.getElementById("supportList");
+  if(!supportTickets.length){
+    box.innerHTML = `<div class="empty">No support tickets yet.</div>`;
+    return;
+  }
+
+  box.innerHTML = supportTickets.map(ticket=>`
+    <div class="item">
+      <strong>${escapeHtml(ticket.subject || ticket.ticket_type || "Support Ticket")}</strong>
+      <p class="small">${escapeHtml(ticket.message || "")}</p>
+      <span class="badge ${getTicketBadgeClass(ticket.status)}">${escapeHtml(ticket.status || "open")}</span>
+      <span class="badge ${getPriorityBadgeClass(ticket.priority)}">${escapeHtml(ticket.priority || "normal")}</span>
+      ${ticket.admin_notes ? `<p class="small" style="margin-top:8px;"><strong>Admin Note:</strong> ${escapeHtml(ticket.admin_notes)}</p>` : ""}
+      <p class="small">${timeAgo(ticket.created_at)}</p>
+    </div>
+  `).join("");
 }
 
-function renderSEO(){
-  const score = Number(clientSite?.seo_score || 0);
-  const scoreClass = score >= 80 ? "good" : score >= 60 ? "warn" : "bad";
+function renderMiniTickets(id,limit){
+  const box = document.getElementById(id);
+  if(!box) return;
 
-  setBadge("seoMainBadge", `${score}/100`, scoreClass);
-  setText("seoMainText", getSEOMessage(score));
+  const openTickets = supportTickets.filter(t=>!["closed","resolved"].includes(String(t.status || "").toLowerCase()));
 
-  const progress = document.getElementById("seoProgress");
-  if(progress) progress.style.width = `${score}%`;
+  if(!openTickets.length){
+    box.innerHTML = `<div class="empty">No open support tickets.</div>`;
+    return;
+  }
 
-  setText("seoPreviewUrl", getLiveUrl());
-  setText("seoPreviewTitle", clientSite?.seo_title || clientSite?.business_name || "Website Title");
-  setText("seoPreviewDescription", clientSite?.seo_description || "SEO description has not been added yet.");
-}
-
-function getSEOMessage(score){
-  if(score >= 80) return "Your website has a strong SEO foundation. Keep sharing your website and building traffic.";
-  if(score >= 60) return "Your SEO is off to a good start. A few improvements can make it stronger.";
-  return "Your SEO needs more information. Add a strong title, description, location, and preview image.";
+  box.innerHTML = openTickets.slice(0,limit).map(ticket=>`
+    <div class="item">
+      <strong>${escapeHtml(ticket.subject || ticket.ticket_type || "Support Ticket")}</strong>
+      <p class="small">${escapeHtml(ticket.status || "open")} • ${timeAgo(ticket.created_at)}</p>
+    </div>
+  `).join("");
 }
 
 async function submitChangeRequest(){
@@ -413,6 +419,81 @@ async function submitChangeRequest(){
   renderRequests();
   renderOverview();
   renderSummaryStats();
+}
+
+async function submitSupportTicket(){
+  const ticketType = getSelectValue("ticketType");
+  const priority = getSelectValue("ticketPriority");
+  const subject = cleanValue("ticketSubject");
+  const message = cleanValue("ticketMessage");
+
+  if(!subject || !message){
+    setText("ticketMessageStatus","Please enter a subject and describe the issue.");
+    return;
+  }
+
+  const payload = {
+    client_user_id:currentUser.id,
+    client_email:currentUser.email,
+    business_name:clientSite?.business_name || "",
+    ticket_type:ticketType,
+    priority,
+    subject,
+    message,
+    status:"open",
+    created_at:new Date().toISOString()
+  };
+
+  const { error } = await db.from("support_tickets").insert(payload);
+
+  if(error){
+    console.error(error);
+    setText("ticketMessageStatus","Support ticket failed. Please try again.");
+    return;
+  }
+
+  setText("ticketMessageStatus","Support ticket submitted successfully.");
+  setValue("ticketSubject","");
+  setValue("ticketMessage","");
+
+  await loadSupportTickets();
+  renderSupport();
+  renderOverview();
+  renderSummaryStats();
+}
+
+function renderBilling(){
+  const billing = getBillingStatus(clientSite || {});
+  setBadge("billingMiniBadge", billing.text, billing.class);
+
+  document.getElementById("billingDetails").innerHTML = `
+    <div class="item"><strong>Status</strong><p class="small">${billing.text}</p></div>
+    <div class="item"><strong>Next Payment</strong><p class="small">${formatDate(clientSite?.next_payment_date)}</p></div>
+    <div class="item"><strong>Last Payment</strong><p class="small">${formatDate(clientSite?.last_payment_date)}</p></div>
+    <div class="item"><strong>Billing Cycle</strong><p class="small">${escapeHtml(clientSite?.billing_cycle || "Monthly")}</p></div>
+  `;
+
+  document.getElementById("planDetails").innerHTML = `
+    <div class="item"><strong>Plan</strong><p class="small">${escapeHtml(clientSite?.package_name || "Website Plan")}</p></div>
+    <div class="item"><strong>Website Status</strong><p class="small">${escapeHtml(clientSite?.site_status || "Setup")}</p></div>
+    <div class="item"><strong>Editor Access</strong><p class="small">${escapeHtml(clientSite?.editor_access || "Safe Mode")}</p></div>
+    <div class="item"><strong>Domain</strong><p class="small">${escapeHtml(clientSite?.domain || "No domain connected")}</p></div>
+  `;
+}
+
+function renderSEO(){
+  const score = Number(clientSite?.seo_score || 0);
+  const scoreClass = score >= 80 ? "good" : score >= 60 ? "warn" : "bad";
+
+  setBadge("seoMainBadge", `${score}/100`, scoreClass);
+  setText("seoMainText", getSEOMessage(score));
+
+  const progress = document.getElementById("seoProgress");
+  if(progress) progress.style.width = `${score}%`;
+
+  setText("seoPreviewUrl", getLiveUrl());
+  setText("seoPreviewTitle", clientSite?.seo_title || clientSite?.business_name || "Website Title");
+  setText("seoPreviewDescription", clientSite?.seo_description || "SEO description has not been added yet.");
 }
 
 function renderChart(id,events){
@@ -473,21 +554,10 @@ function getLiveUrl(){
     return `https://${clientSite.domain}`;
   }
 
-  if(clientSite?.site_url){
-    return clientSite.site_url;
-  }
-
-  if(clientSite?.live_url){
-    return clientSite.live_url;
-  }
-
-  if(clientSite?.published_url){
-    return clientSite.published_url;
-  }
-
-  if(clientSite?.client_user_id){
-    return `${LIVE_BASE_URL}/?client=${clientSite.client_user_id}`;
-  }
+  if(clientSite?.site_url) return clientSite.site_url;
+  if(clientSite?.live_url) return clientSite.live_url;
+  if(clientSite?.published_url) return clientSite.published_url;
+  if(clientSite?.client_user_id) return `${LIVE_BASE_URL}/?client=${clientSite.client_user_id}`;
 
   return "#";
 }
@@ -512,6 +582,26 @@ function getBillingStatus(site){
   return { text:"Active", class:"good" };
 }
 
+function getSEOMessage(score){
+  if(score >= 80) return "Your website has a strong SEO foundation. Keep sharing your website and building traffic.";
+  if(score >= 60) return "Your SEO is off to a good start. A few improvements can make it stronger.";
+  return "Your SEO needs more information. Add a strong title, description, location, and preview image.";
+}
+
+function getTicketBadgeClass(status){
+  const s = String(status || "").toLowerCase();
+  if(s === "closed" || s === "resolved") return "good";
+  if(s === "in progress") return "warn";
+  return "bad";
+}
+
+function getPriorityBadgeClass(priority){
+  const p = String(priority || "").toLowerCase();
+  if(p === "urgent") return "bad";
+  if(p === "high") return "warn";
+  return "";
+}
+
 function getLast30DayEvents(){
   return analyticsEvents.filter(event=>isWithinDays(event.created_at,30));
 }
@@ -531,23 +621,6 @@ function animateNumber(id,end){
   function update(now){
     const progress = Math.min((now - startTime) / duration,1);
     el.textContent = Math.floor(final * progress);
-    if(progress < 1) requestAnimationFrame(update);
-  }
-
-  requestAnimationFrame(update);
-}
-
-function animateMoney(id,end){
-  const el = document.getElementById(id);
-  if(!el) return;
-
-  const final = Number(end || 0);
-  const duration = 650;
-  const startTime = performance.now();
-
-  function update(now){
-    const progress = Math.min((now - startTime) / duration,1);
-    el.textContent = "$" + Math.floor(final * progress).toLocaleString();
     if(progress < 1) requestAnimationFrame(update);
   }
 
