@@ -1,5 +1,3 @@
-alert("dashboard.js loaded");
-
 function debugLog(msg){
   const box = document.getElementById("debugBox");
   if(box) box.innerHTML += `<div>${msg}</div>`;
