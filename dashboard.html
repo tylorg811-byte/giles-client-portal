@@ -11,517 +11,323 @@
 *{margin:0;padding:0;box-sizing:border-box;}
 
 :root{
-  --bg:#070A12;
-  --panel:#0F172A;
-  --panel2:#111827;
-  --line:rgba(255,255,255,.09);
-  --text:#F8FAFC;
-  --muted:#94A3B8;
-  --muted2:#CBD5E1;
-  --purple:#8B5CF6;
+  --bg:#f3f6fb;
+  --dark:#07111f;
+  --card:#ffffff;
+  --text:#0f172a;
+  --muted:#64748b;
+  --line:#e2e8f0;
+  --purple:#7B5CFF;
   --purple2:#A78BFA;
-  --blue:#38BDF8;
-  --green:#22C55E;
-  --red:#EF4444;
-  --orange:#F97316;
-  --shadow:0 24px 70px rgba(0,0,0,.34);
+  --green:#16a34a;
+  --red:#dc2626;
+  --orange:#f97316;
+  --shadow:0 18px 45px rgba(15,23,42,.08);
 }
 
 body{
   font-family:'Inter',Arial,sans-serif;
   background:
-    radial-gradient(circle at 8% 0%,rgba(139,92,246,.26),transparent 33%),
-    radial-gradient(circle at 92% 5%,rgba(56,189,248,.14),transparent 30%),
-    linear-gradient(180deg,var(--bg),#090D18 46%,#070A12);
+    radial-gradient(circle at top left,rgba(123,92,255,.13),transparent 30%),
+    radial-gradient(circle at top right,rgba(56,189,248,.10),transparent 28%),
+    var(--bg);
   color:var(--text);
   min-height:100vh;
 }
 
-button,a,input,select,textarea{font-family:inherit;}
-
 .app{
   min-height:100vh;
   display:grid;
-  grid-template-columns:260px minmax(0,1fr);
+  grid-template-columns:285px 1fr;
 }
 
 .sidebar{
-  height:100vh;
+  background:linear-gradient(180deg,#07111f,#101827);
+  color:white;
+  padding:24px;
   position:sticky;
   top:0;
-  padding:18px;
-  border-right:1px solid var(--line);
-  background:rgba(7,10,18,.76);
-  backdrop-filter:blur(22px);
-  overflow-y:auto;
-  color:white;
+  height:100vh;
+  overflow:auto;
 }
 
 .brand{
   display:flex;
-  gap:12px;
+  gap:14px;
   align-items:center;
-  padding:14px;
-  border:1px solid var(--line);
-  background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.025));
-  border-radius:22px;
-  margin-bottom:18px;
+  margin-bottom:22px;
 }
 
 .logo{
-  width:46px;
-  height:46px;
-  border-radius:16px;
-  display:grid;
-  place-items:center;
-  background:linear-gradient(135deg,var(--purple),var(--blue));
-  font-weight:950;
-  font-size:21px;
-  box-shadow:0 18px 34px rgba(139,92,246,.28);
+  width:54px;
+  height:54px;
+  border-radius:18px;
+  background:linear-gradient(135deg,var(--purple),var(--purple2));
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:900;
+  font-size:23px;
 }
 
-.brand h2{font-size:18px;letter-spacing:-.5px;line-height:1.05;}
+.brand h2{font-size:20px;line-height:1.05;}
 
 .sidebar p{
-  color:var(--muted);
-  font-size:13px;
+  color:#cbd5e1;
+  font-size:14px;
   line-height:1.5;
-  margin:0 8px 18px;
+  margin-bottom:22px;
 }
 
 .nav{
   display:flex;
   flex-direction:column;
-  gap:6px;
+  gap:10px;
 }
 
 .nav button,.nav a{
   width:100%;
   border:none;
-  background:transparent;
-  color:#C9D5E6;
+  background:rgba(255,255,255,.06);
+  color:#e5e7eb;
   text-decoration:none;
-  padding:11px 12px;
-  border-radius:14px;
-  font-weight:800;
-  font-size:13px;
+  padding:14px 15px;
+  border-radius:16px;
+  font-weight:900;
   text-align:left;
   cursor:pointer;
-  display:flex;
-  align-items:center;
-  gap:10px;
-  transition:.18s ease;
+  transition:.2s ease;
 }
 
 .nav button:hover,.nav button.active,.nav a:hover{
-  background:rgba(139,92,246,.18);
+  background:linear-gradient(135deg,var(--purple),var(--purple2));
   color:white;
-  transform:none;
+  transform:translateX(3px);
 }
 
-.main{
-  min-width:0;
-  padding:22px;
-}
+.main{padding:26px;min-width:0;}
 
-.mobile-top{
-  display:none;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  padding:14px 16px;
-  border:1px solid var(--line);
-  background:rgba(15,23,42,.82);
-  backdrop-filter:blur(18px);
-  border-radius:20px;
-  margin-bottom:12px;
-}
-
-.mobile-top strong{
-  font-size:15px;
-  letter-spacing:-.2px;
-}
-
+.mobile-top{display:none;justify-content:space-between;align-items:center;margin-bottom:14px;}
 .mobile-top button{
-  min-width:46px;
-  height:44px;
-  border:none;
-  background:rgba(255,255,255,.07);
-  border:1px solid var(--line);
-  color:white;
-  border-radius:14px;
-  font-weight:900;
-  cursor:pointer;
-  padding:0 12px;
+  border:none;background:linear-gradient(135deg,var(--purple),var(--purple2));
+  color:white;padding:12px 14px;border-radius:14px;font-weight:900;
 }
 
-.mobile-drawer{
-  display:none;
-  background:rgba(15,23,42,.94);
-  border:1px solid var(--line);
-  color:white;
-  padding:14px;
-  border-radius:20px;
-  margin-bottom:12px;
-  box-shadow:var(--shadow);
-}
+.mobile-drawer{display:none;background:#07111f;color:white;padding:18px;border-radius:20px;margin-bottom:16px;}
 .mobile-drawer.open{display:block;}
 
 .hero{
   background:
-    linear-gradient(135deg,rgba(15,23,42,.94),rgba(17,24,39,.84)),
-    radial-gradient(circle at top right,rgba(139,92,246,.45),transparent 38%);
-  border:1px solid var(--line);
+    linear-gradient(135deg,rgba(7,17,31,.97),rgba(15,23,42,.94)),
+    radial-gradient(circle at top right,rgba(123,92,255,.45),transparent 38%);
   color:white;
-  border-radius:26px;
-  padding:24px;
-  box-shadow:var(--shadow);
-  margin-bottom:16px;
+  border-radius:30px;
+  padding:30px;
+  box-shadow:0 24px 65px rgba(15,23,42,.22);
+  margin-bottom:22px;
 }
 
-.hero-row{
-  display:flex;
-  justify-content:space-between;
-  gap:18px;
-  align-items:flex-start;
-}
+.hero-row{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;}
+.hero h1{font-size:40px;line-height:1.02;letter-spacing:-1.3px;margin-bottom:10px;}
+.hero p{color:#cbd5e1;line-height:1.55;max-width:760px;}
 
-.hero h1{
-  font-size:34px;
-  line-height:1.03;
-  letter-spacing:-1.2px;
-  margin-bottom:9px;
-}
-
-.hero p{
-  color:var(--muted2);
-  line-height:1.55;
-  max-width:760px;
-  font-size:14px;
-}
-
-.hero-actions{
-  display:flex;
-  flex-wrap:wrap;
-  gap:9px;
-  justify-content:flex-end;
-}
+.hero-actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;}
 
 .btn{
-  border:none;
-  border-radius:14px;
-  padding:11px 14px;
-  font-weight:900;
-  text-decoration:none;
-  cursor:pointer;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  transition:.18s ease;
+  border:none;border-radius:15px;padding:13px 17px;font-weight:900;
+  text-decoration:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;
+  transition:.2s ease;
 }
-
-.btn:hover{transform:translateY(-1px);}
-
-.btn-primary{
-  background:linear-gradient(135deg,var(--purple),var(--purple2));
-  color:white;
-  box-shadow:0 14px 28px rgba(139,92,246,.22);
-}
-
-.btn-light,.btn-muted{
-  background:rgba(255,255,255,.08);
-  color:#E2E8F0;
-  border:1px solid var(--line);
-}
+.btn:hover{transform:translateY(-2px);}
+.btn-primary{background:linear-gradient(135deg,var(--purple),var(--purple2));color:white;}
+.btn-light{background:white;color:#111827;}
+.btn-muted{background:#f8fafc;color:#0f172a;border:1px solid var(--line);}
 
 .badge{
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  padding:6px 9px;
-  border-radius:999px;
-  font-size:11px;
-  font-weight:950;
-  background:rgba(139,92,246,.15);
-  color:#D8B4FE;
-  margin:4px 5px 0 0;
-  border:1px solid rgba(139,92,246,.25);
+  display:inline-flex;align-items:center;gap:6px;padding:8px 11px;border-radius:999px;
+  font-size:12px;font-weight:900;background:#f3f2ff;color:#5a4cff;margin:4px 6px 0 0;
 }
-
-.badge.good{background:rgba(34,197,94,.13);color:#86EFAC;border-color:rgba(34,197,94,.25);}
-.badge.warn{background:rgba(249,115,22,.13);color:#FDBA74;border-color:rgba(249,115,22,.25);}
-.badge.bad{background:rgba(239,68,68,.13);color:#FCA5A5;border-color:rgba(239,68,68,.25);}
-.badge.dark{background:rgba(255,255,255,.08);color:white;}
+.badge.good{background:#dcfce7;color:#166534;}
+.badge.warn{background:#ffedd5;color:#9a3412;}
+.badge.bad{background:#fee2e2;color:#991b1b;}
+.badge.dark{background:#111827;color:white;}
 
 .summary-grid{
   display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:12px;
-  margin-bottom:16px;
+  grid-template-columns:repeat(4,1fr);
+  gap:16px;
+  margin-bottom:22px;
 }
 
 .card{
-  background:rgba(15,23,42,.80);
-  border:1px solid var(--line);
-  border-radius:22px;
-  padding:18px;
-  box-shadow:0 18px 50px rgba(0,0,0,.20);
-  transition:.18s ease;
+  background:rgba(255,255,255,.96);
+  border:1px solid rgba(226,232,240,.94);
+  border-radius:24px;
+  padding:22px;
+  box-shadow:var(--shadow);
+  transition:.2s ease;
 }
 
 .card:hover{
-  transform:translateY(-1px);
-  box-shadow:0 24px 60px rgba(0,0,0,.24);
+  transform:translateY(-2px);
+  box-shadow:0 24px 55px rgba(15,23,42,.11);
 }
 
 .stat span{
-  display:block;
-  color:var(--muted);
-  font-size:11px;
-  font-weight:950;
-  text-transform:uppercase;
-  letter-spacing:.08em;
-  margin-bottom:9px;
+  display:block;color:var(--muted);font-size:12px;font-weight:900;
+  text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;
+}
+.stat strong{font-size:34px;line-height:1;letter-spacing:-1px;display:block;}
+.stat p{color:var(--muted);font-size:13px;margin-top:10px;line-height:1.4;}
+
+.panel-grid{
+  display:grid;
+  grid-template-columns:1.25fr .75fr;
+  gap:18px;
+  margin-bottom:22px;
 }
 
-.stat strong{
-  font-size:30px;
-  line-height:1;
-  letter-spacing:-1px;
-  display:block;
-  color:white;
+.section-title{
+  display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px;
 }
+.section-title h2{font-size:22px;letter-spacing:-.5px;}
 
-.stat p{
-  color:var(--muted);
-  font-size:12px;
-  margin-top:9px;
-  line-height:1.4;
+.tabs{
+  display:flex;gap:10px;overflow:auto;margin:6px 0 20px;padding-bottom:4px;
 }
-
-  .tabs{
-  display:flex;
-  gap:10px;
-  overflow:auto;
-  margin:10px 0 16px;
-}
-
 .tabs button{
-  border:none;
-  background:rgba(255,255,255,.08);
+  border:none;background:white;border:1px solid var(--line);padding:12px 15px;
+  border-radius:999px;font-weight:900;cursor:pointer;color:#334155;white-space:nowrap;
+}
+.tabs button.active{background:linear-gradient(135deg,var(--purple),var(--purple2));color:white;border-color:transparent;}
+
+.page{display:none;}
+.page.active{display:block;animation:fadeUp .3s ease both;}
+
+.list{display:grid;gap:12px;}
+
+.item{
+  background:#f8fafc;
   border:1px solid var(--line);
-  padding:10px 14px;
-  border-radius:999px;
-  font-weight:900;
-  cursor:pointer;
-  color:#CBD5E1;
+  border-radius:18px;
+  padding:16px;
 }
 
-.tabs button.active{
-  background:linear-gradient(135deg,var(--purple),var(--purple2));
-  color:white;
-  border-color:transparent;
-}
+.item strong{display:block;margin-bottom:5px;}
+.small{color:var(--muted);font-size:13px;line-height:1.45;}
 
-  /* ===== MOBILE FIX ===== */
-@media(max-width:1050px){
-
-  .app{
-    display:block;
-  }
-
-  .sidebar{
-    display:none;
-  }
-
-  .mobile-top{
-    display:flex;
-  }
-
-  .main{
-    padding:16px;
-  }
-
-  .hero{
-    padding:20px;
-    border-radius:22px;
-  }
-
-  .hero-row{
-    display:block;
-  }
-
-  .hero h1{
-    font-size:28px;
-  }
-
-  .hero-actions{
-    justify-content:flex-start;
-    margin-top:14px;
-  }
-
-  .summary-grid{
-    grid-template-columns:1fr 1fr;
-  }
-
-  .tabs{
-    display:flex;
-    gap:8px;
-    overflow-x:auto;
-    padding-bottom:6px;
-  }
-
-  .tabs button{
-    white-space:nowrap;
-    font-size:13px;
-    padding:10px 12px;
-  }
-
-  .card{
-    padding:16px;
-  }
-
-}
-
-@media(max-width:700px){
-
-  .summary-grid{
-    grid-template-columns:1fr;
-  }
-
-  .hero h1{
-    font-size:24px;
-  }
-
-  .chart{
-    height:200px;
-  }
-
-}
-
-  @media(max-width:1050px){
-
-  .app{
-    display:block;
-  }
-
-  .sidebar{
-    display:none;
-  }
-
-  .mobile-top{
-    display:flex;
-  }
-
-  .main{
-    padding:16px;
-  }
-
-  .hero{
-    padding:20px;
-    border-radius:22px;
-  }
-
-  .hero-row{
-    display:block;
-  }
-
-  .hero h1{
-    font-size:28px;
-  }
-
-  .hero-actions{
-    justify-content:flex-start;
-    margin-top:14px;
-  }
-
-  .summary-grid{
-    grid-template-columns:1fr 1fr;
-  }
-
-  .tabs{
-    display:flex;
-    gap:8px;
-    overflow-x:auto;
-    padding-bottom:6px;
-  }
-
-  .tabs button{
-    white-space:nowrap;
-    font-size:13px;
-    padding:10px 12px;
-  }
-
-  .card{
-    padding:16px;
-  }
-
-}
-
-@media(max-width:700px){
-
-  .summary-grid{
-    grid-template-columns:1fr;
-  }
-
-  .hero h1{
-    font-size:24px;
-  }
-
-  .chart{
-    height:200px;
-  }
-
-}
-
-  .chart{
-  height:220px;
+.chart{
+  height:240px;
   display:flex;
+  gap:9px;
   align-items:flex-end;
-  gap:10px;
-  padding:10px 4px 28px;
+  padding:18px 4px 30px;
 }
 
 .bar-wrap{
-  flex:1;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:flex-end;
+  flex:1;text-align:center;position:relative;height:100%;
+  display:flex;flex-direction:column;justify-content:flex-end;
 }
-
 .bar{
-  width:100%;
-  border-radius:10px 10px 4px 4px;
-  background:linear-gradient(180deg,#A78BFA,#7B5CFF);
+  width:100%;min-height:8px;border-radius:12px 12px 5px 5px;
+  background:linear-gradient(180deg,var(--purple2),var(--purple));
+  transition:.8s ease;
 }
-
-.bar-value{
-  font-size:12px;
-  font-weight:900;
-  margin-bottom:4px;
-}
-
 .bar-label{
-  font-size:11px;
-  color:#94a3b8;
-  margin-top:6px;
+  position:absolute;bottom:-26px;left:50%;transform:translateX(-50%);
+  font-size:11px;color:var(--muted);font-weight:800;
+}
+.bar-value{font-size:12px;font-weight:900;margin-bottom:6px;}
+
+.form-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:14px;
 }
 
-  .filter-grid{
+.filter-grid{
   display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
+  grid-template-columns:repeat(4,1fr);
+  gap:14px;
   margin-bottom:18px;
 }
 
-@media(min-width:700px){
-  .filter-grid{
-    grid-template-columns:repeat(4,1fr);
-  }
+label{display:block;font-size:13px;font-weight:900;color:#334155;margin-bottom:7px;}
+
+input,select,textarea{
+  width:100%;border:1px solid #dce1ec;border-radius:15px;padding:14px;
+  font-size:14px;background:#fbfcff;outline:none;
 }
 
-  /* All Visit History card fix */
+input:focus,select:focus,textarea:focus{
+  border-color:var(--purple);
+  box-shadow:0 0 0 5px rgba(123,92,255,.12);
+}
+
+textarea{min-height:120px;resize:vertical;}
+.full{grid-column:1/-1;}
+
+.progress{height:12px;background:#e5e7eb;border-radius:999px;overflow:hidden;margin-top:14px;}
+.progress div{height:100%;width:0;background:linear-gradient(135deg,var(--purple),var(--purple2));transition:.8s ease;}
+
+.empty{
+  background:#f8fafc;border:1px dashed #cbd5e1;border-radius:18px;
+  padding:22px;text-align:center;color:var(--muted);font-weight:900;
+}
+
+.source-pills{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+}
+
+.source-pill{
+  background:#f8fafc;
+  border:1px solid var(--line);
+  border-radius:999px;
+  padding:10px 13px;
+  font-size:13px;
+  font-weight:900;
+}
+
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(10px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
+@media(max-width:1050px){
+  .app{display:block;}
+  .sidebar{display:none;}
+  .mobile-top{display:flex;}
+  .summary-grid{grid-template-columns:repeat(2,1fr);}
+  .panel-grid{grid-template-columns:1fr;}
+  .filter-grid{grid-template-columns:repeat(2,1fr);}
+}
+
+@media(max-width:700px){
+  .main{padding:16px;}
+  .hero{padding:22px;border-radius:24px;}
+  .hero-row{display:block;}
+  .hero h1{font-size:30px;}
+  .hero-actions{justify-content:flex-start;margin-top:16px;}
+  .summary-grid,.form-grid,.filter-grid{grid-template-columns:1fr;}
+  .chart{height:210px;gap:5px;}
+}
+
+/* Request Upload + Visit Card Polish */
+#requestImage{
+  cursor:pointer;
+}
+
+.request-image-preview{
+  width:100%;
+  max-height:280px;
+  object-fit:cover;
+  border-radius:16px;
+  margin-top:12px;
+  border:1px solid var(--line);
+}
+
 #visitsList{
   display:grid;
   gap:14px;
@@ -551,527 +357,280 @@ button,a,input,select,textarea{font-family:inherit;}
   line-height:1.45;
   margin:0;
 }
-  </style>
+
+</style>
 </head>
 
 <body>
 
-
-  
 <div class="app">
 
-<!-- SIDEBAR -->
-<aside class="sidebar">
-  <div class="brand">
-    <div class="logo">G</div>
-    <div><h2>Dashboard</h2></div>
-  </div>
-
-  <p>Monitor your website, leads, activity, and performance.</p>
-
-  <div class="nav">
-    <button class="active" onclick="showDashPage('overview', this)">Overview</button>
-    <button onclick="showDashPage('analytics', this)">Analytics</button>
-    <button onclick="showDashPage('leads', this)">Leads</button>
-    <button onclick="showDashPage('requests', this)">Requests</button>
-    <button onclick="showDashPage('support', this)">Support</button>
-    <button onclick="showDashPage('billing', this)">Billing</button>
-    <button onclick="showDashPage('seo', this)">SEO</button>
-  </div>
-</aside>
-
-<!-- MAIN -->
-<main class="main">
-
-<!-- HERO -->
-<section class="hero">
-  <div class="hero-row">
-    <div>
-      <h1 id="welcomeTitle">Welcome</h1>
-      <p id="welcomeSubtitle">Loading your dashboard...</p>
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">G</div>
+      <div><h2>Website Dashboard</h2></div>
     </div>
 
-    <div class="hero-actions">
-      <a id="heroLiveBtn" href="#" target="_blank" class="btn btn-light">View Site</a>
-      <a href="editor.html" class="btn btn-primary">Edit Website</a>
+    <p>Your website command center. View performance, leads, billing, SEO, support, and requests.</p>
+
+    <div class="nav">
+      <button class="active" onclick="showDashPage('overview', this)">ð  Overview</button>
+      <button onclick="showDashPage('analytics', this)">ð Analytics</button>
+      <button onclick="showDashPage('leads', this)">ð¥ Leads</button>
+      <button onclick="showDashPage('requests', this)">ð¬ Change Requests</button>
+      <button onclick="showDashPage('support', this)">ð§ Support Tickets</button>
+      <button onclick="showDashPage('billing', this)">ð³ Billing</button>
+      <button onclick="showDashPage('seo', this)">ð SEO</button>
+      <a id="sideLiveBtn" href="#" target="_blank">ð View Website</a>
+      <a href="editor.html">â Open Editor</a>
+      <button onclick="logout()">âª Logout</button>
     </div>
-  </div>
-</section>
+  </aside>
 
-<!-- SUMMARY -->
-<section class="summary-grid">
-  <div class="card stat">
-    <span>Views (30 days)</span>
-    <strong id="sumViewsMonth">0</strong>
-    <p id="viewsNote"></p>
-  </div>
+  <main class="main">
 
-  <div class="card stat">
-    <span>Leads</span>
-    <strong id="sumLeadsMonth">0</strong>
-    <p id="leadsNote"></p>
-  </div>
+    <div class="mobile-top">
+      <strong>Website Dashboard</strong>
+      <button onclick="toggleMobileMenu()">â° Menu</button>
+    </div>
 
-  <div class="card stat">
-    <span>Requests</span>
-    <strong id="sumOpenRequests">0</strong>
-    <p>Pending updates</p>
-  </div>
+    <div id="mobileDrawer" class="mobile-drawer">
+      <div class="nav">
+        <button class="active" onclick="showDashPage('overview', this);toggleMobileMenu()">ð  Overview</button>
+        <button onclick="showDashPage('analytics', this);toggleMobileMenu()">ð Analytics</button>
+        <button onclick="showDashPage('leads', this);toggleMobileMenu()">ð¥ Leads</button>
+        <button onclick="showDashPage('requests', this);toggleMobileMenu()">ð¬ Change Requests</button>
+        <button onclick="showDashPage('support', this);toggleMobileMenu()">ð§ Support Tickets</button>
+        <button onclick="showDashPage('billing', this);toggleMobileMenu()">ð³ Billing</button>
+        <button onclick="showDashPage('seo', this);toggleMobileMenu()">ð SEO</button>
+        <a id="mobileLiveBtn" href="#" target="_blank">ð View Website</a>
+        <a href="editor.html">â Open Editor</a>
+        <button onclick="logout()">âª Logout</button>
+      </div>
+    </div>
 
-  <div class="card stat">
-    <span>Support</span>
-    <strong id="sumOpenTickets">0</strong>
-    <p>Open tickets</p>
-  </div>
-</section>
+    <section class="hero">
+      <div class="hero-row">
+        <div>
+          <h1 id="welcomeTitle">Welcome back</h1>
+          <p id="welcomeSubtitle">Loading your website dashboard...</p>
+          <div style="margin-top:12px;">
+            <span id="siteStatusBadge" class="badge">Loading</span>
+            <span id="billingStatusBadge" class="badge">Loading</span>
+            <span id="seoStatusBadge" class="badge">SEO</span>
+          </div>
+        </div>
 
-<!-- TABS -->
-<div class="tabs">
-  <button class="active" onclick="showDashPage('overview', this)">Overview</button>
-  <button onclick="showDashPage('analytics', this)">Analytics</button>
-  <button onclick="showDashPage('leads', this)">Leads</button>
-  <button onclick="showDashPage('requests', this)">Requests</button>
-  <button onclick="showDashPage('support', this)">Support</button>
-  <button onclick="showDashPage('billing', this)">Billing</button>
-  <button onclick="showDashPage('seo', this)">SEO</button>
+        <div class="hero-actions">
+          <a id="heroLiveBtn" href="#" target="_blank" class="btn btn-light">View Website</a>
+          <a href="editor.html" class="btn btn-primary">Open Editor</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="summary-grid">
+      <div class="card stat"><span>Views this month</span><strong id="sumViewsMonth">0</strong><p id="viewsNote">Last 30 days</p></div>
+      <div class="card stat"><span>Leads this month</span><strong id="sumLeadsMonth">0</strong><p id="leadsNote">Form submissions</p></div>
+      <div class="card stat"><span>Open requests</span><strong id="sumOpenRequests">0</strong><p>Change requests not done</p></div>
+      <div class="card stat"><span>Open support</span><strong id="sumOpenTickets">0</strong><p>Support tickets not closed</p></div>
+    </section>
+
+    <div class="tabs">
+      <button class="active" onclick="showDashPage('overview', this)">Overview</button>
+      <button onclick="showDashPage('analytics', this)">Analytics</button>
+      <button onclick="showDashPage('leads', this)">Leads</button>
+      <button onclick="showDashPage('requests', this)">Change Requests</button>
+      <button onclick="showDashPage('support', this)">Support</button>
+      <button onclick="showDashPage('billing', this)">Billing</button>
+      <button onclick="showDashPage('seo', this)">SEO</button>
+    </div>
+
+    <section id="overviewPage" class="page active">
+      <div class="panel-grid">
+        <div class="card">
+          <div class="section-title"><h2>Website Summary</h2><span class="badge good">Live Data</span></div>
+          <p id="summaryText" class="small">Loading summary...</p>
+          <div id="overviewChart" class="chart"></div>
+        </div>
+
+        <div class="card">
+          <div class="section-title"><h2>Account Health</h2></div>
+          <div id="healthList" class="list"></div>
+        </div>
+      </div>
+
+      <div class="panel-grid">
+        <div class="card">
+          <div class="section-title"><h2>Latest Leads</h2><button class="btn btn-primary" onclick="showDashPage('leads')">View All</button></div>
+          <div id="overviewLeads" class="list"></div>
+        </div>
+
+        <div class="card">
+          <div class="section-title"><h2>Open Support</h2><button class="btn btn-primary" onclick="showDashPage('support')">Support</button></div>
+          <div id="overviewTickets" class="list"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="analyticsPage" class="page">
+      <div class="card">
+        <div class="section-title"><h2>Analytics Breakdown</h2><span class="badge">All Visits</span></div>
+
+        <div class="summary-grid">
+          <div class="stat"><span>Total Views</span><strong id="analyticsTotal">0</strong></div>
+          <div class="stat"><span>7 Day Views</span><strong id="analyticsWeek">0</strong></div>
+          <div class="stat"><span>Top Source</span><strong id="analyticsSource" style="font-size:22px;">â</strong></div>
+          <div class="stat"><span>Top Device</span><strong id="analyticsDevice" style="font-size:22px;">â</strong></div>
+        </div>
+
+        <div id="analyticsChart" class="chart"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">
+          <h2>All Visit History</h2>
+          <span class="badge" id="visitCountBadge">0 Visits</span>
+        </div>
+
+        <div class="filter-grid">
+          <div><label>Month</label><select id="visitMonthFilter" onchange="renderVisitsList()"></select></div>
+          <div><label>Source</label><select id="visitSourceFilter" onchange="renderVisitsList()"></select></div>
+          <div><label>Device</label><select id="visitDeviceFilter" onchange="renderVisitsList()"></select></div>
+          <div><label>Page</label><select id="visitPageFilter" onchange="renderVisitsList()"></select></div>
+        </div>
+
+        <div id="visitsList" class="list"></div>
+      </div>
+    </section>
+
+    <section id="leadsPage" class="page">
+      <div class="card">
+        <div class="section-title"><h2>Lead Center</h2><span class="badge good" id="leadCountBadge">0 Leads</span></div>
+        <p class="small" style="margin-bottom:16px;">Every form submission tracked from your website will appear here.</p>
+        <div id="leadsList" class="list"></div>
+      </div>
+    </section>
+
+    <section id="requestsPage" class="page">
+      <div class="panel-grid">
+        <div class="card">
+          <div class="section-title"><h2>Submit a Change Request</h2></div>
+
+          <div class="form-grid">
+            <div><label>Request Type</label><select id="requestType"><option>Text Change</option><option>Image Change</option><option>New Section</option><option>SEO Update</option><option>Other</option></select></div>
+            <div><label>Page</label><input id="requestPage" placeholder="Home, About, Contact..."></div>
+            <div class="full"><label>What do you need changed?</label><textarea id="requestMessage" placeholder="Tell us exactly what you'd like updated..."></textarea></div>
+
+            <div class="full">
+              <label>Upload Image / Screenshot</label>
+              <input id="requestImage" type="file" accept="image/*">
+              <p class="small" style="margin-top:8px;">Optional: upload a photo, screenshot, logo, or image you want added to the site.</p>
+            </div>
+          </div>
+
+          <button class="btn btn-primary" style="margin-top:14px;" onclick="submitChangeRequest()">Submit Request</button>
+          <p id="requestMessageStatus" class="small" style="margin-top:10px;"></p>
+        </div>
+
+        <div class="card">
+          <div class="section-title"><h2>Request Status</h2></div>
+          <div id="requestsSummary" class="list"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title"><h2>Request History</h2></div>
+        <div id="requestsList" class="list"></div>
+      </div>
+    </section>
+
+    <section id="supportPage" class="page">
+      <div class="panel-grid">
+        <div class="card">
+          <div class="section-title"><h2>Open a Support Ticket</h2><span class="badge warn">For Issues</span></div>
+          <p class="small" style="margin-bottom:16px;">Use this for broken pages, login issues, billing problems, forms not working, or urgent website problems.</p>
+
+          <div class="form-grid">
+            <div>
+              <label>Issue Type</label>
+              <select id="ticketType">
+                <option value="Website Issue">Website Issue</option>
+                <option value="Editor Issue">Editor Issue</option>
+                <option value="Billing Issue">Billing Issue</option>
+                <option value="Login Issue">Login Issue</option>
+                <option value="Form Issue">Form Issue</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div>
+              <label>Priority</label>
+              <select id="ticketPriority">
+                <option value="normal">Normal</option>
+                <option value="high">High</option>
+                <option value="urgent">Urgent</option>
+              </select>
+            </div>
+
+            <div class="full">
+              <label>Subject</label>
+              <input id="ticketSubject" placeholder="Example: My contact form is not working">
+            </div>
+
+            <div class="full">
+              <label>Describe the issue</label>
+              <textarea id="ticketMessage" placeholder="Tell us what is happening, what page it is on, and what you tried."></textarea>
+            </div>
+          </div>
+
+          <button class="btn btn-primary" style="margin-top:14px;" onclick="submitSupportTicket()">Submit Support Ticket</button>
+          <p id="ticketMessageStatus" class="small" style="margin-top:10px;"></p>
+        </div>
+
+        <div class="card">
+          <div class="section-title"><h2>Support Status</h2></div>
+          <div id="supportSummary" class="list"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title"><h2>Support Ticket History</h2><span id="ticketCountBadge" class="badge">0 Tickets</span></div>
+        <div id="supportList" class="list"></div>
+      </div>
+    </section>
+
+    <section id="billingPage" class="page">
+      <div class="panel-grid">
+        <div class="card"><div class="section-title"><h2>Billing Overview</h2><span id="billingMiniBadge" class="badge">Loading</span></div><div id="billingDetails" class="list"></div></div>
+        <div class="card"><div class="section-title"><h2>Plan Details</h2></div><div id="planDetails" class="list"></div></div>
+      </div>
+    </section>
+
+    <section id="seoPage" class="page">
+      <div class="panel-grid">
+        <div class="card">
+          <div class="section-title"><h2>SEO Health</h2><span id="seoMainBadge" class="badge">0/100</span></div>
+          <p id="seoMainText" class="small"></p>
+          <div class="progress"><div id="seoProgress"></div></div>
+        </div>
+
+        <div class="card">
+          <div class="section-title"><h2>Search Preview</h2></div>
+          <div class="item">
+            <p class="small" id="seoPreviewUrl">https://clientsite.com</p>
+            <strong id="seoPreviewTitle" style="color:#1a0dab;">SEO Title</strong>
+            <p class="small" id="seoPreviewDescription">SEO description will show here.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
 </div>
-
-<!-- ================= OVERVIEW ================= -->
-<section id="overviewPage" class="page active">
-
-  <!-- SUMMARY TEXT -->
-  <div class="card">
-    <div class="section-title">
-      <h2>Website Summary</h2>
-      <span class="badge good">Live Data</span>
-    </div>
-
-    <p id="summaryText" class="small"></p>
-    <div id="overviewChart" class="chart"></div>
-  </div>
-
-  <!-- 🔥 PREMIUM ACTIVITY FEED -->
-  <div class="card activity-card">
-    <div class="section-title">
-      <div>
-        <h2>Live Activity</h2>
-        <p class="small">Real-time activity across your website</p>
-      </div>
-      <span class="badge good">Live</span>
-    </div>
-
-    <div id="activityFeed" class="list"></div>
-  </div>
-
-</section>
-
-  <!-- ================= ANALYTICS ================= -->
-<section id="analyticsPage" class="page">
-
-  <div class="summary-grid">
-    <div class="card stat">
-      <span>Total Views</span>
-      <strong id="analyticsTotal">0</strong>
-    </div>
-
-    <div class="card stat">
-      <span>7 Day Views</span>
-      <strong id="analyticsWeek">0</strong>
-    </div>
-
-    <div class="card stat">
-      <span>Top Source</span>
-      <strong id="analyticsSource" style="font-size:22px;">—</strong>
-    </div>
-
-    <div class="card stat">
-      <span>Top Device</span>
-      <strong id="analyticsDevice" style="font-size:22px;">—</strong>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="section-title">
-      <h2>Traffic Chart</h2>
-      <span class="badge">Last 7 Days</span>
-    </div>
-    <div id="analyticsChart" class="chart"></div>
-  </div>
-
-  <div class="card">
-    <div class="section-title">
-      <h2>All Visit History</h2>
-      <span id="visitCountBadge" class="badge">0 Visits</span>
-    </div>
-
-    <div class="filter-grid">
-      <div>
-        <label>Month</label>
-        <select id="visitMonthFilter" onchange="renderVisitsList()"></select>
-      </div>
-
-      <div>
-        <label>Source</label>
-        <select id="visitSourceFilter" onchange="renderVisitsList()"></select>
-      </div>
-
-      <div>
-        <label>Device</label>
-        <select id="visitDeviceFilter" onchange="renderVisitsList()"></select>
-      </div>
-
-      <div>
-        <label>Page</label>
-        <select id="visitPageFilter" onchange="renderVisitsList()"></select>
-      </div>
-    </div>
-
-    <div id="visitsList" class="list"></div>
-  </div>
-
-</section>
-
-<!-- ================= LEADS ================= -->
-<section id="leadsPage" class="page">
-  <div class="card">
-    <div class="section-title">
-      <h2>Lead Center</h2>
-      <span id="leadCountBadge" class="badge good">0 Leads</span>
-    </div>
-
-    <p class="small" style="margin-bottom:14px;">
-      Every tracked form submission from your website appears here.
-    </p>
-
-    <div id="leadsList" class="list"></div>
-  </div>
-</section>
-
-<!-- ================= REQUESTS ================= -->
-<section id="requestsPage" class="page">
-
-  <div class="card">
-    <div class="section-title">
-      <h2>Submit a Change Request</h2>
-      <span class="badge">Website Updates</span>
-    </div>
-
-    <div class="form-grid">
-      <div>
-        <label>Request Type</label>
-        <select id="requestType">
-          <option>Text Change</option>
-          <option>Image Change</option>
-          <option>New Section</option>
-          <option>SEO Update</option>
-          <option>Other</option>
-        </select>
-      </div>
-
-      <div>
-        <label>Page</label>
-        <input id="requestPage" placeholder="Home, About, Contact...">
-      </div>
-
-<input type="file" id="requestImage" accept="image/*">
-      
-      <div class="full">
-        <label>What do you need changed?</label>
-        <textarea id="requestMessage" placeholder="Tell us exactly what you'd like updated..."></textarea>
-      </div>
-    </div>
-
-    <button class="btn btn-primary" style="margin-top:14px;" onclick="submitChangeRequest()">Submit Request</button>
-    <p id="requestMessageStatus" class="small" style="margin-top:10px;"></p>
-  </div>
-
-  <div class="card">
-    <div class="section-title">
-      <h2>Request Status</h2>
-    </div>
-    <div id="requestsSummary" class="list"></div>
-  </div>
-
-  <div class="card">
-    <div class="section-title">
-      <h2>Request History</h2>
-    </div>
-    <div id="requestsList" class="list"></div>
-  </div>
-
-</section>
-
-<!-- ================= SUPPORT ================= -->
-<section id="supportPage" class="page">
-
-  <div class="card">
-    <div class="section-title">
-      <h2>Open a Support Ticket</h2>
-      <span class="badge warn">For Issues</span>
-    </div>
-
-    <p class="small" style="margin-bottom:14px;">
-      Use this for broken pages, login issues, billing problems, forms not working, or urgent website issues.
-    </p>
-
-    <div class="form-grid">
-      <div>
-        <label>Issue Type</label>
-        <select id="ticketType">
-          <option value="Website Issue">Website Issue</option>
-          <option value="Editor Issue">Editor Issue</option>
-          <option value="Billing Issue">Billing Issue</option>
-          <option value="Login Issue">Login Issue</option>
-          <option value="Form Issue">Form Issue</option>
-          <option value="Other">Other</option>
-        </select>
-      </div>
-
-      <div>
-        <label>Priority</label>
-        <select id="ticketPriority">
-          <option value="normal">Normal</option>
-          <option value="high">High</option>
-          <option value="urgent">Urgent</option>
-        </select>
-      </div>
-
-      <div class="full">
-        <label>Subject</label>
-        <input id="ticketSubject" placeholder="Example: My contact form is not working">
-      </div>
-
-      <div class="full">
-        <label>Describe the issue</label>
-        <textarea id="ticketMessage" placeholder="Tell us what is happening, what page it is on, and what you tried."></textarea>
-      </div>
-    </div>
-
-    <button class="btn btn-primary" style="margin-top:14px;" onclick="submitSupportTicket()">Submit Support Ticket</button>
-    <p id="ticketMessageStatus" class="small" style="margin-top:10px;"></p>
-  </div>
-
-  <div class="card">
-    <div class="section-title">
-      <h2>Support Status</h2>
-    </div>
-    <div id="supportSummary" class="list"></div>
-  </div>
-
-  <div class="card">
-    <div class="section-title">
-      <h2>Support Ticket History</h2>
-      <span id="ticketCountBadge" class="badge">0 Tickets</span>
-    </div>
-    <div id="supportList" class="list"></div>
-  </div>
-
-</section>
-
-  <!-- ================= BILLING ================= -->
-<section id="billingPage" class="page">
-
-  <div class="card">
-    <div class="section-title">
-      <h2>Billing Overview</h2>
-      <span id="billingMiniBadge" class="badge">Loading</span>
-    </div>
-
-    <div id="billingDetails" class="list"></div>
-  </div>
-
-  <div class="card">
-    <div class="section-title">
-      <h2>Plan Details</h2>
-    </div>
-
-    <div id="planDetails" class="list"></div>
-  </div>
-
-</section>
-
-<!-- ================= SEO ================= -->
-<section id="seoPage" class="page">
-
-  <div class="card">
-    <div class="section-title">
-      <h2>SEO Health</h2>
-      <span id="seoMainBadge" class="badge">0/100</span>
-    </div>
-
-    <p id="seoMainText" class="small"></p>
-
-    <div class="progress">
-      <div id="seoProgress"></div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="section-title">
-      <h2>Search Preview</h2>
-    </div>
-
-    <div class="item">
-      <p class="small" id="seoPreviewUrl">https://clientsite.com</p>
-      <strong id="seoPreviewTitle" style="color:#93C5FD;">SEO Title</strong>
-      <p class="small" id="seoPreviewDescription">SEO description will show here.</p>
-    </div>
-  </div>
-
-</section>
-
-</main>
-</div>
-
-<style>
-.page{display:none!important;}
-.page.active{display:block!important;}
-
-.tabs{
-  display:flex!important;
-  gap:10px!important;
-  overflow-x:auto!important;
-  padding:10px 0 14px!important;
-  margin:18px 0!important;
-}
-
-.tabs button{
-  border:none!important;
-  background:rgba(255,255,255,.08)!important;
-  border:1px solid rgba(255,255,255,.12)!important;
-  color:#CBD5E1!important;
-  padding:12px 16px!important;
-  border-radius:999px!important;
-  font-weight:900!important;
-  white-space:nowrap!important;
-  font-size:14px!important;
-}
-
-.tabs button.active{
-  background:linear-gradient(135deg,#8B5CF6,#A78BFA)!important;
-  color:white!important;
-}
-
-.card{
-  margin-bottom:18px!important;
-}
-
-.summary-grid{
-  gap:18px!important;
-  margin-bottom:20px!important;
-}
-
-.form-grid{
-  display:grid!important;
-  grid-template-columns:1fr 1fr!important;
-  gap:14px!important;
-}
-
-.full{grid-column:1/-1!important;}
-
-label{
-  display:block!important;
-  color:#CBD5E1!important;
-  font-weight:900!important;
-  margin-bottom:7px!important;
-  font-size:13px!important;
-}
-
-input,select,textarea{
-  width:100%!important;
-  display:block!important;
-  background:rgba(255,255,255,.08)!important;
-  color:white!important;
-  border:1px solid rgba(255,255,255,.16)!important;
-  border-radius:14px!important;
-  padding:14px!important;
-  font-size:16px!important;
-  margin:0!important;
-}
-
-select option{
-  background:#0F172A!important;
-  color:white!important;
-}
-
-textarea{
-  min-height:130px!important;
-}
-
-.filter-grid{
-  display:grid!important;
-  grid-template-columns:repeat(4,1fr)!important;
-  gap:12px!important;
-}
-
-.chart{
-  min-height:220px!important;
-}
-
-@media(max-width:700px){
-  .main{padding:14px!important;}
-  .summary-grid,.form-grid,.filter-grid{
-    grid-template-columns:1fr!important;
-  }
-  .hero-actions{
-    display:grid!important;
-    grid-template-columns:1fr!important;
-    gap:10px!important;
-  }
-  .card{
-    margin-bottom:18px!important;
-    padding:18px!important;
-  }
-}
-
-  /* Activity Feed Fix */
-#activityFeed > div{
-  background:rgba(255,255,255,.05);
-  border:1px solid rgba(255,255,255,.08);
-  border-radius:18px;
-  padding:16px;
-  margin-bottom:12px;
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-}
-
-#activityFeed strong{
-  font-size:16px;
-  line-height:1.2;
-}
-
-#activityFeed .small{
-  font-size:13px;
-  color:#94a3b8;
-  line-height:1.4;
-}
-
-#activityFeed .badge{
-  margin-top:6px;
-  align-self:flex-start;
-}
-</style>
-
-<script>
-function showDashPage(page,btn){
-  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-  const target = document.getElementById(page + "Page");
-  if(target) target.classList.add("active");
-
-  document.querySelectorAll(".tabs button,.nav button").forEach(b=>b.classList.remove("active"));
-  document.querySelectorAll(`button[onclick*="${page}"]`).forEach(b=>b.classList.add("active"));
-  if(btn) btn.classList.add("active");
-
-  window.scrollTo({top:0,behavior:"smooth"});
-}
-</script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="app.js?v=100001"></script>
-<script src="dashboard.js?v=100001"></script>
-</body>
-</html>
+<script src="app.js"></script>
+<script src="dashboard.js?v=9100"></script>
 
 </body>
 </html>
