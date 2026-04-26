@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Client Dashboard | Giles Web Design</title>
+<title>Client Dashboard</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -13,7 +13,7 @@
 :root{
   --bg:#070A12;
   --panel:#0F172A;
-  --panel2:#111C33;
+  --panel2:#111827;
   --line:rgba(255,255,255,.08);
   --text:#F8FAFC;
   --muted:#94A3B8;
@@ -27,12 +27,14 @@ body{
   color:var(--text);
 }
 
+/* LAYOUT */
 .main{
-  padding:16px;
   max-width:1200px;
   margin:auto;
+  padding:16px;
 }
 
+/* HERO */
 .hero{
   background:linear-gradient(135deg,#0F172A,#111827);
   border:1px solid var(--line);
@@ -44,7 +46,12 @@ body{
 .hero h1{font-size:26px;}
 .hero p{color:var(--muted);margin-top:6px;}
 
-.actions{margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;}
+.actions{
+  margin-top:12px;
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
 
 .btn{
   padding:10px 14px;
@@ -55,6 +62,7 @@ body{
   font-weight:900;
 }
 
+/* TABS */
 .tabs{
   display:flex;
   gap:8px;
@@ -71,8 +79,11 @@ body{
   font-weight:900;
 }
 
-.tabs button.active{background:var(--purple);}
+.tabs button.active{
+  background:var(--purple);
+}
 
+/* GRID */
 .grid{
   display:grid;
   grid-template-columns:repeat(2,1fr);
@@ -87,10 +98,22 @@ body{
   padding:14px;
 }
 
-.card span{color:var(--muted);font-size:12px;}
-.card strong{font-size:22px;display:block;margin-top:6px;}
+.card span{
+  color:var(--muted);
+  font-size:12px;
+}
 
-.list{display:grid;gap:10px;}
+.card strong{
+  font-size:22px;
+  display:block;
+  margin-top:6px;
+}
+
+/* LIST */
+.list{
+  display:grid;
+  gap:10px;
+}
 
 .item{
   background:var(--panel2);
@@ -98,13 +121,33 @@ body{
   border-radius:12px;
   padding:12px;
   font-size:13px;
+  word-break:break-word;
 }
 
+/* FILTERS */
+.filter-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  margin-bottom:12px;
+}
+
+select{
+  width:100%;
+  padding:10px;
+  border-radius:10px;
+  border:1px solid var(--line);
+  background:#0F172A;
+  color:white;
+}
+
+/* PAGES */
 .page{display:none;}
 .page.active{display:block;}
 
-@media(min-width:700px){
-  .grid{grid-template-columns:repeat(4,1fr);}
+/* MOBILE */
+@media(max-width:700px){
+  .grid,.filter-grid{grid-template-columns:1fr;}
 }
 </style>
 </head>
@@ -113,22 +156,28 @@ body{
 
 <div class="main">
 
+<!-- HERO -->
 <div class="hero">
   <h1 id="welcomeTitle">Dashboard</h1>
   <p id="welcomeSubtitle">Your website performance overview</p>
+
   <div class="actions">
     <a id="heroLiveBtn" href="#" target="_blank" class="btn">View Website</a>
     <a href="editor.html" class="btn">Open Editor</a>
   </div>
 </div>
 
+<!-- TABS -->
 <div class="tabs">
   <button class="active" onclick="showPage('overview', this)">Overview</button>
   <button onclick="showPage('analytics', this)">Analytics</button>
   <button onclick="showPage('leads', this)">Leads</button>
+  <button onclick="showPage('requests', this)">Requests</button>
+  <button onclick="showPage('support', this)">Support</button>
   <button onclick="showPage('billing', this)">Billing</button>
 </div>
 
+<!-- OVERVIEW -->
 <div id="overviewPage" class="page active">
   <div class="grid">
     <div class="card"><span>Views</span><strong id="sumViewsMonth">0</strong></div>
@@ -136,32 +185,63 @@ body{
     <div class="card"><span>Requests</span><strong id="sumOpenRequests">0</strong></div>
     <div class="card"><span>Support</span><strong id="sumOpenTickets">0</strong></div>
   </div>
+
   <div class="card">
     <h3>Recent Leads</h3>
+    <div id="overviewLeads" class="list"></div>
+  </div>
+</div>
+
+<!-- ANALYTICS -->
+<div id="analyticsPage" class="page">
+
+  <div class="grid">
+    <div class="card"><span>Total Views</span><strong id="analyticsTotal">0</strong></div>
+    <div class="card"><span>7 Day</span><strong id="analyticsWeek">0</strong></div>
+    <div class="card"><span>Top Source</span><strong id="analyticsSource">—</strong></div>
+    <div class="card"><span>Top Device</span><strong id="analyticsDevice">—</strong></div>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="filter-grid">
+    <select id="visitMonthFilter" onchange="renderVisitsList()"></select>
+    <select id="visitSourceFilter" onchange="renderVisitsList()"></select>
+    <select id="visitDeviceFilter" onchange="renderVisitsList()"></select>
+    <select id="visitPageFilter" onchange="renderVisitsList()"></select>
+  </div>
+
+  <div class="card">
+    <h3>All Visits</h3>
+    <div id="visitsList" class="list"></div>
+  </div>
+
+</div>
+
+<!-- LEADS -->
+<div id="leadsPage" class="page">
+  <div class="card">
+    <h3>All Leads</h3>
     <div id="leadsList" class="list"></div>
   </div>
 </div>
 
-<div id="analyticsPage" class="page">
-  <div class="grid">
-    <div class="card"><span>Total Views</span><strong id="analyticsTotal">0</strong></div>
-    <div class="card"><span>7 Day</span><strong id="analyticsWeek">0</strong></div>
-    <div class="card"><span>Top Source</span><strong id="analyticsSource">â</strong></div>
-    <div class="card"><span>Top Device</span><strong id="analyticsDevice">â</strong></div>
-  </div>
+<!-- REQUESTS -->
+<div id="requestsPage" class="page">
   <div class="card">
-    <h3>Visits</h3>
-    <div id="visitsList" class="list"></div>
+    <h3>Requests</h3>
+    <div id="requestsList" class="list"></div>
   </div>
 </div>
 
-<div id="leadsPage" class="page">
+<!-- SUPPORT -->
+<div id="supportPage" class="page">
   <div class="card">
-    <h3>All Leads</h3>
-    <div id="fullLeadsList" class="list"></div>
+    <h3>Support Tickets</h3>
+    <div id="supportList" class="list"></div>
   </div>
 </div>
 
+<!-- BILLING -->
 <div id="billingPage" class="page">
   <div class="card">
     <h3>Billing</h3>
@@ -175,6 +255,7 @@ body{
 function showPage(page,btn){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active'));
+
   document.getElementById(page+'Page').classList.add('active');
   btn.classList.add('active');
 }
@@ -182,7 +263,7 @@ function showPage(page,btn){
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="app.js"></script>
-<script src="dashboard.js?v=1100"></script>
+<script src="dashboard.js?v=2000"></script>
 
 </body>
 </html>
