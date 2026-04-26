@@ -1,3 +1,9 @@
+function debugLog(msg){
+  const box = document.getElementById("debugBox");
+  if(box) box.innerHTML += `<div>${msg}</div>`;
+  console.log(msg);
+}
+
 let currentUser = null;
 let clientSite = null;
 let analyticsEvents = [];
