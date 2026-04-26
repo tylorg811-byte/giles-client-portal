@@ -3,284 +3,131 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Client Dashboard | Giles Web Design</title>
+<title>Client Dashboard</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 
-:root{
-  --bg:#070A12;
-  --bg2:#0B1020;
-  --panel:#0F172A;
-  --panel2:#111827;
-  --soft:#152033;
-  --line:rgba(255,255,255,.08);
-  --text:#F8FAFC;
-  --muted:#94A3B8;
-  --muted2:#CBD5E1;
-  --purple:#8B5CF6;
-  --purple2:#A78BFA;
-  --blue:#38BDF8;
-  --green:#22C55E;
-  --red:#EF4444;
-  --orange:#F97316;
-  --shadow:0 25px 80px rgba(0,0,0,.35);
-}
-
-/* BASE */
 body{
   font-family:'Inter',sans-serif;
-  background:
-    radial-gradient(circle at 10% 0%,rgba(139,92,246,.25),transparent 35%),
-    radial-gradient(circle at 90% 5%,rgba(56,189,248,.15),transparent 30%),
-    linear-gradient(180deg,var(--bg),#090D18 45%,#070A12);
-  color:var(--text);
-  min-height:100vh;
+  background:#070A12;
+  color:#fff;
 }
 
-/* LAYOUT */
-.main{
-  max-width:1200px;
+.container{
+  max-width:1100px;
   margin:auto;
-  padding:18px;
-}
-
-/* HERO */
-.hero{
-  background:linear-gradient(135deg,#0F172A,#111827);
-  border:1px solid var(--line);
-  border-radius:22px;
   padding:20px;
-  margin-bottom:16px;
-  box-shadow:var(--shadow);
 }
 
-.hero h1{
-  font-size:30px;
-  letter-spacing:-1px;
+.card{
+  background:#0F172A;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:16px;
+  padding:18px;
+  margin-bottom:14px;
 }
 
-.hero p{
-  color:var(--muted2);
-  margin-top:6px;
-}
-
-.actions{
-  margin-top:14px;
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-}
-
-/* BUTTONS */
-.btn{
-  padding:10px 15px;
-  border-radius:14px;
-  background:linear-gradient(135deg,var(--purple),var(--purple2));
-  color:white;
-  text-decoration:none;
-  font-weight:900;
-  transition:.2s;
-}
-
-.btn:hover{
-  transform:translateY(-2px);
-  box-shadow:0 10px 25px rgba(139,92,246,.4);
-}
-
-/* TABS */
-.tabs{
-  display:flex;
-  gap:8px;
-  overflow:auto;
-  margin-bottom:16px;
-}
-
-.tabs button{
-  border:none;
-  background:rgba(255,255,255,.05);
-  padding:10px 14px;
-  border-radius:999px;
-  color:#cbd5e1;
-  font-weight:900;
-  cursor:pointer;
-}
-
-.tabs button.active{
-  background:linear-gradient(135deg,var(--purple),var(--purple2));
-  color:white;
-}
-
-/* GRID */
 .grid{
   display:grid;
   grid-template-columns:repeat(2,1fr);
-  gap:12px;
-  margin-bottom:16px;
-}
-
-/* CARDS */
-.card{
-  background:rgba(15,23,42,.9);
-  border:1px solid var(--line);
-  border-radius:18px;
-  padding:16px;
-  box-shadow:0 15px 45px rgba(0,0,0,.25);
-  transition:.2s;
-}
-
-.card:hover{
-  transform:translateY(-2px);
-}
-
-/* STATS */
-.card span{
-  color:var(--muted);
-  font-size:12px;
-  font-weight:800;
-}
-
-.card strong{
-  font-size:26px;
-  display:block;
-  margin-top:6px;
-}
-
-/* LIST */
-.list{
-  display:grid;
   gap:10px;
 }
 
-.item{
-  background:rgba(255,255,255,.05);
-  border:1px solid var(--line);
-  border-radius:14px;
-  padding:12px;
-  font-size:13px;
-}
+h1{font-size:26px;}
+p{color:#94A3B8;}
 
-/* FILTERS */
-.filter-grid{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:10px;
-  margin-bottom:12px;
-}
-
-select{
-  width:100%;
-  padding:10px;
-  border-radius:10px;
-  border:1px solid var(--line);
-  background:#0F172A;
+button{
+  border:none;
+  padding:10px 14px;
+  border-radius:12px;
+  background:#8B5CF6;
   color:white;
+  font-weight:700;
+  cursor:pointer;
 }
 
-/* PAGES */
+.tabs{
+  display:flex;
+  gap:8px;
+  margin:16px 0;
+}
+
+.tabs button{
+  background:#1E293B;
+}
+
+.tabs button.active{
+  background:#8B5CF6;
+}
+
 .page{display:none;}
 .page.active{display:block;}
 
-/* MOBILE */
+input,select,textarea{
+  width:100%;
+  padding:10px;
+  margin-top:8px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.1);
+  background:#020617;
+  color:white;
+}
+
+.list{margin-top:10px;}
+.item{
+  padding:10px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+
 @media(max-width:700px){
-  .grid,.filter-grid{grid-template-columns:1fr;}
-  .hero h1{font-size:24px;}
+  .grid{grid-template-columns:1fr;}
 }
 </style>
 </head>
 
   <body>
 
-<div class="main">
+<div class="container">
 
-<!-- HERO -->
-<div class="hero">
-  <h1 id="welcomeTitle">Dashboard</h1>
-  <p id="welcomeSubtitle">Loading your website data...</p>
+<h1 id="welcomeTitle">Dashboard</h1>
+<p id="welcomeSubtitle">Loading...</p>
 
-  <div class="actions">
-    <a id="heroLiveBtn" href="#" target="_blank" class="btn">View Website</a>
-    <a href="editor.html" class="btn">Open Editor</a>
-  </div>
-</div>
-
-<!-- SUMMARY -->
 <div class="grid">
-  <div class="card"><span>Views This Month</span><strong id="sumViewsMonth">0</strong></div>
-  <div class="card"><span>Leads This Month</span><strong id="sumLeadsMonth">0</strong></div>
-  <div class="card"><span>Open Requests</span><strong id="sumOpenRequests">0</strong></div>
-  <div class="card"><span>Open Tickets</span><strong id="sumOpenTickets">0</strong></div>
+  <div class="card"><span>Views</span><h2 id="sumViewsMonth">0</h2></div>
+  <div class="card"><span>Leads</span><h2 id="sumLeadsMonth">0</h2></div>
+  <div class="card"><span>Requests</span><h2 id="sumOpenRequests">0</h2></div>
+  <div class="card"><span>Tickets</span><h2 id="sumOpenTickets">0</h2></div>
 </div>
 
-<!-- TABS -->
 <div class="tabs">
-  <button class="active" onclick="showDashPage('overview', this)">Overview</button>
-  <button onclick="showDashPage('analytics', this)">Analytics</button>
-  <button onclick="showDashPage('leads', this)">Leads</button>
-  <button onclick="showDashPage('requests', this)">Requests</button>
-  <button onclick="showDashPage('support', this)">Support</button>
-  <button onclick="showDashPage('billing', this)">Billing</button>
-  <button onclick="showDashPage('seo', this)">SEO</button>
+  <button class="active" onclick="showPage('overview',this)">Overview</button>
+  <button onclick="showPage('analytics',this)">Analytics</button>
+  <button onclick="showPage('requests',this)">Requests</button>
+  <button onclick="showPage('support',this)">Support</button>
 </div>
 
-<!-- OVERVIEW -->
 <div id="overviewPage" class="page active">
-
   <div class="card">
-    <h3>Website Summary</h3>
+    <h3>Summary</h3>
     <p id="summaryText"></p>
-    <div id="overviewChart" class="chart"></div>
   </div>
-
-  <div class="card">
-    <h3>Recent Leads</h3>
-    <div id="overviewLeads" class="list"></div>
-  </div>
-
-  <div class="card">
-    <h3>Open Support Tickets</h3>
-    <div id="overviewTickets" class="list"></div>
-  </div>
-
 </div>
 
-<!-- ANALYTICS -->
 <div id="analyticsPage" class="page">
-
-  <div class="grid">
-    <div class="card"><span>Total Views</span><strong id="analyticsTotal">0</strong></div>
-    <div class="card"><span>Last 7 Days</span><strong id="analyticsWeek">0</strong></div>
-    <div class="card"><span>Top Source</span><strong id="analyticsSource">—</strong></div>
-    <div class="card"><span>Top Device</span><strong id="analyticsDevice">—</strong></div>
-  </div>
-
-  <div class="filter-grid">
-    <select id="visitMonthFilter" onchange="renderVisitsList()"></select>
-    <select id="visitSourceFilter" onchange="renderVisitsList()"></select>
-    <select id="visitDeviceFilter" onchange="renderVisitsList()"></select>
-    <select id="visitPageFilter" onchange="renderVisitsList()"></select>
+  <div class="card">
+    <h3>Total Views</h3>
+    <h2 id="analyticsTotal">0</h2>
   </div>
 
   <div class="card">
     <h3>All Visits</h3>
-    <p id="visitCountBadge"></p>
     <div id="visitsList" class="list"></div>
   </div>
-
 </div>
 
-<!-- LEADS -->
-<div id="leadsPage" class="page">
-  <div class="card">
-    <h3>All Leads</h3>
-    <p id="leadCountBadge"></p>
-    <div id="leadsList" class="list"></div>
-  </div>
-</div>
-
-<!-- REQUESTS -->
 <div id="requestsPage" class="page">
 
   <div class="card">
@@ -289,98 +136,52 @@ select{
     <select id="requestType">
       <option>Text Change</option>
       <option>Image Change</option>
-      <option>New Section</option>
-      <option>SEO Update</option>
-      <option>Other</option>
     </select>
 
-    <input id="requestPage" placeholder="Page name">
-    <textarea id="requestMessage" placeholder="Describe your request..."></textarea>
+    <input id="requestPage" placeholder="Page">
+    <textarea id="requestMessage" placeholder="Describe..."></textarea>
 
-    <button class="btn" onclick="submitChangeRequest()">Submit</button>
+    <button onclick="submitChangeRequest()">Submit</button>
     <p id="requestMessageStatus"></p>
   </div>
 
   <div class="card">
-    <h3>Request Summary</h3>
-    <div id="requestsSummary"></div>
-  </div>
-
-  <div class="card">
-    <h3>All Requests</h3>
+    <h3>Requests</h3>
     <div id="requestsList" class="list"></div>
   </div>
 
 </div>
 
-<!-- SUPPORT -->
 <div id="supportPage" class="page">
 
   <div class="card">
-    <h3>Submit Support Ticket</h3>
-
-    <select id="ticketType">
-      <option>Website Issue</option>
-      <option>Editor Issue</option>
-      <option>Billing Issue</option>
-      <option>Login Issue</option>
-      <option>Form Issue</option>
-    </select>
-
-    <select id="ticketPriority">
-      <option>normal</option>
-      <option>high</option>
-      <option>urgent</option>
-    </select>
+    <h3>Support</h3>
 
     <input id="ticketSubject" placeholder="Subject">
-    <textarea id="ticketMessage" placeholder="Describe issue..."></textarea>
+    <textarea id="ticketMessage"></textarea>
 
-    <button class="btn" onclick="submitSupportTicket()">Submit</button>
-    <p id="ticketMessageStatus"></p>
+    <button onclick="submitSupportTicket()">Submit</button>
   </div>
 
   <div class="card">
-    <h3>Support Summary</h3>
-    <div id="supportSummary"></div>
-  </div>
-
-  <div class="card">
-    <h3>All Tickets</h3>
-    <p id="ticketCountBadge"></p>
-    <div id="supportList" class="list"></div>
+    <div id="supportList"></div>
   </div>
 
 </div>
 
-<!-- BILLING -->
-<div id="billingPage" class="page">
-  <div class="card">
-    <h3>Billing Details</h3>
-    <div id="billingDetails"></div>
-  </div>
+  <script>
+function showPage(page,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active'));
 
-  <div class="card">
-    <h3>Plan</h3>
-    <div id="planDetails"></div>
-  </div>
-</div>
+  document.getElementById(page+'Page').classList.add('active');
+  btn.classList.add('active');
+}
+</script>
 
-<!-- SEO -->
-<div id="seoPage" class="page">
-  <div class="card">
-    <h3>SEO Score</h3>
-    <div id="seoMainBadge"></div>
-    <p id="seoMainText"></p>
-    <div class="progress"><div id="seoProgress"></div></div>
-  </div>
-</div>
-
-</div>
-
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="app.js"></script>
-<script src="dashboard.js?v=501"></script>
+<script src="dashboard.js?v=9999"></script>
 
 </body>
 </html>
