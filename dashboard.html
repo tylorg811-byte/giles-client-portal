@@ -395,71 +395,6 @@ p{
   .card{padding:14px !important;}
 }
 
-.activity-card{
-  overflow:hidden;
-  position:relative;
-}
-
-.activity-feed{
-  display:grid;
-  gap:10px;
-}
-
-.activity-item{
-  display:grid;
-  grid-template-columns:42px 1fr;
-  gap:12px;
-  align-items:start;
-  background:rgba(255,255,255,.045);
-  border:1px solid rgba(255,255,255,.08);
-  border-radius:16px;
-  padding:13px;
-}
-
-.activity-icon{
-  width:42px;
-  height:42px;
-  border-radius:14px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:900;
-  background:linear-gradient(135deg,#8B5CF6,#A78BFA);
-  color:white;
-}
-
-.activity-item strong{
-  display:block;
-  color:white;
-  margin-bottom:4px;
-}
-
-.activity-meta{
-  color:#94A3B8;
-  font-size:12px;
-  line-height:1.45;
-}
-
-.activity-pill{
-  display:inline-flex;
-  margin-top:7px;
-  padding:5px 8px;
-  border-radius:999px;
-  font-size:10px;
-  font-weight:900;
-  background:rgba(139,92,246,.14);
-  color:#d8b4fe;
-  border:1px solid rgba(139,92,246,.24);
-}
-
-.activity-empty{
-  padding:18px;
-  text-align:center;
-  border-radius:16px;
-  border:1px dashed rgba(255,255,255,.14);
-  color:#94A3B8;
-}
-    
 </style>
 </head>
 
@@ -555,16 +490,12 @@ p{
           <div id="overviewChart" class="chart"></div>
         </div>
 
-        <div class="card activity-card">
+        <div class="card">
   <div class="section-title">
-    <div>
-      <h2>Live Activity</h2>
-      <p class="small">Recent movement across your website, leads, requests, and support.</p>
-    </div>
-    <span class="badge good">Live Feed</span>
+    <h2>Live Activity</h2>
+    <span class="badge good">Recent</span>
   </div>
-
-  <div id="activityFeed" class="activity-feed"></div>
+  <div id="activityFeed" class="list"></div>
 </div>
 
         <div class="card">
