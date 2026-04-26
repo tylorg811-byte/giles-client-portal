@@ -109,18 +109,33 @@ async function loadSupportTickets(){
 }
 
 async function loadAnalytics(){
-  const { data, error } = await db
+  const allEvents = [];
+
+  const legacy = await db
     .from("site_analytics_events")
     .select("*")
     .order("created_at", { ascending:false });
 
-  if(error){
-    console.error(error);
-    analyticsEvents = [];
-    return;
+  if(!legacy.error && legacy.data){
+    allEvents.push(...legacy.data.map(event=>normalizeAnalyticsEvent(event)));
+  }else if(legacy.error){
+    console.warn("Legacy analytics table not loaded:", legacy.error.message || legacy.error);
   }
 
-  analyticsEvents = data || [];
+  const siteAnalytics = await db
+    .from("site_analytics")
+    .select("*")
+    .order("created_at", { ascending:false });
+
+  if(!siteAnalytics.error && siteAnalytics.data){
+    allEvents.push(...siteAnalytics.data.map(event=>normalizeAnalyticsEvent(event)));
+  }else if(siteAnalytics.error){
+    console.warn("New site_analytics table not loaded:", siteAnalytics.error.message || siteAnalytics.error);
+  }
+
+  analyticsEvents = allEvents
+    .filter(Boolean)
+    .sort((a,b)=>new Date(b.created_at || 0) - new Date(a.created_at || 0));
 }
 
 async function loadLeads(){
@@ -211,6 +226,127 @@ function showAdminPage(page){
     document.body.classList.remove("sidebar-open");
   }
 }
+
+
+function normalizeAnalyticsEvent(event){
+  if(!event) return null;
+
+  const clientUserId =
+    event.client_user_id ||
+    getClientUserIdFromTrackingEvent(event) ||
+    "";
+
+  return {
+    ...event,
+    client_user_id:clientUserId,
+    page:event.page || event.path || "/",
+    path:event.path || event.page || "/",
+    referrer:event.referrer || "direct",
+    device:event.device || detectDeviceFromUserAgent(event.user_agent),
+    browser:event.browser || detectBrowserFromUserAgent(event.user_agent),
+    created_at:event.created_at || new Date().toISOString()
+  };
+}
+
+function getClientUserIdFromTrackingEvent(event){
+  const siteId = String(event.site_id || "").toLowerCase().trim();
+  const page = String(event.page || "").toLowerCase();
+  const title = String(event.title || "").toLowerCase();
+
+  if(!clientSites.length) return "";
+
+  let site = clientSites.find(item=>{
+    return getClientTrackingIds(item).includes(siteId);
+  });
+
+  if(!site && siteId){
+    site = clientSites.find(item=>{
+      const slug = makeSlug(item.business_name || "");
+      return slug && slug === siteId;
+    });
+  }
+
+  if(!site && page.includes("sunset")){
+    site = clientSites.find(item=>String(item.business_name || "").toLowerCase().includes("sunset"));
+  }
+
+  if(!site && title.includes("sunset")){
+    site = clientSites.find(item=>String(item.business_name || "").toLowerCase().includes("sunset"));
+  }
+
+  return site?.client_user_id || "";
+}
+
+function makeSlug(value){
+  return String(value || "")
+    .toLowerCase()
+    .trim()
+    .replace(/^https?:\/\//,"")
+    .replace(/^www\./,"")
+    .replace(/\/$/,"")
+    .replace(/[^a-z0-9]+/g,"-")
+    .replace(/^-|-$/g,"");
+}
+
+function getClientTrackingIds(site){
+  if(!site) return [];
+
+  const ids = [
+    site.client_user_id,
+    site.tracking_site_id,
+    site.site_id,
+    site.slug,
+    site.project_slug,
+    site.domain,
+    site.business_name
+  ];
+
+  if(site.business_name) ids.push(makeSlug(site.business_name));
+  if(site.domain) ids.push(makeSlug(site.domain));
+
+  return [...new Set(ids.filter(Boolean).map(value=>String(value).toLowerCase().trim()))];
+}
+
+function analyticsBelongsToSite(event, site){
+  if(!event || !site) return false;
+
+  if(event.client_user_id && site.client_user_id && event.client_user_id === site.client_user_id){
+    return true;
+  }
+
+  const ids = getClientTrackingIds(site);
+  const eventSiteId = String(event.site_id || "").toLowerCase().trim();
+  const eventPage = String(event.page || "").toLowerCase();
+  const eventTitle = String(event.title || "").toLowerCase();
+
+  if(eventSiteId && ids.includes(eventSiteId)) return true;
+
+  return ids.some(id=>{
+    if(!id || id.length < 3) return false;
+    return eventPage.includes(id) || eventTitle.includes(id);
+  });
+}
+
+function detectDeviceFromUserAgent(userAgent){
+  const ua = String(userAgent || "").toLowerCase();
+
+  if(/iphone|android.*mobile|windows phone/.test(ua)) return "mobile";
+  if(/ipad|tablet|android/.test(ua)) return "tablet";
+
+  return "desktop";
+}
+
+function detectBrowserFromUserAgent(userAgent){
+  const ua = String(userAgent || "").toLowerCase();
+
+  if(ua.includes("edg/")) return "Edge";
+  if(ua.includes("chrome/") && !ua.includes("edg/")) return "Chrome";
+  if(ua.includes("safari/") && !ua.includes("chrome/")) return "Safari";
+  if(ua.includes("firefox/")) return "Firefox";
+
+  return "Unknown";
+}
+
 
 function renderStats(){
   const openSupport = supportTickets.filter(ticket=>!["closed","resolved"].includes(String(ticket.status || "").toLowerCase())).length;
@@ -1079,7 +1215,7 @@ function renderAdminVisitsList(){
     const eventPage = event.page || "unknown";
 
     return (
-      (client === "all" || event.client_user_id === client) &&
+      (client === "all" || analyticsBelongsToSite(event, clientSites.find(site=>site.client_user_id === client))) &&
       (month === "all" || eventMonth === month) &&
       (source === "all" || eventSource === source) &&
       (device === "all" || eventDevice === device) &&
@@ -1223,7 +1359,7 @@ function loadClientAnalyticsView(){
   }
 
   const site = clientSites.find(s=>s.client_user_id === id);
-  const events = analyticsEvents.filter(e=>e.client_user_id === id);
+  const events = analyticsEvents.filter(e=>analyticsBelongsToSite(e, site));
   const leads = leadEvents.filter(l=>l.client_user_id === id);
 
   container.innerHTML = `
@@ -1763,7 +1899,8 @@ async function releaseDomain(id){
 }
 
 function getClientAnalytics(clientUserId){
-  const events = analyticsEvents.filter(e=>e.client_user_id === clientUserId);
+  const site = clientSites.find(item=>item.client_user_id === clientUserId);
+  const events = analyticsEvents.filter(event=>analyticsBelongsToSite(event, site));
 
   return {
     today:events.filter(e=>isToday(e.created_at)).length,
