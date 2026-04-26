@@ -402,57 +402,68 @@ async function submitChangeRequest(){
   const type = getSelectValue("requestType");
   const page = cleanValue("requestPage");
   const message = cleanValue("requestMessage");
-  const file = document.getElementById("requestImage").files[0];
+  const fileInput = document.getElementById("requestImage");
+  const file = fileInput?.files?.[0] || null;
 
   if(!message){
     setText("requestMessageStatus","Please describe what you need changed.");
     return;
   }
 
+  setText("requestMessageStatus","Submitting request...");
+
   let imageUrl = null;
 
-  // 🔥 Upload image if exists
   if(file){
-    const filePath = `${currentUser.id}/${Date.now()}-${file.name}`;
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g,"-");
+    const filePath = `${currentUser.id}/${Date.now()}-${safeName}`;
 
-    const { error: uploadError } = await supabase.storage
+    const { error: uploadError } = await db.storage
       .from("request-uploads")
-      .upload(filePath, file);
+      .upload(filePath, file, { upsert:false });
 
     if(uploadError){
-      console.error(uploadError);
-      setText("requestMessageStatus","Image upload failed.");
+      console.error("Image upload error:", uploadError);
+      setText("requestMessageStatus","Image upload failed. Check the request-uploads bucket.");
       return;
     }
 
-    const { data } = supabase.storage
+    const { data } = db.storage
       .from("request-uploads")
       .getPublicUrl(filePath);
 
-    imageUrl = data.publicUrl;
+    imageUrl = data?.publicUrl || null;
   }
 
   const payload = {
-    client_user_id: currentUser.id,
-    client_email: currentUser.email,
-    business_name: clientSite?.business_name || "",
-    request_type: type,
+    client_user_id:currentUser.id,
+    client_email:currentUser.email,
+    business_name:clientSite?.business_name || "",
+    request_type:type,
     page,
     message,
-    image_url: imageUrl,
-    status: "new",
-    created_at: new Date().toISOString()
+    image_url:imageUrl,
+    status:"new",
+    created_at:new Date().toISOString()
   };
 
   const { error } = await db.from("change_requests").insert(payload);
 
   if(error){
-    console.error(error);
-    setText("requestMessageStatus","Request failed.");
+    console.error("Change request error:", error);
+    setText("requestMessageStatus","Request failed. Please try again.");
     return;
   }
 
-  setText("requestMessageStatus","Request submitted.");
+  setText("requestMessageStatus","Request submitted successfully.");
+  setValue("requestPage","");
+  setValue("requestMessage","");
+  if(fileInput) fileInput.value = "";
+
+  await loadChangeRequests();
+  renderRequests();
+  renderOverview();
+  renderSummaryStats();
 }
 
   const payload = {
