@@ -16,16 +16,35 @@ const LIVE_BASE_URL = "https://giles-sites.netlify.app";
 document.addEventListener("DOMContentLoaded", initDashboard);
 
 async function initDashboard(){
-  console.log("DASHBOARD LOADING...");
+  debugLog("INIT START");
 
-  currentUser = await checkUser();
-  if(!currentUser){
-    console.error("No user");
+  try{
+    currentUser = await checkUser();
+    debugLog("USER: " + (currentUser ? currentUser.email : "null"));
+  }catch(e){
+    debugLog("USER ERROR: " + e.message);
     return;
   }
 
-  await loadDashboardData();
-  renderDashboard();
+  if(!currentUser){
+    debugLog("NO USER FOUND");
+    return;
+  }
+
+  try{
+    await loadDashboardData();
+    debugLog("DATA LOADED: analytics " + analyticsEvents.length);
+  }catch(e){
+    debugLog("DATA ERROR: " + e.message);
+    return;
+  }
+
+  try{
+    renderDashboard();
+    debugLog("RENDER DONE");
+  }catch(e){
+    debugLog("RENDER ERROR: " + e.message);
+  }
 }
 
 // LOAD ALL DATA
