@@ -108,15 +108,134 @@ async function loadClientSite(){
 
 // ANALYTICS
 async function loadAnalytics(){
-  const { data, error } = await db
+  const allEvents = [];
+
+  const legacy = await db
     .from("site_analytics_events")
     .select("*")
     .eq("client_user_id", activeClientUserId)
     .order("created_at", { ascending:false });
 
-  if(error) console.error(error);
-  analyticsEvents = data || [];
+  if(!legacy.error && legacy.data){
+    allEvents.push(...legacy.data.map(event=>normalizeDashboardAnalyticsEvent(event)));
+  }else if(legacy.error){
+    console.warn("Legacy analytics not loaded:", legacy.error.message || legacy.error);
+  }
+
+  const newAnalytics = await db
+    .from("site_analytics")
+    .select("*")
+    .order("created_at", { ascending:false });
+
+  if(!newAnalytics.error && newAnalytics.data){
+    allEvents.push(
+      ...newAnalytics.data
+        .map(event=>normalizeDashboardAnalyticsEvent(event))
+        .filter(event=>dashboardAnalyticsBelongsToActiveClient(event))
+    );
+  }else if(newAnalytics.error){
+    console.warn("New site_analytics not loaded:", newAnalytics.error.message || newAnalytics.error);
+  }
+
+  analyticsEvents = allEvents
+    .filter(Boolean)
+    .sort((a,b)=>new Date(b.created_at || 0) - new Date(a.created_at || 0));
 }
+
+function normalizeDashboardAnalyticsEvent(event){
+  if(!event) return null;
+
+  return {
+    ...event,
+    client_user_id:event.client_user_id || activeClientUserId || "",
+    page:event.page || event.path || "/",
+    path:event.path || event.page || "/",
+    referrer:event.referrer || "direct",
+    device:event.device || detectDashboardDeviceFromUserAgent(event.user_agent),
+    browser:event.browser || detectDashboardBrowserFromUserAgent(event.user_agent),
+    created_at:event.created_at || new Date().toISOString()
+  };
+}
+
+function dashboardAnalyticsBelongsToActiveClient(event){
+  if(!event) return false;
+
+  if(event.client_user_id && event.client_user_id === activeClientUserId){
+    return true;
+  }
+
+  if(!clientSite) return false;
+
+  const ids = getDashboardTrackingIds(clientSite);
+  const siteId = String(event.site_id || "").toLowerCase().trim();
+  const page = String(event.page || "").toLowerCase();
+  const title = String(event.title || "").toLowerCase();
+
+  if(siteId && ids.includes(siteId)){
+    return true;
+  }
+
+  return ids.some(id=>{
+    if(!id || id.length < 3) return false;
+    return page.includes(id) || title.includes(id);
+  });
+}
+
+function getDashboardTrackingIds(site){
+  if(!site) return [];
+
+  const ids = [
+    site.client_user_id,
+    site.tracking_site_id,
+    site.site_id,
+    site.slug,
+    site.project_slug,
+    site.domain,
+    site.business_name
+  ];
+
+  if(site.business_name){
+    ids.push(makeDashboardSlug(site.business_name));
+  }
+
+  if(site.domain){
+    ids.push(makeDashboardSlug(site.domain));
+  }
+
+  return [...new Set(ids.filter(Boolean).map(value=>String(value).toLowerCase().trim()))];
+}
+
+function makeDashboardSlug(value){
+  return String(value || "")
+    .toLowerCase()
+    .trim()
+    .replace(/^https?:\/\//,"")
+    .replace(/^www\./,"")
+    .replace(/\/$/,"")
+    .replace(/[^a-z0-9]+/g,"-")
+    .replace(/^-|-$/g,"");
+}
+
+function detectDashboardDeviceFromUserAgent(userAgent){
+  const ua = String(userAgent || "").toLowerCase();
+
+  if(/iphone|android.*mobile|windows phone/.test(ua)) return "mobile";
+  if(/ipad|tablet|android/.test(ua)) return "tablet";
+
+  return "desktop";
+}
+
+function detectDashboardBrowserFromUserAgent(userAgent){
+  const ua = String(userAgent || "").toLowerCase();
+
+  if(ua.includes("edg/")) return "Edge";
+  if(ua.includes("chrome/") && !ua.includes("edg/")) return "Chrome";
+  if(ua.includes("safari/") && !ua.includes("chrome/")) return "Safari";
+  if(ua.includes("firefox/")) return "Firefox";
+
+  return "Unknown";
+}
+
 
 // LEADS
 async function loadLeads(){
