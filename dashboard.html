@@ -1,158 +1,264 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Client Dashboard</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Client Dashboard | Giles Web Design</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
 
 <style>
+
 *{margin:0;padding:0;box-sizing:border-box;}
 
 :root{
+
   --bg:#070A12;
+
   --panel:#0F172A;
+
   --panel2:#111827;
+
   --line:rgba(255,255,255,.08);
+
   --text:#F8FAFC;
+
   --muted:#94A3B8;
+
   --purple:#8B5CF6;
+
   --purple2:#A78BFA;
+
 }
 
 body{
+
   font-family:'Inter',sans-serif;
+
   background:linear-gradient(180deg,#070A12,#090D18);
+
   color:var(--text);
+
 }
 
-/* LAYOUT */
+/* MAIN */
+
 .main{
+
   max-width:1200px;
+
   margin:auto;
+
   padding:16px;
+
 }
 
 /* HERO */
+
 .hero{
+
   background:linear-gradient(135deg,#0F172A,#111827);
+
   border:1px solid var(--line);
+
   border-radius:18px;
+
   padding:18px;
+
   margin-bottom:14px;
+
 }
 
 .hero h1{font-size:26px;}
+
 .hero p{color:var(--muted);margin-top:6px;}
 
 .actions{
+
   margin-top:12px;
+
   display:flex;
+
   gap:10px;
+
   flex-wrap:wrap;
+
 }
 
 .btn{
+
   padding:10px 14px;
+
   border-radius:12px;
+
   background:linear-gradient(135deg,var(--purple),var(--purple2));
+
   color:white;
+
   text-decoration:none;
+
   font-weight:900;
+
 }
 
 /* TABS */
+
 .tabs{
+
   display:flex;
+
   gap:8px;
+
   overflow:auto;
+
   margin-bottom:14px;
+
 }
 
 .tabs button{
+
   border:none;
+
   background:rgba(255,255,255,.05);
+
   padding:10px 14px;
+
   border-radius:999px;
+
   color:white;
+
   font-weight:900;
+
 }
 
 .tabs button.active{
+
   background:var(--purple);
+
 }
 
 /* GRID */
+
 .grid{
+
   display:grid;
+
   grid-template-columns:repeat(2,1fr);
+
   gap:10px;
+
   margin-bottom:14px;
+
 }
 
 .card{
+
   background:var(--panel);
+
   border:1px solid var(--line);
+
   border-radius:14px;
+
   padding:14px;
+
 }
 
 .card span{
+
   color:var(--muted);
+
   font-size:12px;
+
 }
 
 .card strong{
+
   font-size:22px;
+
   display:block;
+
   margin-top:6px;
+
 }
 
 /* LIST */
+
 .list{
+
   display:grid;
+
   gap:10px;
+
 }
 
 .item{
+
   background:var(--panel2);
+
   border:1px solid var(--line);
+
   border-radius:12px;
+
   padding:12px;
+
   font-size:13px;
+
   word-break:break-word;
+
 }
 
 /* FILTERS */
+
 .filter-grid{
+
   display:grid;
+
   grid-template-columns:repeat(4,1fr);
+
   gap:10px;
+
   margin-bottom:12px;
+
 }
 
 select{
+
   width:100%;
+
   padding:10px;
+
   border-radius:10px;
+
   border:1px solid var(--line);
+
   background:#0F172A;
+
   color:white;
+
 }
 
 /* PAGES */
+
 .page{display:none;}
+
 .page.active{display:block;}
 
-/* MOBILE */
 @media(max-width:700px){
+
   .grid,.filter-grid{grid-template-columns:1fr;}
+
 }
+
 </style>
+
 </head>
 
-<body>
+  <body>
 
 <div class="main">
 
@@ -202,7 +308,6 @@ select{
     <div class="card"><span>Top Device</span><strong id="analyticsDevice">—</strong></div>
   </div>
 
-  <!-- FILTERS -->
   <div class="filter-grid">
     <select id="visitMonthFilter" onchange="renderVisitsList()"></select>
     <select id="visitSourceFilter" onchange="renderVisitsList()"></select>
@@ -255,7 +360,6 @@ select{
 function showPage(page,btn){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active'));
-
   document.getElementById(page+'Page').classList.add('active');
   btn.classList.add('active');
 }
@@ -263,7 +367,7 @@ function showPage(page,btn){
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="app.js"></script>
-<script src="dashboard.js?v=2000"></script>
+<script src="dashboard.js?v=3000"></script>
 
 </body>
 </html>
