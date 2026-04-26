@@ -402,11 +402,58 @@ async function submitChangeRequest(){
   const type = getSelectValue("requestType");
   const page = cleanValue("requestPage");
   const message = cleanValue("requestMessage");
+  const file = document.getElementById("requestImage").files[0];
 
   if(!message){
     setText("requestMessageStatus","Please describe what you need changed.");
     return;
   }
+
+  let imageUrl = null;
+
+  // 🔥 Upload image if exists
+  if(file){
+    const filePath = `${currentUser.id}/${Date.now()}-${file.name}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("request-uploads")
+      .upload(filePath, file);
+
+    if(uploadError){
+      console.error(uploadError);
+      setText("requestMessageStatus","Image upload failed.");
+      return;
+    }
+
+    const { data } = supabase.storage
+      .from("request-uploads")
+      .getPublicUrl(filePath);
+
+    imageUrl = data.publicUrl;
+  }
+
+  const payload = {
+    client_user_id: currentUser.id,
+    client_email: currentUser.email,
+    business_name: clientSite?.business_name || "",
+    request_type: type,
+    page,
+    message,
+    image_url: imageUrl,
+    status: "new",
+    created_at: new Date().toISOString()
+  };
+
+  const { error } = await db.from("change_requests").insert(payload);
+
+  if(error){
+    console.error(error);
+    setText("requestMessageStatus","Request failed.");
+    return;
+  }
+
+  setText("requestMessageStatus","Request submitted.");
+}
 
   const payload = {
     client_user_id:currentUser.id,
