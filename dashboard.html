@@ -314,6 +314,88 @@ textarea{min-height:120px;resize:vertical;}
   .chart{height:210px;gap:5px;}
 }
 </style>
+
+  <style>
+
+/* ===== SAFE PREMIUM OVERRIDE (DOES NOT BREAK JS) ===== */
+
+body{
+  background:
+    radial-gradient(circle at 10% 0%,rgba(139,92,246,.25),transparent 35%),
+    radial-gradient(circle at 90% 5%,rgba(56,189,248,.15),transparent 30%),
+    #070A12 !important;
+  color:#F8FAFC !important;
+}
+
+/* CARDS */
+.card{
+  background:rgba(15,23,42,.85) !important;
+  border:1px solid rgba(255,255,255,.08) !important;
+  border-radius:18px !important;
+  box-shadow:0 15px 40px rgba(0,0,0,.35) !important;
+}
+
+/* TEXT CLEANUP */
+.small,
+p{
+  color:#94A3B8 !important;
+}
+
+/* STAT NUMBERS */
+.stat strong{
+  color:#fff !important;
+}
+
+/* BUTTONS */
+.btn{
+  background:linear-gradient(135deg,#8B5CF6,#A78BFA) !important;
+  color:white !important;
+  border:none !important;
+  box-shadow:0 10px 25px rgba(139,92,246,.35);
+}
+
+.btn:hover{
+  transform:translateY(-2px);
+}
+
+/* NAV / TABS */
+.tabs button{
+  background:rgba(255,255,255,.05) !important;
+  border:1px solid rgba(255,255,255,.08) !important;
+  color:#CBD5E1 !important;
+}
+
+.tabs button.active{
+  background:linear-gradient(135deg,#8B5CF6,#A78BFA) !important;
+  color:#fff !important;
+}
+
+/* LIST ITEMS */
+.item{
+  background:rgba(255,255,255,.04) !important;
+  border:1px solid rgba(255,255,255,.08) !important;
+  border-radius:14px !important;
+}
+
+/* HERO */
+.hero{
+  background:
+    linear-gradient(135deg,#0F172A,#111827) !important;
+  border-radius:20px !important;
+  border:1px solid rgba(255,255,255,.08) !important;
+}
+
+/* FIX WEIRD SYMBOL SPACING */
+.item strong{
+  word-break:break-word;
+}
+
+/* MOBILE FIXES */
+@media(max-width:700px){
+  .card{padding:14px !important;}
+}
+
+</style>
 </head>
 
 <body>
