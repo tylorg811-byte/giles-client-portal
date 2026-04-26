@@ -1521,6 +1521,18 @@ function renderChangeRequests(){
       <div>
         <p><strong>${escapeHtml(req.request_type || "Request")}</strong></p>
         <p>${escapeHtml(req.message || "")}</p>
+        ${req.image_url ? `
+  <a href="${req.image_url}" target="_blank">
+    <img src="${req.image_url}" style="
+      width:100%;
+      max-height:260px;
+      object-fit:cover;
+      border-radius:12px;
+      margin-top:10px;
+      border:1px solid rgba(255,255,255,.12);
+    ">
+  </a>
+` : ""}
         ${req.admin_notes ? `<p><strong>Note:</strong> ${escapeHtml(req.admin_notes)}</p>` : ""}
       </div>
 
