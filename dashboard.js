@@ -186,6 +186,27 @@ function renderAnalytics(){
   renderChart("analyticsChart", monthEvents);
   setupVisitFilters();
   renderVisitsList();
+
+  // ===== ADVANCED INSIGHTS =====
+const growth = getGrowthRate(monthEvents);
+const conversion = calculateConversionRate(monthEvents, leadEvents);
+
+document.getElementById("analyticsInsights").innerHTML = `
+  <div class="item">
+    <strong>Traffic Trend</strong>
+    <p class="small">${growth >= 0 ? "📈 Growing" : "📉 Dropping"} (${growth}%)</p>
+  </div>
+
+  <div class="item">
+    <strong>Conversion Rate</strong>
+    <p class="small">${conversion}% of visitors become leads</p>
+  </div>
+
+  <div class="item">
+    <strong>Best Page</strong>
+    <p class="small">${getTopValue(monthEvents,"page") || "—"}</p>
+  </div>
+`;
 }
 
 function setupVisitFilters(){
@@ -718,4 +739,21 @@ function timeAgo(dateString){
 function formatDate(dateString){
   if(!dateString) return "—";
   return new Date(dateString + "T00:00:00").toLocaleDateString();
+}
+
+function getGrowthRate(events){
+  const now = events.filter(e=>isWithinDays(e.created_at,15)).length;
+  const prev = events.filter(e=>{
+    const d = new Date(e.created_at);
+    const diff = (new Date() - d) / (1000*60*60*24);
+    return diff > 15 && diff <= 30;
+  }).length;
+
+  if(prev === 0) return 100;
+  return Math.round(((now - prev) / prev) * 100);
+}
+
+function calculateConversionRate(events, leads){
+  if(!events.length) return 0;
+  return Math.round((leads.length / events.length) * 100);
 }
