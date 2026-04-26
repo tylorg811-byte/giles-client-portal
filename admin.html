@@ -638,6 +638,18 @@ textarea{min-height:105px;resize:vertical;}
   to{opacity:1;transform:translateY(0);}
 }
 
+.actions .dashboard-access{
+  grid-column:1 / -1;
+  background:linear-gradient(135deg,var(--purple),var(--blue))!important;
+  color:white!important;
+  border-color:transparent!important;
+  box-shadow:0 14px 28px rgba(139,92,246,.22);
+}
+
+.actions .dashboard-access:hover{
+  filter:brightness(1.08);
+}
+
 
 /* Mobile-readable analytics/cards */
 .analytics-client-card{
@@ -1030,7 +1042,7 @@ textarea{min-height:105px;resize:vertical;}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="app.js"></script>
-<script src="admin.js?v=702"></script>
+<script src="admin.js?v=703"></script>
 <script src="admin-importer.js?v=5"></script>
 
 </body>
