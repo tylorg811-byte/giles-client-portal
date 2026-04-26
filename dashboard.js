@@ -793,3 +793,65 @@ function calculateConversionRate(events, leads){
     return `<div class="item"><strong>Website Visit</strong><p class="small">${escapeHtml(item.page || "Website")} • ${timeAgo(item.created_at)}</p></div>`;
   }).join("");
 }
+
+                    function renderActivity(){
+  const box = document.getElementById("activityFeed");
+  if(!box) return;
+
+  const combined = [
+    ...analyticsEvents.map(e => ({ ...e, type:"visit" })),
+    ...leadEvents.map(l => ({ ...l, type:"lead" })),
+    ...changeRequests.map(r => ({ ...r, type:"request" })),
+    ...supportTickets.map(t => ({ ...t, type:"support" }))
+  ];
+
+  const sorted = combined
+    .filter(item => item.created_at)
+    .sort((a,b) => new Date(b.created_at) - new Date(a.created_at))
+    .slice(0,12);
+
+  if(!sorted.length){
+    box.innerHTML = `<div class="activity-empty">No activity yet. Once your site gets visits, leads, requests, or tickets, they’ll show here.</div>`;
+    return;
+  }
+
+  box.innerHTML = sorted.map(item => {
+    let icon = "👀";
+    let title = "Website Visit";
+    let detail = `${escapeHtml(item.page || "Website")} • ${escapeHtml(cleanReferrer(item.referrer))}`;
+    let pill = "Visitor Activity";
+
+    if(item.type === "lead"){
+      icon = "🔥";
+      title = "New Website Lead";
+      detail = `${escapeHtml(item.form_name || "Website form")} • ${escapeHtml(item.page || "Unknown page")}`;
+      pill = "New Lead";
+    }
+
+    if(item.type === "request"){
+      icon = "💬";
+      title = "Change Request Submitted";
+      detail = `${escapeHtml(item.request_type || "Request")} • ${escapeHtml(item.page || "Website")}`;
+      pill = escapeHtml(item.status || "new");
+    }
+
+    if(item.type === "support"){
+      icon = "🎧";
+      title = "Support Ticket Opened";
+      detail = `${escapeHtml(item.subject || item.ticket_type || "Support ticket")}`;
+      pill = escapeHtml(item.priority || item.status || "open");
+    }
+
+    return `
+      <div class="activity-item">
+        <div class="activity-icon">${icon}</div>
+        <div>
+          <strong>${title}</strong>
+          <div class="activity-meta">${detail}</div>
+          <div class="activity-meta">${timeAgo(item.created_at)}</div>
+          <span class="activity-pill">${pill}</span>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
