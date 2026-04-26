@@ -10,13 +10,19 @@ const LIVE_BASE_URL = "https://giles-sites.netlify.app";
 document.addEventListener("DOMContentLoaded", initDashboard);
 
 async function initDashboard(){
+  console.log("DASHBOARD LOADING...");
+
   currentUser = await checkUser();
-  if(!currentUser) return;
+  if(!currentUser){
+    console.error("No user");
+    return;
+  }
 
   await loadDashboardData();
   renderDashboard();
 }
 
+// LOAD ALL DATA
 async function loadDashboardData(){
   await loadClientSite();
   await loadAnalytics();
@@ -25,6 +31,7 @@ async function loadDashboardData(){
   await loadSupportTickets();
 }
 
+// CLIENT SITE
 async function loadClientSite(){
   const { data, error } = await db
     .from("client_sites")
@@ -36,6 +43,7 @@ async function loadClientSite(){
   clientSite = data || null;
 }
 
+// ANALYTICS
 async function loadAnalytics(){
   const { data, error } = await db
     .from("site_analytics_events")
@@ -47,6 +55,7 @@ async function loadAnalytics(){
   analyticsEvents = data || [];
 }
 
+// LEADS
 async function loadLeads(){
   const { data, error } = await db
     .from("site_leads")
@@ -58,6 +67,7 @@ async function loadLeads(){
   leadEvents = data || [];
 }
 
+// REQUESTS
 async function loadChangeRequests(){
   const { data, error } = await db
     .from("change_requests")
@@ -69,6 +79,7 @@ async function loadChangeRequests(){
   changeRequests = data || [];
 }
 
+// SUPPORT
 async function loadSupportTickets(){
   const { data, error } = await db
     .from("support_tickets")
@@ -77,7 +88,7 @@ async function loadSupportTickets(){
     .order("created_at", { ascending:false });
 
   if(error){
-    console.error("Support tickets not loaded:", error);
+    console.error(error);
     supportTickets = [];
     return;
   }
@@ -122,9 +133,9 @@ function renderBadges(){
   const billing = getBillingStatus(clientSite || {});
   const seoScore = Number(clientSite?.seo_score || 0);
 
-  setBadge("siteStatusBadge", siteStatus === "published" ? "🌐 Website Live" : `🛠 ${siteStatus}`, siteStatus === "published" ? "good" : "warn");
-  setBadge("billingStatusBadge", `💳 ${billing.text}`, billing.class);
-  setBadge("seoStatusBadge", `🔎 SEO ${seoScore}/100`, seoScore >= 80 ? "good" : seoScore >= 60 ? "warn" : "bad");
+  setBadge("siteStatusBadge", siteStatus === "published" ? "Website Live" : siteStatus, siteStatus === "published" ? "good" : "warn");
+  setBadge("billingStatusBadge", billing.text, billing.class);
+  setBadge("seoStatusBadge", `SEO ${seoScore}/100`, seoScore >= 80 ? "good" : seoScore >= 60 ? "warn" : "bad");
 }
 
 function renderSummaryStats(){
@@ -156,23 +167,62 @@ function renderOverview(){
   );
 
   renderChart("overviewChart", monthEvents);
-  renderHealthList();
-  renderMiniLeads("overviewLeads", 3);
-  renderMiniTickets("overviewTickets", 3);
-renderActivity();
+  renderActivity();
 }
 
-function renderHealthList(){
-  const billing = getBillingStatus(clientSite || {});
-  const seo = Number(clientSite?.seo_score || 0);
-  const openTickets = supportTickets.filter(t=>!["closed","resolved"].includes(String(t.status || "").toLowerCase())).length;
+function renderActivity(){
+  const box = document.getElementById("activityFeed");
+  if(!box) return;
 
-  document.getElementById("healthList").innerHTML = `
-    <div class="item"><strong>Website Status</strong><p class="small">${clientSite?.site_status === "published" ? "Your website is live." : "Your website is not marked published yet."}</p></div>
-    <div class="item"><strong>Billing</strong><p class="small">${billing.text}. Next payment: ${formatDate(clientSite?.next_payment_date)}</p></div>
-    <div class="item"><strong>SEO</strong><p class="small">SEO score is ${seo}/100.</p></div>
-    <div class="item"><strong>Support</strong><p class="small">${openTickets} open support ticket(s).</p></div>
-  `;
+  const combined = [
+    ...analyticsEvents.map(e => ({ ...e, type:"visit" })),
+    ...leadEvents.map(l => ({ ...l, type:"lead" })),
+    ...changeRequests.map(r => ({ ...r, type:"request" })),
+    ...supportTickets.map(t => ({ ...t, type:"support" }))
+  ];
+
+  const sorted = combined
+    .filter(item => item.created_at)
+    .sort((a,b) => new Date(b.created_at) - new Date(a.created_at))
+    .slice(0,12);
+
+  if(!sorted.length){
+    box.innerHTML = `<div class="empty">No activity yet. Once your site gets visits, leads, requests, or tickets, they’ll show here.</div>`;
+    return;
+  }
+
+  box.innerHTML = sorted.map(item => {
+    let title = "Website Visit";
+    let detail = `${escapeHtml(item.page || "Website")} • ${escapeHtml(cleanReferrer(item.referrer))}`;
+    let pill = "Visitor Activity";
+
+    if(item.type === "lead"){
+      title = "New Website Lead";
+      detail = `${escapeHtml(item.form_name || "Website form")} • ${escapeHtml(item.page || "Unknown page")}`;
+      pill = "New Lead";
+    }
+
+    if(item.type === "request"){
+      title = "Change Request Submitted";
+      detail = `${escapeHtml(item.request_type || "Request")} • ${escapeHtml(item.page || "Website")}`;
+      pill = escapeHtml(item.status || "new");
+    }
+
+    if(item.type === "support"){
+      title = "Support Ticket Opened";
+      detail = `${escapeHtml(item.subject || item.ticket_type || "Support ticket")}`;
+      pill = escapeHtml(item.priority || item.status || "open");
+    }
+
+    return `
+      <div class="item">
+        <strong>${title}</strong>
+        <p class="small">${detail}</p>
+        <p class="small">${timeAgo(item.created_at)}</p>
+        <span class="badge">${pill}</span>
+      </div>
+    `;
+  }).join("");
 }
 
 function renderAnalytics(){
@@ -187,27 +237,6 @@ function renderAnalytics(){
   renderChart("analyticsChart", monthEvents);
   setupVisitFilters();
   renderVisitsList();
-
-  // ===== ADVANCED INSIGHTS =====
-const growth = getGrowthRate(monthEvents);
-const conversion = calculateConversionRate(monthEvents, leadEvents);
-
-document.getElementById("analyticsInsights").innerHTML = `
-  <div class="item">
-    <strong>Traffic Trend</strong>
-    <p class="small">${growth >= 0 ? "📈 Growing" : "📉 Dropping"} (${growth}%)</p>
-  </div>
-
-  <div class="item">
-    <strong>Conversion Rate</strong>
-    <p class="small">${conversion}% of visitors become leads</p>
-  </div>
-
-  <div class="item">
-    <strong>Best Page</strong>
-    <p class="small">${getTopValue(monthEvents,"page") || "—"}</p>
-  </div>
-`;
 }
 
 function setupVisitFilters(){
@@ -296,6 +325,8 @@ function renderLeads(){
   setText("leadCountBadge", `${leadEvents.length} Lead${leadEvents.length === 1 ? "" : "s"}`);
 
   const box = document.getElementById("leadsList");
+  if(!box) return;
+
   if(!leadEvents.length){
     box.innerHTML = `<div class="empty">No leads yet. When someone submits a form, it will appear here.</div>`;
     return;
@@ -311,95 +342,33 @@ function renderLeads(){
   `).join("");
 }
 
-function renderMiniLeads(id,limit){
-  const box = document.getElementById(id);
-  if(!box) return;
-
-  if(!leadEvents.length){
-    box.innerHTML = `<div class="empty">No leads yet.</div>`;
-    return;
-  }
-
-  box.innerHTML = leadEvents.slice(0,limit).map(lead=>`
-    <div class="item">
-      <strong>${escapeHtml(lead.form_name || "Website Lead")}</strong>
-      <p class="small">${escapeHtml(lead.page || "Unknown page")} • ${timeAgo(lead.created_at)}</p>
-    </div>
-  `).join("");
-}
-
 function renderRequests(){
+  const summaryBox = document.getElementById("requestsSummary");
+  const listBox = document.getElementById("requestsList");
+
   const open = changeRequests.filter(r=>r.status !== "done").length;
   const done = changeRequests.filter(r=>r.status === "done").length;
 
-  document.getElementById("requestsSummary").innerHTML = `
-    <div class="item"><strong>Open Requests</strong><p class="small">${open}</p></div>
-    <div class="item"><strong>Completed Requests</strong><p class="small">${done}</p></div>
-    <div class="item"><strong>Purpose</strong><p class="small">Use change requests for content updates, image swaps, new sections, or SEO changes.</p></div>
-  `;
+  if(summaryBox){
+    summaryBox.innerHTML = `
+      <div class="item"><strong>Open Requests</strong><p class="small">${open}</p></div>
+      <div class="item"><strong>Completed Requests</strong><p class="small">${done}</p></div>
+    `;
+  }
 
-  const box = document.getElementById("requestsList");
+  if(!listBox) return;
+
   if(!changeRequests.length){
-    box.innerHTML = `<div class="empty">No requests submitted yet.</div>`;
+    listBox.innerHTML = `<div class="empty">No requests submitted yet.</div>`;
     return;
   }
 
-  box.innerHTML = changeRequests.map(req=>`
+  listBox.innerHTML = changeRequests.map(req=>`
     <div class="item">
       <strong>${escapeHtml(req.request_type || "Request")}</strong>
       <p class="small">${escapeHtml(req.message || "")}</p>
       <span class="badge ${req.status === "done" ? "good" : "warn"}">${escapeHtml(req.status || "new")}</span>
       <p class="small">${timeAgo(req.created_at)}</p>
-    </div>
-  `).join("");
-}
-
-function renderSupport(){
-  const open = supportTickets.filter(t=>!["closed","resolved"].includes(String(t.status || "").toLowerCase())).length;
-  const closed = supportTickets.filter(t=>["closed","resolved"].includes(String(t.status || "").toLowerCase())).length;
-  const urgent = supportTickets.filter(t=>String(t.priority || "").toLowerCase() === "urgent").length;
-
-  setText("ticketCountBadge", `${supportTickets.length} Ticket${supportTickets.length === 1 ? "" : "s"}`);
-
-  document.getElementById("supportSummary").innerHTML = `
-    <div class="item"><strong>Open Tickets</strong><p class="small">${open}</p></div>
-    <div class="item"><strong>Resolved Tickets</strong><p class="small">${closed}</p></div>
-    <div class="item"><strong>Urgent Tickets</strong><p class="small">${urgent}</p></div>
-  `;
-
-  const box = document.getElementById("supportList");
-  if(!supportTickets.length){
-    box.innerHTML = `<div class="empty">No support tickets yet.</div>`;
-    return;
-  }
-
-  box.innerHTML = supportTickets.map(ticket=>`
-    <div class="item">
-      <strong>${escapeHtml(ticket.subject || ticket.ticket_type || "Support Ticket")}</strong>
-      <p class="small">${escapeHtml(ticket.message || "")}</p>
-      <span class="badge ${getTicketBadgeClass(ticket.status)}">${escapeHtml(ticket.status || "open")}</span>
-      <span class="badge ${getPriorityBadgeClass(ticket.priority)}">${escapeHtml(ticket.priority || "normal")}</span>
-      ${ticket.admin_notes ? `<p class="small" style="margin-top:8px;"><strong>Admin Note:</strong> ${escapeHtml(ticket.admin_notes)}</p>` : ""}
-      <p class="small">${timeAgo(ticket.created_at)}</p>
-    </div>
-  `).join("");
-}
-
-function renderMiniTickets(id,limit){
-  const box = document.getElementById(id);
-  if(!box) return;
-
-  const openTickets = supportTickets.filter(t=>!["closed","resolved"].includes(String(t.status || "").toLowerCase()));
-
-  if(!openTickets.length){
-    box.innerHTML = `<div class="empty">No open support tickets.</div>`;
-    return;
-  }
-
-  box.innerHTML = openTickets.slice(0,limit).map(ticket=>`
-    <div class="item">
-      <strong>${escapeHtml(ticket.subject || ticket.ticket_type || "Support Ticket")}</strong>
-      <p class="small">${escapeHtml(ticket.status || "open")} • ${timeAgo(ticket.created_at)}</p>
     </div>
   `).join("");
 }
@@ -428,7 +397,7 @@ async function submitChangeRequest(){
   const { error } = await db.from("change_requests").insert(payload);
 
   if(error){
-    console.error(error);
+    console.error("Change request error:", error);
     setText("requestMessageStatus","Request failed. Please try again.");
     return;
   }
@@ -441,6 +410,43 @@ async function submitChangeRequest(){
   renderRequests();
   renderOverview();
   renderSummaryStats();
+}
+
+function renderSupport(){
+  const summaryBox = document.getElementById("supportSummary");
+  const listBox = document.getElementById("supportList");
+
+  const open = supportTickets.filter(t=>!["closed","resolved"].includes(String(t.status || "").toLowerCase())).length;
+  const closed = supportTickets.filter(t=>["closed","resolved"].includes(String(t.status || "").toLowerCase())).length;
+  const urgent = supportTickets.filter(t=>String(t.priority || "").toLowerCase() === "urgent").length;
+
+  setText("ticketCountBadge", `${supportTickets.length} Ticket${supportTickets.length === 1 ? "" : "s"}`);
+
+  if(summaryBox){
+    summaryBox.innerHTML = `
+      <div class="item"><strong>Open Tickets</strong><p class="small">${open}</p></div>
+      <div class="item"><strong>Resolved Tickets</strong><p class="small">${closed}</p></div>
+      <div class="item"><strong>Urgent Tickets</strong><p class="small">${urgent}</p></div>
+    `;
+  }
+
+  if(!listBox) return;
+
+  if(!supportTickets.length){
+    listBox.innerHTML = `<div class="empty">No support tickets yet.</div>`;
+    return;
+  }
+
+  listBox.innerHTML = supportTickets.map(ticket=>`
+    <div class="item">
+      <strong>${escapeHtml(ticket.subject || ticket.ticket_type || "Support Ticket")}</strong>
+      <p class="small">${escapeHtml(ticket.message || "")}</p>
+      <span class="badge ${getTicketBadgeClass(ticket.status)}">${escapeHtml(ticket.status || "open")}</span>
+      <span class="badge ${getPriorityBadgeClass(ticket.priority)}">${escapeHtml(ticket.priority || "normal")}</span>
+      ${ticket.admin_notes ? `<p class="small" style="margin-top:8px;"><strong>Admin Note:</strong> ${escapeHtml(ticket.admin_notes)}</p>` : ""}
+      <p class="small">${timeAgo(ticket.created_at)}</p>
+    </div>
+  `).join("");
 }
 
 async function submitSupportTicket(){
@@ -469,7 +475,7 @@ async function submitSupportTicket(){
   const { error } = await db.from("support_tickets").insert(payload);
 
   if(error){
-    console.error(error);
+    console.error("Support ticket error:", error);
     setText("ticketMessageStatus","Support ticket failed. Please try again.");
     return;
   }
@@ -481,26 +487,30 @@ async function submitSupportTicket(){
   await loadSupportTickets();
   renderSupport();
   renderOverview();
-  renderSummaryStats();
-}
-
-function renderBilling(){
+  function renderBilling(){
   const billing = getBillingStatus(clientSite || {});
   setBadge("billingMiniBadge", billing.text, billing.class);
 
-  document.getElementById("billingDetails").innerHTML = `
-    <div class="item"><strong>Status</strong><p class="small">${billing.text}</p></div>
-    <div class="item"><strong>Next Payment</strong><p class="small">${formatDate(clientSite?.next_payment_date)}</p></div>
-    <div class="item"><strong>Last Payment</strong><p class="small">${formatDate(clientSite?.last_payment_date)}</p></div>
-    <div class="item"><strong>Billing Cycle</strong><p class="small">${escapeHtml(clientSite?.billing_cycle || "Monthly")}</p></div>
-  `;
+  const detailsBox = document.getElementById("billingDetails");
+  const planBox = document.getElementById("planDetails");
 
-  document.getElementById("planDetails").innerHTML = `
-    <div class="item"><strong>Plan</strong><p class="small">${escapeHtml(clientSite?.package_name || "Website Plan")}</p></div>
-    <div class="item"><strong>Website Status</strong><p class="small">${escapeHtml(clientSite?.site_status || "Setup")}</p></div>
-    <div class="item"><strong>Editor Access</strong><p class="small">${escapeHtml(clientSite?.editor_access || "Safe Mode")}</p></div>
-    <div class="item"><strong>Domain</strong><p class="small">${escapeHtml(clientSite?.domain || "No domain connected")}</p></div>
-  `;
+  if(detailsBox){
+    detailsBox.innerHTML = `
+      <div class="item"><strong>Status</strong><p class="small">${billing.text}</p></div>
+      <div class="item"><strong>Next Payment</strong><p class="small">${formatDate(clientSite?.next_payment_date)}</p></div>
+      <div class="item"><strong>Last Payment</strong><p class="small">${formatDate(clientSite?.last_payment_date)}</p></div>
+      <div class="item"><strong>Billing Cycle</strong><p class="small">${escapeHtml(clientSite?.billing_cycle || "Monthly")}</p></div>
+    `;
+  }
+
+  if(planBox){
+    planBox.innerHTML = `
+      <div class="item"><strong>Plan</strong><p class="small">${escapeHtml(clientSite?.package_name || "Website Plan")}</p></div>
+      <div class="item"><strong>Website Status</strong><p class="small">${escapeHtml(clientSite?.site_status || "Setup")}</p></div>
+      <div class="item"><strong>Editor Access</strong><p class="small">${escapeHtml(clientSite?.editor_access || "Safe Mode")}</p></div>
+      <div class="item"><strong>Domain</strong><p class="small">${escapeHtml(clientSite?.domain || "No domain connected")}</p></div>
+    `;
+  }
 }
 
 function renderSEO(){
@@ -722,6 +732,7 @@ function getTopValue(items,key){
 }
 
 function isWithinDays(dateString,days){
+  if(!dateString) return false;
   return new Date() - new Date(dateString) <= days * 24 * 60 * 60 * 1000;
 }
 
@@ -740,56 +751,4 @@ function timeAgo(dateString){
 function formatDate(dateString){
   if(!dateString) return "—";
   return new Date(dateString + "T00:00:00").toLocaleDateString();
-}
-
-function getGrowthRate(events){
-  const now = events.filter(e=>isWithinDays(e.created_at,15)).length;
-  const prev = events.filter(e=>{
-    const d = new Date(e.created_at);
-    const diff = (new Date() - d) / (1000*60*60*24);
-    return diff > 15 && diff <= 30;
-  }).length;
-
-  if(prev === 0) return 100;
-  return Math.round(((now - prev) / prev) * 100);
-}
-
-function calculateConversionRate(events, leads){
-  if(!events.length) return 0;
-  return Math.round((leads.length / events.length) * function renderActivity(){
-  const box = document.getElementById("activityFeed");
-  if(!box) return;
-
-  const combined = [
-    ...analyticsEvents.map(e => ({ ...e, type:"visit" })),
-    ...leadEvents.map(l => ({ ...l, type:"lead" })),
-    ...changeRequests.map(r => ({ ...r, type:"request" })),
-    ...supportTickets.map(t => ({ ...t, type:"support" }))
-  ];
-
-  const sorted = combined
-    .filter(item => item.created_at)
-    .sort((a,b) => new Date(b.created_at) - new Date(a.created_at))
-    .slice(0,10);
-
-  if(!sorted.length){
-    box.innerHTML = `<div class="empty">No activity yet.</div>`;
-    return;
-  }
-
-  box.innerHTML = sorted.map(item => {
-    if(item.type === "lead"){
-      return `<div class="item"><strong>New Lead</strong><p class="small">${escapeHtml(item.form_name || "Website form")} • ${timeAgo(item.created_at)}</p></div>`;
-    }
-
-    if(item.type === "request"){
-      return `<div class="item"><strong>Change Request</strong><p class="small">${escapeHtml(item.request_type || "Request")} • ${timeAgo(item.created_at)}</p></div>`;
-    }
-
-    if(item.type === "support"){
-      return `<div class="item"><strong>Support Ticket</strong><p class="small">${escapeHtml(item.subject || item.ticket_type || "Ticket")} • ${timeAgo(item.created_at)}</p></div>`;
-    }
-
-    return `<div class="item"><strong>Website Visit</strong><p class="small">${escapeHtml(item.page || "Website")} • ${timeAgo(item.created_at)}</p></div>`;
-  }).join("");
 }
