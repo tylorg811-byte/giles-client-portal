@@ -299,6 +299,30 @@ button,a,input,select,textarea{font-family:inherit;}
   line-height:1.4;
 }
 
+  .tabs{
+  display:flex;
+  gap:10px;
+  overflow:auto;
+  margin:10px 0 16px;
+}
+
+.tabs button{
+  border:none;
+  background:rgba(255,255,255,.08);
+  border:1px solid var(--line);
+  padding:10px 14px;
+  border-radius:999px;
+  font-weight:900;
+  cursor:pointer;
+  color:#CBD5E1;
+}
+
+.tabs button.active{
+  background:linear-gradient(135deg,var(--purple),var(--purple2));
+  color:white;
+  border-color:transparent;
+}
+
   /* ===== MOBILE FIX ===== */
 @media(max-width:1050px){
 
