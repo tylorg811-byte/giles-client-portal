@@ -392,6 +392,7 @@ function renderRequests(){
     <div class="item">
       <strong>${escapeHtml(req.request_type || "Request")}</strong>
       <p class="small">${escapeHtml(req.message || "")}</p>
+      ${req.image_url ? `<img src="${escapeAttribute(req.image_url)}" alt="Request upload" style="width:100%;max-width:520px;border-radius:14px;margin:10px 0;border:1px solid rgba(255,255,255,.12);display:block;">` : ""}
       <span class="badge ${req.status === "done" ? "good" : "warn"}">${escapeHtml(req.status || "new")}</span>
       <p class="small">${timeAgo(req.created_at)}</p>
     </div>
@@ -466,34 +467,6 @@ async function submitChangeRequest(){
   renderSummaryStats();
 }
 
-  const payload = {
-    client_user_id:currentUser.id,
-    client_email:currentUser.email,
-    business_name:clientSite?.business_name || "",
-    request_type:type,
-    page,
-    message,
-    status:"new",
-    created_at:new Date().toISOString()
-  };
-
-  const { error } = await db.from("change_requests").insert(payload);
-
-  if(error){
-    console.error("Change request error:", error);
-    setText("requestMessageStatus","Request failed. Please try again.");
-    return;
-  }
-
-  setText("requestMessageStatus","Request submitted successfully.");
-  setValue("requestPage","");
-  setValue("requestMessage","");
-
-  await loadChangeRequests();
-  renderRequests();
-  renderOverview();
-  renderSummaryStats();
-}
 
 function renderSupport(){
   const summaryBox = document.getElementById("supportSummary");
