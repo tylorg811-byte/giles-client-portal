@@ -159,6 +159,7 @@ function renderOverview(){
   renderHealthList();
   renderMiniLeads("overviewLeads", 3);
   renderMiniTickets("overviewTickets", 3);
+renderActivity();
 }
 
 function renderHealthList(){
@@ -755,5 +756,40 @@ function getGrowthRate(events){
 
 function calculateConversionRate(events, leads){
   if(!events.length) return 0;
-  return Math.round((leads.length / events.length) * 100);
+  return Math.round((leads.length / events.length) * function renderActivity(){
+  const box = document.getElementById("activityFeed");
+  if(!box) return;
+
+  const combined = [
+    ...analyticsEvents.map(e => ({ ...e, type:"visit" })),
+    ...leadEvents.map(l => ({ ...l, type:"lead" })),
+    ...changeRequests.map(r => ({ ...r, type:"request" })),
+    ...supportTickets.map(t => ({ ...t, type:"support" }))
+  ];
+
+  const sorted = combined
+    .filter(item => item.created_at)
+    .sort((a,b) => new Date(b.created_at) - new Date(a.created_at))
+    .slice(0,10);
+
+  if(!sorted.length){
+    box.innerHTML = `<div class="empty">No activity yet.</div>`;
+    return;
+  }
+
+  box.innerHTML = sorted.map(item => {
+    if(item.type === "lead"){
+      return `<div class="item"><strong>New Lead</strong><p class="small">${escapeHtml(item.form_name || "Website form")} • ${timeAgo(item.created_at)}</p></div>`;
+    }
+
+    if(item.type === "request"){
+      return `<div class="item"><strong>Change Request</strong><p class="small">${escapeHtml(item.request_type || "Request")} • ${timeAgo(item.created_at)}</p></div>`;
+    }
+
+    if(item.type === "support"){
+      return `<div class="item"><strong>Support Ticket</strong><p class="small">${escapeHtml(item.subject || item.ticket_type || "Ticket")} • ${timeAgo(item.created_at)}</p></div>`;
+    }
+
+    return `<div class="item"><strong>Website Visit</strong><p class="small">${escapeHtml(item.page || "Website")} • ${timeAgo(item.created_at)}</p></div>`;
+  }).join("");
 }
