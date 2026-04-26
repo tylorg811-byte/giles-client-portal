@@ -244,6 +244,9 @@ function normalizeAnalyticsEvent(event){
     referrer:event.referrer || "direct",
     device:event.device || detectDeviceFromUserAgent(event.user_agent),
     browser:event.browser || detectBrowserFromUserAgent(event.user_agent),
+    visitor_country:event.visitor_country || "",
+    visitor_region:event.visitor_region || "",
+    visitor_timezone:event.visitor_timezone || "",
     created_at:event.created_at || new Date().toISOString()
   };
 }
@@ -345,6 +348,53 @@ function detectBrowserFromUserAgent(userAgent){
   if(ua.includes("firefox/")) return "Firefox";
 
   return "Unknown";
+}
+
+
+
+function getVisitorLocationLabel(event){
+  const region = event.visitor_region || "";
+  const country = event.visitor_country || "";
+  const timezone = event.visitor_timezone || "";
+
+  if(region && country) return `${region}, ${country}`;
+  if(country) return country;
+  if(timezone) return timezone;
+
+  return "Unknown location";
+}
+
+function getTopLocation(events){
+  const counts = {};
+
+  events.forEach(event=>{
+    const location = getVisitorLocationLabel(event);
+    counts[location] = (counts[location] || 0) + 1;
+  });
+
+  return Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0] || "Unknown location";
+}
+
+function getTopCountry(events){
+  const counts = {};
+
+  events.forEach(event=>{
+    const country = event.visitor_country || "Unknown country";
+    counts[country] = (counts[country] || 0) + 1;
+  });
+
+  return Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0] || "Unknown country";
+}
+
+function getTopRegion(events){
+  const counts = {};
+
+  events.forEach(event=>{
+    const region = event.visitor_region || "Unknown state/region";
+    counts[region] = (counts[region] || 0) + 1;
+  });
+
+  return Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0] || "Unknown state/region";
 }
 
 
@@ -1117,6 +1167,9 @@ function renderAnalyticsOverviewFull(){
   const topSource = getTopReferrer(analyticsEvents);
   const topPage = getTopValue(analyticsEvents,"page") || "—";
   const topDevice = getTopValue(analyticsEvents,"device") || "—";
+  const topLocation = getTopLocation(analyticsEvents);
+  const topRegion = getTopRegion(analyticsEvents);
+  const topCountry = getTopCountry(analyticsEvents);
 
   el.innerHTML = `
     <div class="analytics-header-grid">
@@ -1131,6 +1184,9 @@ function renderAnalyticsOverviewFull(){
       <div class="source-card"><span>Top Source</span><strong>${escapeHtml(topSource)}</strong></div>
       <div class="source-card"><span>Top Page</span><strong>${escapeHtml(topPage)}</strong></div>
       <div class="source-card"><span>Top Device</span><strong>${escapeHtml(topDevice)}</strong></div>
+      <div class="source-card"><span>Top Location</span><strong>${escapeHtml(topLocation)}</strong></div>
+      <div class="source-card"><span>Top State / Region</span><strong>${escapeHtml(topRegion)}</strong></div>
+      <div class="source-card"><span>Top Country</span><strong>${escapeHtml(topCountry)}</strong></div>
     </div>
   `;
 
@@ -1238,6 +1294,7 @@ function renderAdminVisitsList(){
       <p><strong>Source:</strong> ${escapeHtml(cleanReferrer(event.referrer))}</p>
       <p><strong>Device:</strong> ${escapeHtml(event.device || "Unknown")} • ${escapeHtml(event.browser || "Unknown")}</p>
       <p><strong>Path:</strong> ${escapeHtml(event.path || "—")}</p>
+      <p><strong>Location:</strong> ${escapeHtml(getVisitorLocationLabel(event))}</p>
       <p style="color:#64748b;font-size:13px;">${timeAgo(event.created_at)}</p>
     </div>
   `).join("");
@@ -1251,6 +1308,9 @@ function renderFilteredAnalyticsStats(events){
   const topSource = getTopReferrer(events);
   const topDevice = getTopValue(events,"device") || "—";
   const topPage = getTopValue(events,"page") || "—";
+  const topLocation = getTopLocation(events);
+  const topRegion = getTopRegion(events);
+  const topCountry = getTopCountry(events);
 
   box.innerHTML = `
     <div class="grid">
@@ -1262,6 +1322,9 @@ function renderFilteredAnalyticsStats(events){
 
     <div class="source-grid">
       <div class="source-card"><span>Top Device</span><strong>${escapeHtml(topDevice)}</strong></div>
+      <div class="source-card"><span>Top Location</span><strong>${escapeHtml(topLocation)}</strong></div>
+      <div class="source-card"><span>Top State / Region</span><strong>${escapeHtml(topRegion)}</strong></div>
+      <div class="source-card"><span>Top Country</span><strong>${escapeHtml(topCountry)}</strong></div>
       <div class="source-card"><span>Mobile Views</span><strong>${events.filter(e=>e.device === "mobile").length}</strong></div>
       <div class="source-card"><span>Desktop Views</span><strong>${events.filter(e=>e.device === "desktop").length}</strong></div>
     </div>
@@ -1381,6 +1444,7 @@ function loadClientAnalyticsView(){
               <p><strong>${escapeHtml(event.page || "Website Visit")}</strong></p>
               <p>Source: ${escapeHtml(cleanReferrer(event.referrer))}</p>
               <p>${escapeHtml(event.device || "Unknown")} • ${escapeHtml(event.browser || "Unknown")}</p>
+              <p>Location: ${escapeHtml(getVisitorLocationLabel(event))}</p>
               <p style="color:#64748b;font-size:13px;">${timeAgo(event.created_at)}</p>
             </div>
           `).join("")
