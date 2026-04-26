@@ -327,6 +327,7 @@ function renderClientSites(sites){
   sites.forEach(site=>{
     const billing = getBillingStatus(site);
     const liveUrl = getClientLiveUrl(site);
+    const dashboardUrl = getClientDashboardUrl(site);
     const analytics = site.client_user_id ? getClientAnalytics(site.client_user_id) : null;
     const leads = site.client_user_id ? getClientLeads(site.client_user_id) : null;
     const payments = getClientPaymentTotal(site.client_user_id);
@@ -393,6 +394,8 @@ function renderClientSites(sites){
       </div>
 
       <div class="actions">
+        <a href="${dashboardUrl}" target="_blank" class="dashboard-access">Open Dashboard</a>
+
         <button onclick="openClientDetail('${site.id}')">View</button>
         <button onclick="editClientSite('${site.id}')">Edit</button>
 
@@ -708,6 +711,7 @@ function renderSupportTickets(){
     const editorUrl = ticket.client_user_id ? `editor.html?client=${ticket.client_user_id}` : "editor.html";
     const site = clientSites.find(s=>s.client_user_id === ticket.client_user_id);
     const liveUrl = site ? getClientLiveUrl(site) : LIVE_BASE_URL;
+    const dashboardUrl = site ? getClientDashboardUrl(site) : "dashboard.html";
 
     card.innerHTML = `
       <div>
@@ -746,6 +750,7 @@ function renderSupportTickets(){
       </div>
 
       <div class="actions">
+        <a href="${dashboardUrl}" target="_blank" class="dashboard-access">Dashboard</a>
         <button onclick="updateSupportTicket('${ticket.id}')">Update</button>
         <button onclick="resolveSupportTicket('${ticket.id}')">Resolve</button>
         <a href="${editorUrl}" target="_blank">Editor</a>
@@ -1263,6 +1268,7 @@ function openClientDetail(id){
   const leads = site.client_user_id ? getClientLeads(site.client_user_id) : null;
   const revenue = getClientPaymentTotal(site.client_user_id);
   const openSupport = site.client_user_id ? supportTickets.filter(t=>t.client_user_id === site.client_user_id && !["closed","resolved"].includes(String(t.status || "").toLowerCase())).length : 0;
+  const dashboardUrl = getClientDashboardUrl(site);
 
   document.getElementById("clientDetailContent").innerHTML = `
     <div class="detail-grid">
@@ -1275,7 +1281,8 @@ function openClientDetail(id){
         <div class="detail-row"><span>SEO</span><span>${site.seo_score || 0}/100</span></div>
 
         <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
-          <a class="primary" href="${getClientLiveUrl(site)}" target="_blank">Open Site</a>
+          <a class="primary" href="${dashboardUrl}" target="_blank">Open Dashboard</a>
+          <a class="secondary" href="${getClientLiveUrl(site)}" target="_blank">Open Site</a>
           <a class="secondary" href="editor.html?client=${site.client_user_id || ""}" target="_blank">Editor</a>
           <button class="secondary" onclick="openSEOForClient('${site.client_user_id || ""}')">SEO</button>
         </div>
@@ -1509,6 +1516,7 @@ function renderChangeRequests(){
     const editorUrl = req.client_user_id ? `editor.html?client=${req.client_user_id}` : "editor.html";
     const site = clientSites.find(s=>s.client_user_id === req.client_user_id);
     const liveUrl = site ? getClientLiveUrl(site) : LIVE_BASE_URL;
+    const dashboardUrl = site ? getClientDashboardUrl(site) : "dashboard.html";
 
     card.innerHTML = `
       <div>
@@ -1549,6 +1557,7 @@ function renderChangeRequests(){
       </div>
 
       <div class="actions">
+        <a href="${dashboardUrl}" target="_blank" class="dashboard-access">Dashboard</a>
         <button onclick="updateChangeRequest('${req.id}', '${req.client_user_id || ""}')">Update</button>
         <button onclick="completeRequest('${req.id}', '${req.client_user_id || ""}')">Complete</button>
         <a href="${editorUrl}" target="_blank">Editor</a>
@@ -1772,6 +1781,15 @@ function getClientLeads(clientUserId){
     week:leads.filter(l=>isWithinDays(l.created_at,7)).length,
     month:leads.filter(l=>isWithinDays(l.created_at,30)).length
   };
+}
+
+
+function getClientDashboardUrl(site){
+  if(!site || !site.client_user_id){
+    return "dashboard.html";
+  }
+
+  return `dashboard.html?client=${encodeURIComponent(site.client_user_id)}`;
 }
 
 function getClientLiveUrl(site){
