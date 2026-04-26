@@ -242,8 +242,8 @@ function renderActivity(){
     return `
       <div class="item">
         <strong>${title}</strong>
-        <p class="small">${detail}</p>
-        <p class="small">${timeAgo(item.created_at)}</p>
+       <div class="small">${detail}</div>
+<div class="small">${timeAgo(item.created_at)}</div>
         <span class="badge">${pill}</span>
       </div>
     `;
