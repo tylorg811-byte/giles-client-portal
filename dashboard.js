@@ -5,6 +5,8 @@ function debugLog(msg){
 }
 
 let currentUser = null;
+let activeClientUserId = null;
+let isAdminView = false;
 let clientSite = null;
 let analyticsEvents = [];
 let leadEvents = [];
@@ -32,6 +34,14 @@ async function initDashboard(){
   }
 
   try{
+    await setupActiveClientUser();
+    debugLog("ACTIVE CLIENT: " + activeClientUserId);
+  }catch(e){
+    debugLog("ADMIN VIEW ERROR: " + e.message);
+    return;
+  }
+
+  try{
     await loadDashboardData();
     debugLog("DATA LOADED: analytics " + analyticsEvents.length);
   }catch(e){
@@ -45,6 +55,34 @@ async function initDashboard(){
   }catch(e){
     debugLog("RENDER ERROR: " + e.message);
   }
+}
+
+
+async function setupActiveClientUser(){
+  activeClientUserId = currentUser.id;
+  isAdminView = false;
+
+  const params = new URLSearchParams(window.location.search);
+  const requestedClientId = params.get("client");
+
+  if(!requestedClientId){
+    return;
+  }
+
+  const { data: adminData, error: adminError } = await db
+    .from("admin_users")
+    .select("*")
+    .eq("user_id", currentUser.id)
+    .maybeSingle();
+
+  if(adminError || !adminData){
+    alert("Admin access only.");
+    window.location.href = "dashboard.html";
+    throw new Error("Admin access denied");
+  }
+
+  activeClientUserId = requestedClientId;
+  isAdminView = true;
 }
 
 // LOAD ALL DATA
@@ -61,7 +99,7 @@ async function loadClientSite(){
   const { data, error } = await db
     .from("client_sites")
     .select("*")
-    .eq("client_user_id", currentUser.id)
+    .eq("client_user_id", activeClientUserId)
     .maybeSingle();
 
   if(error) console.error(error);
@@ -73,7 +111,7 @@ async function loadAnalytics(){
   const { data, error } = await db
     .from("site_analytics_events")
     .select("*")
-    .eq("client_user_id", currentUser.id)
+    .eq("client_user_id", activeClientUserId)
     .order("created_at", { ascending:false });
 
   if(error) console.error(error);
@@ -85,7 +123,7 @@ async function loadLeads(){
   const { data, error } = await db
     .from("site_leads")
     .select("*")
-    .eq("client_user_id", currentUser.id)
+    .eq("client_user_id", activeClientUserId)
     .order("created_at", { ascending:false });
 
   if(error) console.error(error);
@@ -97,7 +135,7 @@ async function loadChangeRequests(){
   const { data, error } = await db
     .from("change_requests")
     .select("*")
-    .eq("client_user_id", currentUser.id)
+    .eq("client_user_id", activeClientUserId)
     .order("created_at", { ascending:false });
 
   if(error) console.error(error);
@@ -109,7 +147,7 @@ async function loadSupportTickets(){
   const { data, error } = await db
     .from("support_tickets")
     .select("*")
-    .eq("client_user_id", currentUser.id)
+    .eq("client_user_id", activeClientUserId)
     .order("created_at", { ascending:false });
 
   if(error){
@@ -126,7 +164,7 @@ function renderDashboard(){
   const liveUrl = getLiveUrl();
 
   setText("welcomeTitle", `Welcome back, ${name}`);
-  setText("welcomeSubtitle", buildSubtitle());
+  setText("welcomeSubtitle", isAdminView ? `Admin viewing client dashboard • ${buildSubtitle()}` : buildSubtitle());
 
   setHref("heroLiveBtn", liveUrl);
   setHref("sideLiveBtn", liveUrl);
@@ -417,7 +455,7 @@ async function submitChangeRequest(){
 
   if(file){
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g,"-");
-    const filePath = `${currentUser.id}/${Date.now()}-${safeName}`;
+    const filePath = `${activeClientUserId}/${Date.now()}-${safeName}`;
 
     const { error: uploadError } = await db.storage
       .from("request-uploads")
@@ -437,7 +475,7 @@ async function submitChangeRequest(){
   }
 
   const payload = {
-    client_user_id:currentUser.id,
+    client_user_id:activeClientUserId,
     client_email:currentUser.email,
     business_name:clientSite?.business_name || "",
     request_type:type,
@@ -517,7 +555,7 @@ async function submitSupportTicket(){
   }
 
   const payload = {
-    client_user_id:currentUser.id,
+    client_user_id:activeClientUserId,
     client_email:currentUser.email,
     business_name:clientSite?.business_name || "",
     ticket_type:ticketType,
