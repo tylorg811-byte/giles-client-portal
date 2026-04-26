@@ -511,10 +511,13 @@ async function submitSupportTicket(){
   setValue("ticketSubject","");
   setValue("ticketMessage","");
 
-  await loadSupportTickets();
+    await loadSupportTickets();
   renderSupport();
   renderOverview();
-  function renderBilling(){
+  renderSummaryStats();
+}
+
+function renderBilling(){
   const billing = getBillingStatus(clientSite || {});
   setBadge("billingMiniBadge", billing.text, billing.class);
 
