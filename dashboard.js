@@ -338,10 +338,10 @@ function renderVisitsList(){
   box.innerHTML = data.map(event=>`
     <div class="item">
       <strong>${escapeHtml(event.page || "Website Visit")}</strong>
-      <p class="small">Source: ${escapeHtml(cleanReferrer(event.referrer))}</p>
-      <p class="small">Device: ${escapeHtml(event.device || "Unknown")} • Browser: ${escapeHtml(event.browser || "Unknown")}</p>
-      <p class="small">Path: ${escapeHtml(event.path || "—")}</p>
-      <p class="small">${timeAgo(event.created_at)}</p>
+      <div class="small">Source: ${escapeHtml(cleanReferrer(event.referrer))}</div>
+<div class="small">Device: ${escapeHtml(event.device || "Unknown")} • Browser: ${escapeHtml(event.browser || "Unknown")}</div>
+<div class="small">Path: ${escapeHtml(event.path || "—")}</div>
+<div class="small">${timeAgo(event.created_at)}</div>
     </div>
   `).join("");
 }
