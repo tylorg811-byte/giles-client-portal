@@ -968,3 +968,186 @@ function formatDate(dateString){
   if(!dateString) return "—";
   return new Date(dateString + "T00:00:00").toLocaleDateString();
 }
+
+function getVisitorLocationLabel(event){
+  const region = event.visitor_region || "";
+  const country = event.visitor_country || "";
+  const timezone = event.visitor_timezone || "";
+
+  if(region && country) return `${region}, ${country}`;
+  if(country) return country;
+  if(timezone) return timezone;
+
+  return "Unknown location";
+}
+
+function getTopLocation(events){
+  const counts = {};
+
+  events.forEach(event=>{
+    const location = getVisitorLocationLabel(event);
+    counts[location] = (counts[location] || 0) + 1;
+  });
+
+  return Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0] || "Unknown location";
+}
+
+function getTopCountry(events){
+  const counts = {};
+
+  events.forEach(event=>{
+    const country = event.visitor_country || "Unknown country";
+    counts[country] = (counts[country] || 0) + 1;
+  });
+
+  return Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0] || "Unknown country";
+}
+
+function getTopRegion(events){
+  const counts = {};
+
+  events.forEach(event=>{
+    const region = event.visitor_region || "Unknown state/region";
+    counts[region] = (counts[region] || 0) + 1;
+  });
+
+  return Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0] || "Unknown state/region";
+}
+
+/* Replaces the existing renderOverview() so location appears in the dashboard summary */
+function renderOverview(){
+  const monthEvents = getLast30DayEvents();
+  const topPage = getTopValue(monthEvents,"page") || "your site";
+  const topSource = getTopReferrer(monthEvents);
+  const topLocation = getTopLocation(monthEvents);
+  const leads = getLast30DayLeads().length;
+
+  setText(
+    "summaryText",
+    `In the last 30 days, your website received ${monthEvents.length} visit${monthEvents.length === 1 ? "" : "s"} and ${leads} lead${leads === 1 ? "" : "s"}. Your top page is ${topPage}, your top traffic source is ${topSource}, and your top visitor location is ${topLocation}.`
+  );
+
+  renderChart("overviewChart", monthEvents);
+  renderActivity();
+}
+
+/* Replaces the existing renderAnalytics() so clients get a better location summary */
+function renderAnalytics(){
+  const monthEvents = getLast30DayEvents();
+  const week = analyticsEvents.filter(e=>isWithinDays(e.created_at,7)).length;
+
+  setText("analyticsTotal", monthEvents.length);
+  setText("analyticsWeek", week);
+  setText("analyticsSource", getTopReferrer(monthEvents));
+  setText("analyticsDevice", getTopValue(monthEvents,"device") || "—");
+
+  /* These only show if you later add matching IDs in dashboard.html */
+  setText("analyticsLocation", getTopLocation(monthEvents));
+  setText("analyticsRegion", getTopRegion(monthEvents));
+  setText("analyticsCountry", getTopCountry(monthEvents));
+
+  renderChart("analyticsChart", monthEvents);
+  setupVisitFilters();
+  renderVisitsList();
+}
+
+/* Replaces the existing renderVisitsList() so every visit card shows location */
+function renderVisitsList(){
+  const box = document.getElementById("visitsList");
+  if(!box) return;
+
+  const month = getSelectValue("visitMonthFilter");
+  const source = getSelectValue("visitSourceFilter");
+  const device = getSelectValue("visitDeviceFilter");
+  const page = getSelectValue("visitPageFilter");
+
+  let data = [...analyticsEvents];
+
+  data = data.filter(event=>{
+    const eventMonth = new Date(event.created_at).toISOString().slice(0,7);
+    const eventSource = cleanReferrer(event.referrer);
+    const eventDevice = event.device || "unknown";
+    const eventPage = event.page || "unknown";
+
+    return (
+      (month === "all" || eventMonth === month) &&
+      (source === "all" || eventSource === source) &&
+      (device === "all" || eventDevice === device) &&
+      (page === "all" || eventPage === page)
+    );
+  });
+
+  setText("visitCountBadge", `${data.length} Visit${data.length === 1 ? "" : "s"}`);
+
+  if(!data.length){
+    box.innerHTML = `<div class="empty">No visits match these filters.</div>`;
+    return;
+  }
+
+  box.innerHTML = data.map(event=>`
+    <div class="item">
+      <strong>${escapeHtml(event.page || "Website Visit")}</strong>
+      <div class="small">Source: ${escapeHtml(cleanReferrer(event.referrer))}</div>
+      <div class="small">Device: ${escapeHtml(event.device || "Unknown")} • Browser: ${escapeHtml(event.browser || "Unknown")}</div>
+      <div class="small">Location: ${escapeHtml(getVisitorLocationLabel(event))}</div>
+      <div class="small">Path: ${escapeHtml(event.path || "—")}</div>
+      <div class="small">${timeAgo(event.created_at)}</div>
+    </div>
+  `).join("");
+}
+
+/* Optional: location will also appear in the activity feed for website visits */
+function renderActivity(){
+  const box = document.getElementById("activityFeed");
+  if(!box) return;
+
+  const combined = [
+    ...analyticsEvents.map(e => ({ ...e, type:"visit" })),
+    ...leadEvents.map(l => ({ ...l, type:"lead" })),
+    ...changeRequests.map(r => ({ ...r, type:"request" })),
+    ...supportTickets.map(t => ({ ...t, type:"support" }))
+  ];
+
+  const sorted = combined
+    .filter(item => item.created_at)
+    .sort((a,b) => new Date(b.created_at) - new Date(a.created_at))
+    .slice(0,12);
+
+  if(!sorted.length){
+    box.innerHTML = `<div class="empty">No activity yet. Once your site gets visits, leads, requests, or tickets, they’ll show here.</div>`;
+    return;
+  }
+
+  box.innerHTML = sorted.map(item => {
+    let title = "Website Visit";
+    let detail = `${escapeHtml(item.page || "Website")} • ${escapeHtml(cleanReferrer(item.referrer))} • ${escapeHtml(getVisitorLocationLabel(item))}`;
+    let pill = "Visitor Activity";
+
+    if(item.type === "lead"){
+      title = "New Website Lead";
+      detail = `${escapeHtml(item.form_name || "Website form")} • ${escapeHtml(item.page || "Unknown page")}`;
+      pill = "New Lead";
+    }
+
+    if(item.type === "request"){
+      title = "Change Request Submitted";
+      detail = `${escapeHtml(item.request_type || "Request")} • ${escapeHtml(item.page || "Website")}`;
+      pill = escapeHtml(item.status || "new");
+    }
+
+    if(item.type === "support"){
+      title = "Support Ticket Opened";
+      detail = `${escapeHtml(item.subject || item.ticket_type || "Support ticket")}`;
+      pill = escapeHtml(item.priority || item.status || "open");
+    }
+
+    return `
+      <div class="item">
+        <strong>${title}</strong>
+        <div class="small">${detail}</div>
+        <div class="small">${timeAgo(item.created_at)}</div>
+        <span class="badge">${pill}</span>
+      </div>
+    `;
+  }).join("");
+}
