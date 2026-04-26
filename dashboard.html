@@ -473,14 +473,59 @@ button,a,input,select,textarea{font-family:inherit;}
   }
 
 }
+
+  .chart{
+  height:220px;
+  display:flex;
+  align-items:flex-end;
+  gap:10px;
+  padding:10px 4px 28px;
+}
+
+.bar-wrap{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-end;
+}
+
+.bar{
+  width:100%;
+  border-radius:10px 10px 4px 4px;
+  background:linear-gradient(180deg,#A78BFA,#7B5CFF);
+}
+
+.bar-value{
+  font-size:12px;
+  font-weight:900;
+  margin-bottom:4px;
+}
+
+.bar-label{
+  font-size:11px;
+  color:#94a3b8;
+  margin-top:6px;
+}
+
+  .filter-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-bottom:18px;
+}
+
+@media(min-width:700px){
+  .filter-grid{
+    grid-template-columns:repeat(4,1fr);
+  }
+}
   </style>
 </head>
 
 <body>
 
-<div id="debugBox" style="position:fixed;top:10px;left:10px;right:10px;z-index:999999;background:red;color:white;padding:14px;border-radius:12px;font-size:14px;">
-DEBUG BOX LOADED
-</div>
+
   
 <div class="app">
 
